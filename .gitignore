@@ -1,0 +1,65 @@
+# Node modules
+node_modules/
+
+# Python virtual environments
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter and notebook checkpoints
+.ipynb_checkpoints/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# Model/data files
+*.dat
+*.bz2
+*.pt
+*.pth
+*.h5
+*.ckpt
+*.pb
+*.npz
+*.npy
+
+# Compiled libraries and binaries
+*.pyd
+*.dll
+*.so
+*.lib
+*.exe
+
+# Package management
+*.egg-info/
+dist/
+build/
+
+# Logs and temp files
+*.log
+*.tmp
+
+# IDE/project files
+.vscode/
+.idea/
+
+# Site-packages (if accidentally present)
+Lib/
+Scripts/
+Include/
+share/
+
+# Large files
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Credentials/secrets
+.env
+.env.*
