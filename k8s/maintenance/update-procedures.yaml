@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: update-procedures
+  namespace: default
+data:
+  canary.yaml: |
+    apiVersion: flagger.app/v1beta1
+    kind: Canary
+    metadata:
+      name: frontend-canary
+      namespace: default
+    spec:
+      targetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: frontend
+      service:
+        port: 80
+        targetPort: 3000
+      analysis:
+        interval: 30s
+        threshold: 10
+        maxWeight: 50
+        stepWeight: 10
+        metrics:
+        - name: request-success-rate
+          thresholdRange:
+            min: 99
+          interval: 1m
+        - name: request-duration
+          thresholdRange:
+            max: 500
+          interval: 1m
+        webhooks:
+        - name: load-test
+          url: http://flagger-loadtester.test/
+          timeout: 5s
+          metadata:
+            cmd: "hey -z 1m -q 10 -c 2 http://frontend-canary.default.svc.cluster.local/"
+  rollback.yaml: |
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: frontend-rollback
+      namespace: default
+      annotations:
+        kubernetes.io/rollback-to: "true"
+        kubernetes.io/rollback-version: ""  # Will be set during rollback
+    spec:
+      replicas: 3
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
+  procedures.md: |
+    # Update and Rollback Procedures
+
+    ## Update Process
+    1. Pre-update Checks
+       - Verify current system health
+       - Check resource availability
+       - Backup critical data
+       - Run pre-update tests
+
+    2. Canary Deployment
+       - Deploy new version to canary
+       - Monitor metrics:
+         - Error rates
+         - Response times
+         - Resource usage
+       - Gradually increase traffic
+
+    3. Validation
+       - Run integration tests
+       - Verify security configurations
+       - Check monitoring metrics
+       - Validate backup systems
+
+    4. Full Deployment
+       - Complete rollout if canary is successful
+       - Monitor system during transition
+       - Verify all services are healthy
+
+    ## Rollback Process
+    1. Immediate Rollback
+       ```bash
+       kubectl rollout undo deployment/frontend
+       kubectl rollout undo deployment/ai-service
+       ```
+
+    2. Verification
+       - Check service health
+       - Verify data consistency
+       - Run critical function tests
+       - Monitor error rates
+
+    3. Post-Rollback
+       - Document issues
+       - Analyze root cause
+       - Update procedures if needed
+       - Plan corrective actions
+
+    ## Version Management
+    1. Version Tagging
+       ```bash
+       git tag -a v1.x.x -m "Release version 1.x.x"
+       git push origin v1.x.x
+       ```
+
+    2. Image Management
+       ```bash
+       docker tag ayphen-hire/frontend:latest ayphen-hire/frontend:v1.x.x
+       docker push ayphen-hire/frontend:v1.x.x
+       ```
+
+    3. Configuration Management
+       - Update ConfigMaps
+       - Update Secrets if needed
+       - Version control all changes

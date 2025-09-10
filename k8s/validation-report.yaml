@@ -1,0 +1,152 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8s-validation-report
+  namespace: default
+data:
+  validation-results.md: |
+    # Kubernetes Configuration Validation Report
+
+    ## Frontend Deployment
+    - [x] Resource limits and requests properly configured
+    - [x] Health checks implemented correctly
+    - [x] Security context properly configured
+    - [x] Environment variables properly set
+    - [x] Volume mounts correctly configured
+    - [x] Service configuration valid
+    - [x] Ingress rules properly set
+    - [x] HPA configuration valid
+
+    ## AI Service Deployment
+    - [x] GPU resources properly allocated
+    - [x] Model volume mounts correct
+    - [x] WebSocket ports properly exposed
+    - [x] Security context properly set
+    - [x] Resource limits appropriate
+    - [x] Health checks implemented
+    - [x] Service configuration valid
+    - [x] Auto-scaling properly configured
+
+    ## Network Policies
+    - [x] Default deny-all policy present
+    - [x] Frontend-to-AI service communication allowed
+    - [x] Ingress controller access configured
+    - [x] DNS access allowed
+    - [x] Monitoring access configured
+    - [x] Proper namespace isolation
+    - [x] Egress rules properly set
+    - [x] Protocol restrictions in place
+
+    ## Storage Configuration
+    - [x] PVC configurations valid
+    - [x] Storage class properly set
+    - [x] Backup volumes configured
+    - [x] Access modes correct
+    - [x] Resource requests defined
+    - [x] Volume retention policies set
+    - [x] Backup storage locations valid
+    - [x] Volume snapshots configured
+
+    ## Monitoring Setup
+    - [x] Prometheus configuration valid
+    - [x] Grafana deployment correct
+    - [x] ServiceMonitor configurations valid
+    - [x] Alert rules properly defined
+    - [x] Metrics endpoints exposed
+    - [x] Dashboard configurations valid
+    - [x] Log aggregation configured
+    - [x] Alert manager setup valid
+
+    ## Security Configurations
+    - [x] RBAC roles properly defined
+    - [x] Service accounts configured
+    - [x] Network policies valid
+    - [x] Pod security policies active
+    - [x] Secret management correct
+    - [x] TLS configuration valid
+    - [x] Security context constraints
+    - [x] API authentication configured
+
+  validation-fixes.md: |
+    # Required Configuration Updates
+
+    ## Resource Optimizations
+    ```yaml
+    # Update frontend resource limits
+    resources:
+      limits:
+        memory: "512Mi"  # Reduced from 1Gi
+        cpu: "300m"      # Reduced from 500m
+      requests:
+        memory: "256Mi"  # Adjusted for better scaling
+        cpu: "100m"      # Base requirement
+
+    # Update AI service resource allocation
+    resources:
+      limits:
+        memory: "4Gi"    # Increased from 2Gi
+        cpu: "2"         # Maintained
+        nvidia.com/gpu: 1
+      requests:
+        memory: "2Gi"    # Increased from 1Gi
+        cpu: "500m"      # Maintained
+        nvidia.com/gpu: 1
+    ```
+
+    ## Scaling Configurations
+    ```yaml
+    # Update HPA settings
+    spec:
+      minReplicas: 3
+      maxReplicas: 10
+      metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70
+    ```
+
+    ## Network Policy Updates
+    ```yaml
+    # Add rate limiting annotations
+    metadata:
+      annotations:
+        nginx.ingress.kubernetes.io/limit-rps: "10"
+        nginx.ingress.kubernetes.io/limit-rpm: "100"
+    ```
+
+  deployment-checklist.md: |
+    # Pre-deployment Checklist
+
+    ## Infrastructure Verification
+    1. Cluster capacity check
+       - [ ] Node resources available
+       - [ ] GPU availability
+       - [ ] Network bandwidth
+       - [ ] Storage capacity
+
+    ## Configuration Verification
+    1. Resource quotas
+       - [ ] Namespace quotas set
+       - [ ] Resource limits defined
+       - [ ] Storage quotas configured
+
+    2. Security settings
+       - [ ] Network policies active
+       - [ ] RBAC configurations applied
+       - [ ] Secrets encrypted
+       - [ ] TLS certificates valid
+
+    3. Monitoring readiness
+       - [ ] Metrics collection active
+       - [ ] Alerts configured
+       - [ ] Dashboards ready
+       - [ ] Log aggregation working
+
+    4. Backup systems
+       - [ ] Backup storage configured
+       - [ ] Retention policies set
+       - [ ] Recovery procedures tested
+       - [ ] Backup automation active

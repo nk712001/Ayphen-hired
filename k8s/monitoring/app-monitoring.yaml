@@ -1,0 +1,116 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: frontend-pod-monitor
+  namespace: monitoring
+  labels:
+    team: ayphen-hire
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  podMetricsEndpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: 'http_request_duration_seconds.*'
+      action: keep
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: ai-service-pod-monitor
+  namespace: monitoring
+  labels:
+    team: ayphen-hire
+spec:
+  selector:
+    matchLabels:
+      app: ai-service
+  podMetricsEndpoints:
+  - port: metrics
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: 'model_inference_duration_seconds.*|model_accuracy.*'
+      action: keep
+---
+apiVersion: monitoring.coreos.com/v1
+kind: AlertmanagerConfig
+metadata:
+  name: ayphen-hire-alerts
+  namespace: monitoring
+spec:
+  route:
+    groupBy: ['alertname', 'service']
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    receiver: 'ops-team'
+    routes:
+    - matchers:
+      - name: severity
+        value: critical
+      receiver: 'ops-team'
+      repeatInterval: 1h
+  receivers:
+  - name: 'ops-team'
+    slackConfigs:
+    - apiURL:
+        key: slack-webhook-url
+        name: slack-webhook
+      channel: '#ops-alerts'
+      sendResolved: true
+      title: '{{ template "slack.title" . }}'
+      text: '{{ template "slack.text" . }}'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitoring-config
+  namespace: monitoring
+data:
+  prometheus-rules.yaml: |
+    groups:
+    - name: application
+      rules:
+      - record: http_request_duration_seconds:avg
+        expr: |
+          avg(rate(http_request_duration_seconds_sum[5m]))
+          /
+          avg(rate(http_request_duration_seconds_count[5m]))
+      - record: model_inference_duration_seconds:p95
+        expr: |
+          histogram_quantile(0.95, sum(rate(model_inference_duration_seconds_bucket[5m])) by (le))
+      - alert: HighLatency
+        expr: http_request_duration_seconds:avg > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High latency detected
+          description: Average request duration is above 500ms
+      - alert: LowModelAccuracy
+        expr: model_accuracy < 0.95
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Model accuracy below threshold
+          description: AI model accuracy has dropped below 95%
+  grafana-dashboard.yaml: |
+    apiVersion: 1
+    providers:
+    - name: 'Ayphen Hire'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /etc/grafana/provisioning/dashboards

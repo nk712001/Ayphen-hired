@@ -1,0 +1,149 @@
+apiVersion: velero.io/v1
+kind: RestoreConfig
+metadata:
+  name: disaster-recovery-config
+  namespace: velero
+spec:
+  restoreMethod: full
+  includedNamespaces:
+  - default
+  - monitoring
+  includedResources:
+  - deployments
+  - statefulsets
+  - configmaps
+  - secrets
+  - persistentvolumeclaims
+  labelSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: ayphen-hire
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: database-restore
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: db-restore
+        image: bitnami/postgresql:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          aws s3 cp s3://ayphen-hire-backups/databases/db-${RESTORE_DATE}.sql.gz /restore/
+          gunzip -c /restore/db-${RESTORE_DATE}.sql.gz | psql -h ${DB_HOST} -U ${DB_USER} -d ${DB_NAME}
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ayphen-app-secrets
+              key: DB_PASSWORD
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: backup-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backup-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        volumeMounts:
+        - name: restore
+          mountPath: /restore
+      volumes:
+      - name: restore
+        emptyDir: {}
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ai-models-restore
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: model-restore
+        image: amazon/aws-cli:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          aws s3 sync s3://ayphen-hire-backups/models/ /models/
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: backup-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backup-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        volumeMounts:
+        - name: models
+          mountPath: /models
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: ai-models-pvc
+      restartPolicy: Never
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: disaster-recovery-procedures
+  namespace: default
+data:
+  procedures.md: |
+    # Disaster Recovery Procedures
+
+    ## 1. Immediate Response
+    1. Assess the situation and identify affected components
+    2. Notify stakeholders through established communication channels
+    3. Switch to failover region if primary region is affected
+    4. Begin recovery process based on incident type
+
+    ## 2. Data Recovery
+    1. Identify latest valid backup
+    2. Execute Velero restore:
+       ```bash
+       velero restore create --from-backup latest-backup
+       ```
+    3. Verify backup integrity
+    4. Restore database:
+       ```bash
+       kubectl create job --from=cronjob/database-restore manual-restore
+       ```
+    5. Restore AI models:
+       ```bash
+       kubectl create job --from=cronjob/ai-models-restore manual-restore
+       ```
+
+    ## 3. Service Recovery
+    1. Verify network policies and security configurations
+    2. Restore services in order:
+       - Database
+       - AI Service
+       - Frontend
+    3. Verify service connectivity and health
+    4. Run integration tests
+
+    ## 4. Validation
+    1. Verify data consistency
+    2. Check security configurations
+    3. Test critical functionalities
+    4. Monitor system metrics
+    5. Validate backup systems
+
+    ## 5. Post-Recovery
+    1. Document incident and response
+    2. Update procedures if needed
+    3. Review and improve monitoring
+    4. Schedule preventive measures

@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: default
+data:
+  ai_service_url: "wss://ai.ayphen-hire.com"
+  api_base_url: "https://api.ayphen-hire.com"
+  environment: "production"
+  log_level: "info"
+  cors_origins: "https://app.ayphen-hire.com"
+  max_upload_size: "10m"
+  websocket_timeout: "30000"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-service-config
+  namespace: default
+data:
+  model_config: |
+    {
+      "face_detection": {
+        "confidence_threshold": 0.8,
+        "max_faces": 1,
+        "frame_interval": 100
+      },
+      "gaze_tracking": {
+        "tolerance_angle": 30,
+        "violation_threshold": 3
+      },
+      "object_detection": {
+        "confidence_threshold": 0.7,
+        "prohibited_objects": ["phone", "book", "laptop", "tablet"]
+      },
+      "audio_analysis": {
+        "voice_threshold": 0.6,
+        "noise_threshold": 0.3,
+        "sample_rate": 44100
+      }
+    }
+  logging_config: |
+    {
+      "version": 1,
+      "disable_existing_loggers": false,
+      "formatters": {
+        "json": {
+          "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+          "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+      },
+      "handlers": {
+        "console": {
+          "class": "logging.StreamHandler",
+          "formatter": "json",
+          "stream": "ext://sys.stdout"
+        }
+      },
+      "root": {
+        "level": "INFO",
+        "handlers": ["console"]
+      }
+    }
+  gpu_config: |
+    {
+      "memory_allocation": 0.8,
+      "compute_capability": "7.0",
+      "cuda_version": "11.4"
+    }

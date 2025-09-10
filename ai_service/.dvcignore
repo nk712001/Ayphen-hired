@@ -1,0 +1,10 @@
+# Add patterns of files dvc should ignore
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+.env
