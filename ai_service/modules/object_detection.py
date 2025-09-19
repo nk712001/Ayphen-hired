@@ -5,17 +5,15 @@ import cv2
 
 class ObjectDetector:
     def __init__(self):
-        # Load YOLOv5 model
-        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
-        
+        self.model = None
         # Define prohibited items
         self.prohibited_items = [
             'cell phone', 'laptop', 'book', 'remote', 'keyboard',
-            'mouse', 'tablet', 'tv', 'monitor', 'person'
+            'mouse', 'tablet', 'tv', 'monitor'
         ]
         
         # Detection thresholds
-        self.confidence_threshold = 0.5
+        self.confidence_threshold = 0.3
         self.violation_history: List[Dict] = []
         self.history_size = 30
 
@@ -43,15 +41,21 @@ class ObjectDetector:
 
     def _calculate_violation_severity(self, detections: List[Dict]) -> str:
         """Calculate violation severity based on detections"""
-        if any(d['class'] == 'person' for d in detections if d['confidence'] > 0.8):
-            return 'critical'  # Multiple people detected
-        if any(d['class'] in ['cell phone', 'laptop', 'tablet'] for d in detections if d['confidence'] > 0.7):
-            return 'high'  # Electronic devices detected
-        if any(d['class'] in ['book', 'remote', 'keyboard', 'mouse'] for d in detections):
-            return 'medium'  # Other prohibited items
+        if any(d['class'] in ['cell phone', 'laptop', 'tablet'] for d in detections if d['confidence'] > 0.5):
+            return 'critical'  # Electronic devices detected
+        if any(d['class'] in ['book', 'remote', 'keyboard', 'mouse'] for d in detections if d['confidence'] > 0.4):
+            return 'high'  # Other prohibited items
+        if any(d['class'] in ['tv', 'monitor'] for d in detections if d['confidence'] > 0.4):
+            return 'medium'  # Display devices
         return 'low'
 
+    def _ensure_model_loaded(self):
+        if self.model is None:
+            import torch
+            self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+
     def analyze_frame(self, frame: np.ndarray) -> Dict:
+        self._ensure_model_loaded()
         """Analyze frame for prohibited objects"""
         try:
             # Preprocess frame
@@ -131,12 +135,10 @@ class ObjectDetector:
         return float(np.mean([d.get("confidence", 0.0) for d in detections]))
 
     def track(self, objects: list) -> list:
-        # Dummy implementation for test
-        return objects
+        raise NotImplementedError("track is not implemented for production use.")
 
     def detect(self, frame: np.ndarray):
-        # Dummy implementation for test
-        return {"detections": []}
+        raise NotImplementedError("detect is not implemented for production use.")
 
     def reset_state(self):
         """Reset the detector's state"""

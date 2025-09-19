@@ -142,7 +142,7 @@
 1. Unit testing
    - [x] Write backend unit tests
    - [x] Create frontend component tests
-   - [ ] Develop AI model tests
+   - [In Progress] Develop AI model tests
    - Validation: In Progress - Current coverage >70%
 
 2. Integration testing

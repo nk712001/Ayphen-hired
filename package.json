@@ -12,5 +12,11 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "ts-jest": "^29.4.1"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@prisma/client": "^6.16.1",
+    "next-auth": "^4.24.11",
+    "sonner": "^2.0.7"
   }
 }

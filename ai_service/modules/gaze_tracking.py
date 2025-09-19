@@ -5,11 +5,15 @@ from typing import Dict, List, Tuple, Optional
 
 class GazeTracker:
     def __init__(self):
-        # Initialize dlib's face detector and facial landmark predictor
-        self.detector = dlib.get_frontal_face_detector()
-        self.predictor = dlib.shape_predictor('models/shape_predictor_68_face_landmarks.dat')
-        
+        self.detector = None
+        self.predictor = None
         # Define eye aspect ratio thresholds
+
+    def _ensure_model_loaded(self):
+        if self.detector is None or self.predictor is None:
+            import dlib
+            self.detector = dlib.get_frontal_face_detector()
+            self.predictor = dlib.shape_predictor('models/shape_predictor_68_face_landmarks.dat')
         self.EAR_THRESHOLD = 0.2
         self.CONSECUTIVE_FRAMES = 3
         
@@ -57,6 +61,7 @@ class GazeTracker:
         return left_eye, right_eye
 
     def analyze_gaze(self, frame: np.ndarray) -> Dict:
+        self._ensure_model_loaded()
         """Analyze gaze direction and attention in the frame"""
         try:
             eyes = self._detect_eyes(frame)
@@ -117,13 +122,10 @@ class GazeTracker:
             }
 
     def monitor_attention(self, gaze_events: list) -> dict:
-        # Dummy implementation for test
-        count_away = gaze_events.count("away")
-        return {"away_count": count_away, "total": len(gaze_events)}
+        raise NotImplementedError("monitor_attention is not implemented for production use.")
 
     def detect_eye_landmarks(self, image: np.ndarray):
-        # Dummy implementation for test
-        return [(10, 10), (20, 10), (15, 20)]
+        raise NotImplementedError("detect_eye_landmarks is not implemented for production use.")
 
     def calculate_gaze_direction(self, landmarks: list) -> str:
         # Dummy implementation for test

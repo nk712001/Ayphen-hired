@@ -13,6 +13,47 @@ from modules.audio_processing import AudioProcessor
 
 app = FastAPI(title="Test Monitor AI Service")
 
+# Global warm-up flag
+WARMUP_COMPLETE = False
+
+# Model warm-up routine
+async def warmup_models():
+    global WARMUP_COMPLETE
+    print("[WARMUP] Starting model warm-up...")
+    try:
+        # Warm up FaceDetector
+        fd = FaceDetector()
+        fd._ensure_model_loaded()
+        dummy_img = np.zeros((720, 1280, 3), dtype=np.uint8)
+        try:
+            fd.detector.detect_faces(dummy_img)
+        except Exception as e:
+            print(f"[WARMUP] FaceDetector error: {e}")
+        # Warm up GazeTracker
+        gt = GazeTracker()
+        gt._ensure_model_loaded()
+        try:
+            gt.detector(np.zeros((720, 1280), dtype=np.uint8))
+        except Exception as e:
+            print(f"[WARMUP] GazeTracker error: {e}")
+        # Warm up ObjectDetector
+        od = ObjectDetector()
+        od._ensure_model_loaded()
+        try:
+            od.model(dummy_img)
+        except Exception as e:
+            print(f"[WARMUP] ObjectDetector error: {e}")
+        WARMUP_COMPLETE = True
+        print("[WARMUP] All models warmed up.")
+    except Exception as e:
+        print(f"[WARMUP] Model warm-up failed: {e}")
+        WARMUP_COMPLETE = False
+
+@app.on_event("startup")
+async def startup_event():
+    # Run model warm-up
+    await warmup_models()
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -35,8 +76,22 @@ class ProctorSession:
     def process_video_frame(self, frame_data: str) -> Dict:
         # Process video frame with all detectors
         face_results = self.face_detector.analyze_frame(frame_data)
-        gaze_results = self.gaze_tracker.analyze_gaze(frame_data)
-        object_results = self.object_detector.analyze_frame(frame_data)
+        
+        # Decode image for gaze and object detection
+        try:
+            import base64
+            import cv2
+            import numpy as np
+            img_data = base64.b64decode(frame_data)
+            nparr = np.frombuffer(img_data, np.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            gaze_results = self.gaze_tracker.analyze_gaze(image)
+            object_results = self.object_detector.analyze_frame(image)
+        except Exception as e:
+            print(f"[ERROR] Failed to decode image for gaze/object detection: {e}")
+            gaze_results = {"status": "error", "error": str(e)}
+            object_results = {"status": "error", "error": str(e)}
 
         # Combine results
         violations = []
@@ -53,7 +108,8 @@ class ProctorSession:
                 {
                     'type': 'prohibited_object',
                     'severity': object_results['severity'],
-                    'details': det
+                    'message': det['class'],
+                    'confidence': det['confidence']
                 }
                 for det in object_results['detections']
             ])
@@ -141,4 +197,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    if WARMUP_COMPLETE:
+        return {"status": "healthy"}
+    else:
+        return {"status": "not_ready"}

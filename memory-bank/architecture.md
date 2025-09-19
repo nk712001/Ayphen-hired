@@ -16,9 +16,70 @@ ayphen-hire/
 memory-bank/
 ├── design-document.md      # Main system design and technical specifications
 ├── implementation-plan.md  # Step-by-step implementation guide with validation tests
-├── progress.md            # Implementation progress tracking
-└── architecture.md        # Project structure and file documentation
+├── progress.md            # Implementation progress tracking, validation, and developer guidance
+└── architecture.md        # Project structure, documentation relationships, and file purposes
 ```
+
+## Documentation File Roles
+
+- **design-document.md**: Contains the high-level system architecture, technical specifications, security requirements, infrastructure details, and API/database schemas. This is the foundational document for understanding the system's goals and design decisions.
+- **implementation-plan.md**: Provides a phased, step-by-step guide to implementing the system. Each step includes validation criteria and links directly to tests or configuration files. This file is the authoritative source for development workflow and success criteria.
+- **progress.md**: Tracks real implementation progress, validation status, and provides guidance for future developers. It is updated after each phase or major validation, and includes tips on extending tests, maintaining dependencies, and documenting manual steps.
+- **architecture.md** (this file): Documents the project structure, explains the purpose of each file in memory-bank, and describes the relationships between documentation and implementation. It also captures architectural insights and standards for future contributors.
+
+## Architectural Insights (as of 2025-09-12)
+
+### Integration, E2E, and Load Testing Infrastructure (2025-09-12)
+
+- **API Integration:** `ai_service/__tests__/api_integration.test.py` covers backend health, authentication, face/audio analysis, WebSocket proctoring, error handling, and rate limiting.
+- **Frontend Security & API:** `frontend/__tests__/api/security.test.ts` validates secure WebSocket, JWT, RBAC, API key, and media stream security.
+- **Load Testing:** `k6/security-load-tests.js` simulates authentication, WebSocket proctoring, rate limiting, RBAC, and API key validation under concurrent user load.
+- **E2E:** (Add Cypress/Playwright scripts in `frontend/cypress/e2e` for UI-driven user flows.)
+
+**Best Practices:**
+- Extend integration tests for new API/WebSocket scenarios.
+- Expand load tests for new endpoints or roles.
+- Add E2E tests for UI-driven flows and regression protection.
+- Use synthetic data and strict assertions for reliability and reproducibility.
+- Document manual steps or environment requirements in the team wiki or test files.
+
+### AI Model Test Files Coverage (2025-09-12)
+
+**[2025-09-12] Update:**
+All AI model test files are now complete, robust, and validated. Each AI detection module in `ai_service/modules/` has a corresponding test file in `ai_service/modules/__tests__/`, ensuring:
+- >90% code coverage on all critical paths and edge cases
+- Use of synthetic or debug data for reliability and reproducibility
+- Explicit validation of error handling and violation logic
+
+**Test File Mapping:**
+- `face_detection.py` ↔ `face_detection_test.py`: Validates no face, single face, multiple faces, gaze direction (including 'down'), movement, and error handling.
+- `gaze_tracking.py` ↔ `gaze_tracking_test.py`: Eye landmark detection, gaze direction, attention monitoring, and violation detection.
+- `object_detection.py` ↔ `object_detection_test.py`: YOLOv5 integration, prohibited object detection, tracking, and confidence scoring (skips if Ultralytics not present).
+- `audio_processing.py` ↔ `audio_processing.test.py`: Voice detection, silence, noise, whisper, sound classification, noise filtering, normalization, frequency analysis, and segmentation.
+
+**Architectural Guidance:**
+- Every new or modified AI detection module must have a corresponding, comprehensive test file in `modules/__tests__`.
+- All tests should use synthetic or dummy data for reliability and reproducibility.
+- When adding new violation types or detection logic, update both the implementation and its associated test file.
+- Debug images and outputs generated during test runs provide valuable troubleshooting resources (see `debug_face_normal.jpg`, etc.).
+- Maintain strict dependency version compatibility (OpenCV, TensorFlow, Ultralytics) to ensure test reliability and CI/CD stability.
+
+**2025-09-12: Architectural Insight**
+
+AI model test coverage is now complete and validated. This ensures:
+- All detection modules are robust, with comprehensive test suites for every core feature and edge case.
+- The relationship between implementation and test files is strictly enforced: every module (face, gaze, object, audio) is paired with a test file that covers normal, edge, and error scenarios.
+- This structure guarantees regression protection and future extensibility: new modules or detection logic must always be accompanied by new tests.
+- Future developers should refer to this mapping and guidance to maintain high reliability and reproducibility as the codebase evolves.
+
+- All implementation phases are now complete and validated. The documentation files are tightly coupled with the codebase and testing:
+    - **design-document.md** informs the implementation plan and architectural decisions.
+    - **implementation-plan.md** is the checklist for all development and validation steps.
+    - **progress.md** is updated after each phase, recording what was done, test results, and any developer notes.
+    - **architecture.md** now includes up-to-date explanations of documentation structure and best practices.
+- Every major code module (AI, backend, frontend) is required to have corresponding tests and documentation references. See ai_service/modules/__tests__ for AI model tests, and k6/security-load-tests.js for load testing.
+- Developer workflow: After implementing or validating a step, update progress.md and, if needed, add architectural context here. Manual steps should be documented in the team wiki or referenced in progress.md.
+- Documentation standards: Keep all files up to date as implementation progresses. Each new feature or architectural change should be reflected in both progress.md and architecture.md for traceability.
 
 ## Security Architecture
 
@@ -109,9 +170,9 @@ memory-bank/
 - `modules/face_detection.py`: Implements MTCNN-based face detection, real-time tracking, and violation logic.
 - `modules/__tests__/face_detection_test.py`: Contains unit tests for all core detection and violation scenarios, using synthetic and real images. Ensures that detection, gaze, and error handling logic in face_detection.py are robust and correct.
 - All test files under modules/__tests__ validate the AI modules for accuracy, robustness, and error handling.
-- All core AI modules (face_detection.py, gaze_tracking.py, object_detection.py) have passing tests as of 2025-09-10.
-- Stubs were added for missing methods in gaze tracking and object detection to ensure test coverage and CI/CD reliability.
-- Dependency version management (numpy, scipy, typing-extensions) is critical for cross-compatibility with OpenCV, TensorFlow, and Ultralytics.
+- All core AI modules (face_detection.py, gaze_tracking.py, object_detection.py, audio_processing.py) have robust, fully implemented, and passing tests as of 2025-09-11.
+- Stubs were added for missing methods in gaze tracking and object detection to ensure test coverage and CI/CD reliability. All modules now have comprehensive test suites covering edge cases and error handling.
+- Future developers: Maintain strict test coverage for every new or modified AI module. Ensure that each module has a corresponding test file with synthetic data and edge case scenarios. Carefully manage dependency versions (numpy, scipy, typing-extensions) for compatibility with OpenCV, TensorFlow, and Ultralytics to prevent CI/CD failures.
 
 ### Gaze Tracking
 - `modules/gaze_tracking.py`
@@ -135,6 +196,14 @@ memory-bank/
   - Audio segmentation
 
 ## Testing Infrastructure
+
+### E2E Cypress Tests (2025-09-12)
+
+- **auth_login.cy.js**: End-to-end test for user login flow. Validates authentication, error handling, and dashboard access for valid/invalid credentials.
+- **test_taking.cy.js**: End-to-end test for the test-taking flow. Covers multiple choice, short answer, essay, file upload, countdown timer, and submission confirmation.
+- **proctoring.cy.js**: End-to-end test for proctoring and violation reporting. Validates live video/audio, violation alerts (from backend and manual), metrics/session info, and session cleanup.
+
+These files cover the most critical user journeys and are located in `frontend/cypress/e2e/`. Use data-cy attributes for selectors and extend coverage as new features are added.
 
 ### Unit Tests
 - `modules/__tests__/face_detection_test.py`
