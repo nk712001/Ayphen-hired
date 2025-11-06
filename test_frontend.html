@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Test Monitoring Platform - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .btn {
+            background: #4c51bf;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s ease;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .btn:hover {
+            background: #3730a3;
+        }
+
+        .btn.recording {
+            background: #dc2626;
+        }
+
+        .btn.recording:hover {
+            background: #b91c1c;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .phase-indicator {
+            background: #e5e7eb;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .implementation-status {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .implementation-status h3 {
+            color: #92400e;
+            margin-bottom: 1rem;
+        }
+
+        .status-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .completed {
+            color: #059669;
+        }
+
+        .remaining {
+            color: #d97706;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI-Powered Test Monitoring Platform</h1>
+            <p>Test your camera, microphone, and AI proctoring capabilities</p>
+        </div>
+
+        <div class="grid">
+            <!-- API Connection Status -->
+            <div class="card">
+                <h2>📡 API Connection Status</h2>
+                <div class="btn" onclick="testAPIConnection()">Test API Connection</div>
+                <div id="api-status" class="status pending">Testing...</div>
+                <div id="api-result" class="result"></div>
+            </div>
+
+            <!-- Camera Setup -->
+            <div class="card">
+                <h2>📷 Camera Setup & Validation</h2>
+                <div class="btn" onclick="testCameraValidation()">Test Camera Validation</div>
+                <div id="camera-status" class="status pending">Camera not tested</div>
+                <div id="camera-result" class="result"></div>
+            </div>
+
+            <!-- Voice Calibration -->
+            <div class="card">
+                <h2>🎤 Voice Calibration & Recognition</h2>
+                <div class="btn" onclick="startVoiceCalibration()">Start Voice Calibration</div>
+                <div id="voice-status" class="status pending">Microphone not calibrated</div>
+                <div id="voice-result" class="result"></div>
+            </div>
+
+            <!-- Recording Controls -->
+            <div class="card">
+                <h2>🎙️ Recording Controls</h2>
+                <div class="controls">
+                    <button id="record-btn" class="btn" onclick="toggleRecording()">
+                        <span id="record-btn-text">▶️ Start Recording</span>
+                    </button>
+                    <div id="recording-status" class="status pending">Not recording</div>
+                </div>
+            </div>
+
+            <!-- Question Engine -->
+            <div class="card">
+                <h2>❓ Question Engine</h2>
+                <div class="btn" onclick="testQuestionEngine()">Test Question Engine</div>
+                <div id="question-status" class="status pending">Questions not loaded</div>
+                <div id="question-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Implementation Status -->
+        <div class="implementation-status">
+            <h3>🚧 Implementation Status</h3>
+            <div class="status-list">
+                <div class="completed">
+                    <h4>✅ Completed Features:</h4>
+                    <ul>
+                        <li>Enhanced multi-camera system with third-camera guidance</li>
+                        <li>Voice recognition calibration testing</li>
+                        <li>Question engine with sequencing system</li>
+                        <li>Answer manager with recording state machine</li>
+                        <li>Database schema updates</li>
+                        <li>Backend API endpoints</li>
+                    </ul>
+                </div>
+                <div class="remaining">
+                    <h4>🚧 Remaining Features:</h4>
+                    <ul>
+                        <li>Admin user management dashboard</li>
+                        <li>Subscription-based access control</li>
+                        <li>AI-powered question generation</li>
+                        <li>Candidate management system</li>
+                        <li>Full frontend implementation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Phase Indicator -->
+        <div class="phase-indicator" id="phase-indicator">
+            Phase: Setup & Testing
+        </div>
+    </div>
+
+    <script>
+        // API configuration
+        const API_BASE = 'http://localhost:8001';
+
+        // Global state
+        let isRecording = false;
+        let audioStream = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        // Test API Connection
+        async function testAPIConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/camera/health`);
+                const data = await response.json();
+
+                document.getElementById('api-status').className = 'status success';
+                document.getElementById('api-status').textContent = '✅ APIs Connected';
+                document.getElementById('api-result').textContent = JSON.stringify(data, null, 2);
+
+                console.log('API Connection Test:', data);
+            } catch (error) {
+                document.getElementById('api-status').className = 'status error';
+                document.getElementById('api-status').textContent = '❌ API Connection Failed';
+                document.getElementById('api-result').textContent = `Error: ${error.message}`;
+
+                console.error('API Connection Error:', error);
+            }
+        }
+
+        // Test Camera Validation
+        async function testCameraValidation() {
+            try {
+                // Mock base64 image data (1x1 pixel PNG)
+                const mockImageData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+                const response = await fetch(`${API_BASE}/api/camera/validate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        frame_data: mockImageData,
+                        camera_type: 'primary',
+                        session_id: 'test-session-' + Date.now()
+                    })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('camera-status').className = data.result?.position_valid ? 'status success' : 'status pending';
+                document.getElementById('camera-status').textContent = data.result?.position_valid ? '✅ Camera Validated' : '⚠️ Camera Needs Adjustment';
+                document.getElementById('camera-result').textContent = JSON.stringify(data, null, 2);
+
+                console.log('Camera Validation:', data);
+            } catch (error) {
+                document.getElementById('camera-status').className = 'status error';
+                document.getElementById('camera-status').textContent = '❌ Camera Test Failed';
+                document.getElementById('camera-result').textContent = `Error: ${error.message}`;
+
+                console.error('Camera Validation Error:', error);
+            }
+        }
+
+        // Start Voice Calibration
+        async function startVoiceCalibration() {
+            try {
+                const response = await fetch(`${API_BASE}/api/speech/start-calibration`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        difficulty_level: 'basic',
+                        session_id: 'test-session-' + Date.now()
+                    })
+                });
+
+                const data = await response.json();
+
+                const calibration = data.calibration;
+                document.getElementById('voice-status').className = calibration?.meets_accuracy_threshold ? 'status success' : 'status pending';
+                document.getElementById('voice-status').textContent = calibration?.meets_accuracy_threshold ? '✅ Voice Calibrated' : '⚠️ Calibration in Progress';
+                document.getElementById('voice-result').textContent = JSON.stringify(data, null, 2);
+
+                // Update phase indicator
+                updatePhase('Calibration Testing');
+
+                console.log('Voice Calibration:', data);
+            } catch (error) {
+                document.getElementById('voice-status').className = 'status error';
+                document.getElementById('voice-status').textContent = '❌ Calibration Failed';
+                document.getElementById('voice-result').textContent = `Error: ${error.message}`;
+
+                console.error('Voice Calibration Error:', error);
+            }
+        }
+
+        // Test Question Engine
+        async function testQuestionEngine() {
+            try {
+                const testConfig = {
+                    id: 'test-' + Date.now(),
+                    title: 'Sample AI Test',
+                    duration: 30,
+                    questions: [
+                        {
+                            id: 'q1',
+                            type: 'conversational',
+                            text: 'Please introduce yourself and describe your experience with remote work.',
+                            order: 0,
+                            timeToStart: 10
+                        },
+                        {
+                            id: 'q2',
+                            type: 'coding',
+                            text: 'Write a function that returns the sum of two numbers.',
+                            order: 1,
+                            timeLimit: 15
+                        }
+                    ]
+                };
+
+                const response = await fetch(`${API_BASE}/api/questions/load-test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        test_config: testConfig,
+                        session_id: 'test-session-' + Date.now()
+                    })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('question-status').className = 'status success';
+                document.getElementById('question-status').textContent = '✅ Questions Loaded';
+                document.getElementById('question-result').textContent = JSON.stringify(data, null, 2);
+
+                // Update phase indicator
+                updatePhase('Question Engine Ready');
+
+                console.log('Question Engine Test:', data);
+            } catch (error) {
+                document.getElementById('question-status').className = 'status error';
+                document.getElementById('question-status').textContent = '❌ Question Engine Failed';
+                document.getElementById('question-result').textContent = `Error: ${error.message}`;
+
+                console.error('Question Engine Error:', error);
+            }
+        }
+
+        // Toggle Recording
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('record-btn');
+            const recordBtnText = document.getElementById('record-btn-text');
+            const recordingStatus = document.getElementById('recording-status');
+
+            if (!isRecording) {
+                try {
+                    // Request microphone access
+                    audioStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            sampleRate: 16000
+                        }
+                    });
+
+                    // Create media recorder
+                    mediaRecorder = new MediaRecorder(audioStream);
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        audioChunks = [];
+
+                        // Create audio URL for playback
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        console.log('Recording saved:', audioUrl);
+
+                        // Update UI
+                        recordBtnText.textContent = '🎙️ Start Recording';
+                        recordingStatus.className = 'status pending';
+                        recordingStatus.textContent = `Recording saved (${formatFileSize(audioBlob.size)})`;
+                    };
+
+                    // Start recording
+                    mediaRecorder.start();
+                    isRecording = true;
+
+                    // Update UI
+                    recordBtn.className = 'btn recording';
+                    recordBtnText.textContent = '⏹️ Stop Recording';
+                    recordingStatus.className = 'status error';
+                    recordingStatus.textContent = '🔴 Recording...';
+
+                    // Update phase indicator
+                    updatePhase('Recording Active');
+
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    alert('Error accessing microphone: ' + error.message);
+                }
+            } else {
+                // Stop recording
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+
+                if (audioStream) {
+                    audioStream.getTracks().forEach(track => track.stop());
+                }
+
+                isRecording = false;
+
+                // Update UI
+                recordBtn.className = 'btn';
+                recordBtnText.textContent = '▶️ Start Recording';
+                recordingStatus.className = 'status pending';
+                recordingStatus.textContent = 'Recording stopped';
+            }
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Update phase indicator
+        function updatePhase(phase) {
+            const indicator = document.getElementById('phase-indicator');
+            indicator.textContent = `Phase: ${phase}`;
+
+            // Add animation
+            indicator.style.animation = 'none';
+            setTimeout(() => {
+                indicator.style.animation = 'pulse 2s infinite';
+            }, 10);
+        }
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { opacity: 1; }
+                50% { opacity: 0.5; }
+                100% { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Auto-test API connection on page load
+        window.addEventListener('load', () => {
+            setTimeout(testAPIConnection, 1000);
+        });
+    </script>
+</body>
+</html>
