@@ -27,22 +27,23 @@ class SpeechRecognizer:
     """
     Handles speech recognition and validation for the voice recognition test.
     Uses audio processing capabilities to analyze voice quality and characteristics.
+    Enhanced with calibration testing and accent assessment features.
     """
     def __init__(self):
         self.audio_processor = AudioProcessor()
         self.sample_rate = 16000
-        
+
         # Initialize speech recognition engines
         self.recognizer = None
         self.whisper_model = None
-        
+
         if SPEECH_RECOGNITION_AVAILABLE:
             self.recognizer = sr.Recognizer()
             # Adjust for ambient noise and energy threshold
             self.recognizer.energy_threshold = 300
             self.recognizer.dynamic_energy_threshold = True
             self.recognizer.pause_threshold = 0.8
-            
+
         if WHISPER_AVAILABLE:
             try:
                 # Load a lightweight Whisper model for better performance
@@ -51,6 +52,22 @@ class SpeechRecognizer:
             except Exception as e:
                 print(f"[WARNING] Failed to load Whisper model: {e}")
                 self.whisper_model = None
+
+        # Enhanced features for voice calibration testing
+        self.calibration_test_active = False
+        self.accent_accuracy_scores = []
+        self.accent_accuracy_threshold = 0.85
+        self.background_noise_baseline = 0.0
+        self.calibration_audio_samples = []
+        self.max_calibration_samples = 5
+        self.voice_characteristics = {
+            'pitch_range': [],
+            'speaking_rate': [],
+            'volume_profile': [],
+            'timbre_features': []
+        }
+        self.test_difficulty_levels = ['basic', 'intermediate', 'advanced']
+        self.current_test_level = 'basic'
         self.reference_slogans = [
             # Tech & Innovation Slogans
             "Innovation distinguishes between a leader and a follower",
