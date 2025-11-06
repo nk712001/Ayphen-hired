@@ -21,6 +21,11 @@ The platform supports:
 - Browser lockdown features
 - AI-driven proctoring via webcam and microphone
 - Administrative dashboard for results and proctoring flags
+- Optional third-camera setup for enhanced proctoring (configurable by interviewer)
+- Voice recognition test for candidate verification
+- Interview flow with different question types (conversational and coding)
+- AI-powered question generation based on job descriptions
+- Candidate management and test distribution
 
 ### 1.3. Target Audience
 - **Test Administrators**: Educational institutions, corporate training departments, certification bodies
@@ -90,21 +95,67 @@ graph TD
   - Multiple face detection
   - Gaze tracking
   - Object detection
+  - Multi-camera support
+  - Hand position detection
 
 - **Audio Monitoring**
   - Voice detection
   - Suspicious sound detection
+  - Speech recognition and verification
+  - Voice activity analysis
 
 - **Flagging System**
   - Real-time analysis
   - Severity categorization
   - Timestamped events
+  - Multi-camera violation correlation
 
 ### 3.4. Test Administration & Reporting
 - Test creation interface
 - Candidate management
 - Results dashboard
 - Detailed proctoring reports
+
+### 3.5. Pre-Interview Setup & Calibration
+- **Third-Camera Setup (Optional)**
+  - Camera position guide overlay
+  - Real-time position validation
+  - Face and hand detection for optimal positioning
+  - Visual feedback system
+  - Configurable by interviewer during test creation
+
+- **Microphone & Voice Recognition Test**
+  - Sample sentence reading and verification
+  - Voice-to-text accuracy validation
+  - Background noise assessment
+  - Audio quality feedback
+
+### 3.6. Interview Flow & Question Engine
+- **Question Type Differentiation**
+  - Conversational question handling
+  - Coding question with integrated editor
+  - Adaptive timing based on question type
+  - Question sequencing and flow control
+
+- **Answering Controls**
+  - Audio recording for conversational questions
+  - Code editor with syntax highlighting
+  - Answer validation and submission
+  - Progress tracking and navigation
+
+### 3.7. Admin & Interviewer Flow
+- **User & Credential Management**
+  - Role-based user administration
+  - Access control and permissions
+  - Subscription-based feature access
+  - Organization management
+
+- **Test Creation & Distribution**
+  - Manual question creation
+  - AI-powered question generation
+  - Proctoring configuration options (including third-camera toggle)
+  - Candidate bulk import
+  - Test assignment and link generation
 
 ## 4. Database Schema
 
@@ -115,7 +166,22 @@ CREATE TABLE Users (
     email VARCHAR(255) UNIQUE,
     password_hash TEXT,
     full_name VARCHAR(255),
-    role VARCHAR(50)
+    role VARCHAR(50),
+    organization_id UUID REFERENCES Organizations(organization_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Organizations Table
+```sql
+CREATE TABLE Organizations (
+    organization_id UUID PRIMARY KEY,
+    name VARCHAR(255),
+    subscription_status VARCHAR(50), -- 'trial', 'active', 'expired'
+    expiry_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -124,9 +190,54 @@ CREATE TABLE Users (
 CREATE TABLE Tests (
     test_id UUID PRIMARY KEY,
     title VARCHAR(255),
+    job_description TEXT,
+    resume_url TEXT,
     duration_minutes INTEGER,
+    requires_secondary_camera BOOLEAN DEFAULT FALSE,
     created_by UUID REFERENCES Users(user_id),
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### Questions Table
+```sql
+CREATE TABLE Questions (
+    question_id UUID PRIMARY KEY,
+    test_id UUID REFERENCES Tests(test_id),
+    question_type VARCHAR(50), -- 'conversational', 'coding'
+    question_text TEXT,
+    difficulty VARCHAR(50), -- 'Easy', 'Intermediate', 'Hard'
+    time_to_start INTEGER, -- seconds to start answering, NULL for coding questions
+    question_order INTEGER,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### Candidates Table
+```sql
+CREATE TABLE Candidates (
+    candidate_id UUID PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    resume_url TEXT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### TestAssignments Table
+```sql
+CREATE TABLE TestAssignments (
+    assignment_id UUID PRIMARY KEY,
+    test_id UUID REFERENCES Tests(test_id),
+    candidate_id UUID REFERENCES Candidates(candidate_id),
+    unique_link VARCHAR(255) UNIQUE,
+    status VARCHAR(50), -- 'pending', 'in_progress', 'completed'
+    created_at TIMESTAMP,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP
 );
 ```
 
@@ -134,15 +245,41 @@ CREATE TABLE Tests (
 ```sql
 CREATE TABLE TestAttempts (
     attempt_id UUID PRIMARY KEY,
-    test_id UUID REFERENCES Tests(test_id),
-    user_id UUID REFERENCES Users(user_id),
+    assignment_id UUID REFERENCES TestAssignments(assignment_id),
     start_time TIMESTAMP,
     end_time TIMESTAMP,
     status VARCHAR(50),  -- 'IN_PROGRESS', 'COMPLETED', 'TERMINATED'
     last_saved_at TIMESTAMP,
-    answers JSONB,
     notes TEXT,
     connection_drops INTEGER DEFAULT 0
+);
+```
+
+### Answers Table
+```sql
+CREATE TABLE Answers (
+    answer_id UUID PRIMARY KEY,
+    question_id UUID REFERENCES Questions(question_id),
+    assignment_id UUID REFERENCES TestAssignments(assignment_id),
+    content TEXT,
+    recording_url TEXT,
+    code_submission TEXT,
+    started_at TIMESTAMP,
+    submitted_at TIMESTAMP
+);
+```
+
+### ProctorSessions Table
+```sql
+CREATE TABLE ProctorSessions (
+    session_id UUID PRIMARY KEY,
+    assignment_id UUID REFERENCES TestAssignments(assignment_id),
+    started_at TIMESTAMP,
+    ended_at TIMESTAMP,
+    primary_camera_active BOOLEAN DEFAULT TRUE,
+    secondary_camera_active BOOLEAN DEFAULT FALSE,
+    secondary_camera_required BOOLEAN DEFAULT FALSE,
+    microphone_active BOOLEAN DEFAULT TRUE
 );
 ```
 
@@ -150,11 +287,13 @@ CREATE TABLE TestAttempts (
 ```sql
 CREATE TABLE Violations (
     violation_id UUID PRIMARY KEY,
-    test_attempt_id UUID REFERENCES TestAttempts(attempt_id),
+    session_id UUID REFERENCES ProctorSessions(session_id),
     type VARCHAR(50),  -- 'CRITICAL', 'MAJOR', 'MINOR'
+    category VARCHAR(50), -- 'face_violation', 'gaze_violation', 'audio_violation', 'object_violation'
     description TEXT,
     timestamp TIMESTAMP,
     evidence_url TEXT,  -- S3/Cloud Storage URL for video/audio snippet
+    camera_source VARCHAR(50), -- 'primary', 'secondary'
     status VARCHAR(50)  -- 'PENDING_REVIEW', 'CONFIRMED', 'DISMISSED'
 );
 ```
@@ -178,6 +317,9 @@ CREATE TABLE Violations (
 - Python with FastAPI
 - OpenCV
 - TensorFlow/PyTorch
+- Web Speech API integration
+- Multi-camera stream processing
+- LLM integration for question generation
 
 ### Deployment
 - Docker

@@ -1,5 +1,119 @@
 # AI-Powered Test Monitoring Platform: Implementation Plan
 
+## New Feature Requirements: AI Proctoring Platform
+
+### Phase A: Pre-Interview Setup & Calibration
+
+#### A.1 Third-Camera Setup & Monitoring (Optional)
+1. Implement third-camera setup UI
+   - [ ] Create camera position guide overlay
+   - [ ] Implement camera feed validation
+   - [ ] Add position verification using face detection
+   - [ ] Add toggle in interviewer flow to enable/disable this feature
+   - Validation: Test with various camera positions
+
+2. Develop camera validation logic
+   - [ ] Extend face detection to validate camera angle
+   - [ ] Add hand detection for keyboard visibility
+   - [ ] Implement position guidance system
+   - [ ] Create fallback logic when third camera is not available
+   - Validation: Verify detection accuracy with test images
+
+#### A.2 Microphone & Voice Recognition Test
+1. Implement voice recognition test
+   - [ ] Create test UI with sample sentences
+   - [ ] Integrate Web Speech API for transcription
+   - [ ] Implement Levenshtein distance calculation
+   - Validation: Test with various accents and noise levels
+
+2. Add audio quality validation
+   - [ ] Implement background noise detection
+   - [ ] Add audio level normalization
+   - [ ] Create feedback system for audio issues
+   - Validation: Test with various microphones and environments
+
+### Phase B: Interview Flow & Question Engine
+
+#### B.1 Question Type Differentiation
+1. Implement question data structure
+   - [ ] Create database schema for question types
+   - [ ] Add API endpoints for question retrieval
+   - [ ] Implement question sequencing logic
+   - Validation: Verify correct question flow
+
+2. Develop question rendering components
+   - [ ] Create conversational question component
+   - [ ] Build coding question component with editor
+   - [ ] Implement question timer system
+   - Validation: Test with various question types
+
+#### B.2 Answering Controls & State Management
+1. Implement recording controls
+   - [ ] Create recording state machine
+   - [ ] Build UI controls for recording
+   - [ ] Add audio visualization
+   - Validation: Test recording flow
+
+2. Develop answer submission system
+   - [ ] Create answer validation logic
+   - [ ] Implement submission API
+   - [ ] Add confirmation and feedback UI
+   - Validation: Test submission with various answer types
+
+### Phase C: Admin Flow
+
+#### C.1 User & Credential Management
+1. Build admin dashboard
+   - [ ] Create user management interface
+   - [ ] Implement user CRUD operations
+   - [ ] Add role assignment functionality
+   - Validation: Test user management workflow
+
+2. Implement access control system
+   - [ ] Create API for user status updates
+   - [ ] Add email invitation system
+   - [ ] Implement access revocation
+   - Validation: Verify access control enforcement
+
+#### C.2 Subscription-Based Access Control
+1. Implement subscription model
+   - [ ] Create organization and subscription tables
+   - [ ] Add subscription status checks
+   - [ ] Implement access middleware
+   - Validation: Test with various subscription states
+
+### Phase D: Interviewer Flow
+
+#### D.1 Test Creation Module
+1. Build test creation interface
+   - [ ] Create test details form
+   - [ ] Add job description and resume upload
+   - [ ] Implement manual question creation
+   - [ ] Add proctoring settings with third-camera option toggle
+   - Validation: Test creation workflow
+
+#### D.2 AI-Powered Question Generation
+1. Implement AI question generation
+   - [ ] Create prompt engineering for LLM
+   - [ ] Build API for question generation
+   - [ ] Add question editing interface
+   - Validation: Test quality of generated questions
+
+#### D.3 Candidate Management & Test Distribution
+1. Build candidate management system
+   - [ ] Create candidate entry form
+   - [ ] Implement CSV bulk upload
+   - [ ] Add candidate list view
+   - Validation: Test candidate management
+
+2. Implement test assignment system
+   - [ ] Create unique test link generation
+   - [ ] Build assignment API
+   - [ ] Add email notification system
+   - Validation: Test assignment workflow
+
+## Original Implementation Plan
+
 ## Phase 1: Development Environment Setup
 
 ### 1.1 Local Development Environment
@@ -199,3 +313,12 @@
 - Response time <200ms for API calls
 - Zero security vulnerabilities
 - 99.9% uptime achieved
+
+## New Feature Success Criteria
+- Third-camera setup correctly validates camera position >90% of the time when enabled
+- System functions properly with or without third-camera setup (optional feature)
+- Voice recognition test achieves >85% accuracy across accents
+- Question type differentiation works correctly for all question types
+- Admin dashboard successfully manages users and access control
+- AI question generation produces relevant questions based on job descriptions
+- Test distribution system handles bulk assignments without errors

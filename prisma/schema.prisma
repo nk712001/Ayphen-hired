@@ -44,11 +44,14 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  role          String    @default("USER")
+  role          String    @default("USER") // "USER", "ADMIN", "INTERVIEWER"
   phone         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   password      String?
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  tests         Test[]
 }
 
 model VerificationToken {
@@ -57,4 +60,107 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Organization {
+  id                String    @id @default(cuid())
+  name              String
+  subscriptionStatus String    @default("trial") // "trial", "active", "expired"
+  expiryDate        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  users             User[]
+}
+
+model Test {
+  id                     String    @id @default(cuid())
+  title                  String
+  jobDescription         String?   @db.Text
+  resumeUrl              String?
+  duration               Int       // in minutes
+  requiresSecondaryCamera Boolean   @default(false)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  createdBy              String
+  user                   User      @relation(fields: [createdBy], references: [id])
+  questions              Question[]
+  assignments            TestAssignment[]
+}
+
+model Question {
+  id            String    @id @default(cuid())
+  testId        String
+  type          String    // "conversational" or "coding"
+  text          String    @db.Text
+  timeToStart   Int?      // Seconds to start answering, null for coding questions
+  difficulty    String?   // "Easy", "Intermediate", "Hard"
+  order         Int       // Question order in the test
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  test          Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+}
+
+model Candidate {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  resumeUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  assignments   TestAssignment[]
+}
+
+model TestAssignment {
+  id            String    @id @default(cuid())
+  testId        String
+  candidateId   String
+  uniqueLink    String    @unique
+  status        String    @default("pending") // "pending", "in_progress", "completed"
+  createdAt     DateTime  @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  test          Test      @relation(fields: [testId], references: [id])
+  candidate     Candidate @relation(fields: [candidateId], references: [id])
+  proctorSessions ProctorSession[]
+  answers       Answer[]
+}
+
+model Answer {
+  id               String    @id @default(cuid())
+  questionId       String
+  testAssignmentId String
+  content          String?   @db.Text
+  recordingUrl     String?
+  codeSubmission   String?   @db.Text
+  startedAt        DateTime?
+  submittedAt      DateTime?
+  question         Question  @relation(fields: [questionId], references: [id])
+  testAssignment   TestAssignment @relation(fields: [testAssignmentId], references: [id])
+}
+
+model ProctorSession {
+  id                String    @id @default(cuid())
+  testAssignmentId  String
+  startedAt         DateTime  @default(now())
+  endedAt           DateTime?
+  primaryCameraActive Boolean   @default(true)
+  secondaryCameraActive Boolean   @default(false)
+  secondaryCameraRequired Boolean   @default(false)
+  microphoneActive  Boolean   @default(true)
+  testAssignment    TestAssignment @relation(fields: [testAssignmentId], references: [id])
+  violations        Violation[]
+}
+
+model Violation {
+  id               String    @id @default(cuid())
+  proctorSessionId String
+  type             String    // "face_violation", "gaze_violation", "audio_violation", "object_violation"
+  severity         String    // "CRITICAL", "MAJOR", "MINOR"
+  description      String?
+  timestamp        DateTime  @default(now())
+  evidenceUrl      String?
+  cameraSource     String?   // "primary", "secondary"
+  status           String    @default("PENDING_REVIEW") // "PENDING_REVIEW", "CONFIRMED", "DISMISSED"
+  proctorSession   ProctorSession @relation(fields: [proctorSessionId], references: [id])
 }

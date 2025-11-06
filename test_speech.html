@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Speech Recognition Test</title>
+</head>
+<body>
+    <h1>Speech Recognition Test</h1>
+    <div id="status">Initializing...</div>
+    <div id="results"></div>
+    
+    <script>
+        async function testSpeechRecognition() {
+            const sessionId = `test_${Date.now()}`;
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                // Initialize session
+                statusDiv.textContent = 'Initializing session...';
+                const initResponse = await fetch('/api/setup/speech-test/init-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                
+                const initResult = await initResponse.json();
+                console.log('Init result:', initResult);
+                resultsDiv.innerHTML += `<p><strong>Init:</strong> ${JSON.stringify(initResult)}</p>`;
+                
+                // Get sentence
+                statusDiv.textContent = 'Getting test sentence...';
+                const sentenceResponse = await fetch('/api/setup/speech-test/get-sentence', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                
+                const sentenceResult = await sentenceResponse.json();
+                console.log('Sentence result:', sentenceResult);
+                resultsDiv.innerHTML += `<p><strong>Sentence:</strong> ${JSON.stringify(sentenceResult)}</p>`;
+                
+                // Test speech processing with dummy audio
+                statusDiv.textContent = 'Testing speech processing...';
+                const processResponse = await fetch('/api/setup/speech-test/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        session_id: sessionId, 
+                        audio_data: 'dGVzdCBhdWRpbyBkYXRh', // base64 encoded "test audio data"
+                        reference_text: sentenceResult.sentence || 'test sentence'
+                    })
+                });
+                
+                const processResult = await processResponse.json();
+                console.log('Process result:', processResult);
+                resultsDiv.innerHTML += `<p><strong>Process:</strong> ${JSON.stringify(processResult, null, 2)}</p>`;
+                
+                statusDiv.textContent = 'Test completed!';
+                
+                // Check if we got real transcription
+                if (processResult.transcribed_text && processResult.transcribed_text !== null) {
+                    resultsDiv.innerHTML += `<p style="color: green;"><strong>✅ Real transcription received!</strong></p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: red;"><strong>❌ Still using mock data</strong></p>`;
+                }
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                statusDiv.textContent = 'Test failed!';
+                resultsDiv.innerHTML += `<p style="color: red;"><strong>Error:</strong> ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        window.onload = testSpeechRecognition;
+    </script>
+</body>
+</html>

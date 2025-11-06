@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Connection Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .log {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: #dff0d8;
+      color: #3c763d;
+    }
+    .error {
+      background-color: #f2dede;
+      color: #a94442;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebSocket Connection Test</h1>
+  
+  <div class="container">
+    <h2>Connection Information</h2>
+    <p><strong>Page URL:</strong> <span id="pageUrl"></span></p>
+    <p><strong>Page Protocol:</strong> <span id="pageProtocol"></span></p>
+    <p><strong>Secure Context:</strong> <span id="secureContext"></span></p>
+    <p><strong>AI Service URL:</strong> https://127.0.0.1:8001</p>
+    <p><strong>Expected WebSocket URL:</strong> wss://127.0.0.1:8001/ws/proctor/test-session</p>
+  </div>
+  
+  <div class="container">
+    <h2>Test WebSocket Connection</h2>
+    <button id="testWs">Test Connection</button>
+    <button id="testHealth">Test AI Service Health</button>
+    <div id="status" class="status"></div>
+  </div>
+  
+  <div class="log" id="log">
+    <p>Connection logs will appear here...</p>
+  </div>
+  
+  <script>
+    // Update connection information
+    document.getElementById('pageUrl').textContent = window.location.href;
+    document.getElementById('pageProtocol').textContent = window.location.protocol;
+    document.getElementById('secureContext').textContent = window.isSecureContext ? 'Yes' : 'No';
+    
+    // Log function
+    function log(message, isError = false) {
+      const logElement = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.style.color = isError ? '#a94442' : '#333';
+      entry.style.borderBottom = '1px solid #eee';
+      entry.style.padding = '5px 0';
+      entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+      
+      // Also log to console
+      if (isError) {
+        console.error(message);
+      } else {
+        console.log(message);
+      }
+    }
+    
+    // Update status
+    function updateStatus(message, isError = false) {
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = message;
+      statusElement.className = 'status ' + (isError ? 'error' : 'success');
+    }
+    
+    // Test WebSocket connection
+    document.getElementById('testWs').addEventListener('click', function() {
+      log('Testing WebSocket connection...');
+      updateStatus('Connecting...', false);
+      
+      try {
+        // Configuration
+        const TEST_SESSION_ID = 'test-session';
+        const AI_SERVICE_URL = 'https://127.0.0.1:8001';
+        
+        // Convert HTTP/HTTPS to WS/WSS
+        let baseUrl = AI_SERVICE_URL;
+        if (baseUrl.startsWith('http://')) {
+          baseUrl = baseUrl.replace('http://', 'ws://');
+        } else if (baseUrl.startsWith('https://')) {
+          baseUrl = baseUrl.replace('https://', 'wss://');
+        }
+        
+        // Extract hostname without protocol
+        let hostname = baseUrl;
+        if (hostname.startsWith('ws://')) hostname = hostname.substring(5);
+        if (hostname.startsWith('wss://')) hostname = hostname.substring(6);
+        
+        // Use explicit localhost IP for better compatibility
+        if (hostname.startsWith('localhost:')) {
+          hostname = hostname.replace('localhost', '127.0.0.1');
+        }
+        
+        // Construct final WebSocket URL
+        const protocol = baseUrl.startsWith('wss://') ? 'wss://' : 'ws://';
+        const wsUrl = `${protocol}${hostname}/ws/proctor/${TEST_SESSION_ID}`;
+        
+        log(`Attempting to connect to WebSocket URL: ${wsUrl}`);
+        
+        // Create WebSocket connection
+        const ws = new WebSocket(wsUrl);
+        
+        ws.onopen = () => {
+          log('✅ WebSocket connection established successfully!');
+          log(`Protocol used: ${ws.url.startsWith('wss://') ? 'WSS (Secure)' : 'WS (Insecure)'}`);
+          updateStatus('Connected successfully!', false);
+          
+          // Send a test message
+          ws.send(JSON.stringify({
+            type: 'test',
+            data: 'connection-test'
+          }));
+          
+          // Close after 5 seconds
+          setTimeout(() => {
+            ws.close();
+            log('Test completed. Connection closed.');
+          }, 5000);
+        };
+        
+        ws.onmessage = (event) => {
+          log(`Received message from server: ${event.data}`);
+        };
+        
+        ws.onerror = (error) => {
+          log('❌ WebSocket connection error', true);
+          updateStatus('Connection failed! See logs for details.', true);
+          
+          // Check if this might be a mixed content issue
+          if (window.isSecureContext) {
+            log('This error may be due to mixed content restrictions.', true);
+            log('The browser is blocking non-secure WebSocket (ws://) connections from a secure context (https://).', true);
+          }
+        };
+        
+        ws.onclose = (event) => {
+          log(`WebSocket closed with code ${event.code}, reason: ${event.reason}`);
+          if (event.code !== 1000) {
+            updateStatus(`Connection closed with code ${event.code}`, true);
+          }
+        };
+      } catch (error) {
+        log(`Error creating WebSocket: ${error.message}`, true);
+        updateStatus('Failed to create WebSocket connection', true);
+      }
+    });
+    
+    // Test AI Service Health
+    document.getElementById('testHealth').addEventListener('click', function() {
+      log('Testing AI service health...');
+      updateStatus('Checking AI service...', false);
+      
+      fetch('https://127.0.0.1:8001/health', { 
+        method: 'GET',
+        mode: 'no-cors'
+      })
+        .then(response => {
+          log(`AI service health check response status: ${response.status}`);
+          updateStatus('AI service is running', false);
+          return response.text();
+        })
+        .then(data => {
+          log(`AI service health data: ${data}`);
+        })
+        .catch(e => {
+          log(`AI service health check failed: ${e.message}`, true);
+          updateStatus('AI service health check failed', true);
+        });
+    });
+  </script>
+</body>
+</html>

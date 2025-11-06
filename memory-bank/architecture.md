@@ -5,8 +5,17 @@
 ayphen-hire/
 ├── frontend/               # Next.js frontend application
 │   ├── app/               # App router and pages
+│   │   ├── admin/         # Admin dashboard and management
+│   │   ├── interview/     # Interview flow and question engine
+│   │   └── setup/         # Pre-interview setup and calibration
 │   ├── components/        # Reusable UI components
+│   │   ├── proctoring/    # Proctoring-related components
+│   │   ├── interview/     # Interview-related components
+│   │   └── admin/         # Admin dashboard components
 │   ├── lib/              # Utility functions and hooks
+│   │   ├── proctoring/   # Proctoring context and utilities
+│   │   ├── interview/    # Interview state management
+│   │   └── admin/        # Admin utilities and APIs
 │   ├── public/           # Static assets
 │   ├── .eslintrc.json    # ESLint + TypeScript config
 │   └── tsconfig.json     # TypeScript strict config
@@ -26,6 +35,154 @@ memory-bank/
 - **implementation-plan.md**: Provides a phased, step-by-step guide to implementing the system. Each step includes validation criteria and links directly to tests or configuration files. This file is the authoritative source for development workflow and success criteria.
 - **progress.md**: Tracks real implementation progress, validation status, and provides guidance for future developers. It is updated after each phase or major validation, and includes tips on extending tests, maintaining dependencies, and documenting manual steps.
 - **architecture.md** (this file): Documents the project structure, explains the purpose of each file in memory-bank, and describes the relationships between documentation and implementation. It also captures architectural insights and standards for future contributors.
+
+## Architectural Insights (as of 2025-09-24)
+
+### AI Proctoring Platform Architecture (2025-09-24)
+
+#### Database Schema Extension
+The database schema will be extended with the following models to support the AI Proctoring Platform:
+
+```prisma
+model Test {
+  id            String    @id @default(cuid())
+  name          String
+  jobDescription String?  @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String    // User ID
+  questions     Question[]
+  assignments   TestAssignment[]
+  user          User      @relation(fields: [createdBy], references: [id])
+}
+
+model Question {
+  id            String    @id @default(cuid())
+  testId        String
+  type          String    // "conversational" or "coding"
+  text          String    @db.Text
+  timeToStart   Int?      // Seconds to start answering, null for coding questions
+  difficulty    String?   // "Easy", "Intermediate", "Hard"
+  order         Int       // Question order in the test
+  test          Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers       Answer[]
+}
+
+model TestAssignment {
+  id            String    @id @default(cuid())
+  testId        String
+  candidateId   String
+  uniqueLink    String    @unique
+  status        String    @default("pending") // "pending", "in_progress", "completed"
+  createdAt     DateTime  @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  test          Test      @relation(fields: [testId], references: [id])
+  candidate     Candidate @relation(fields: [candidateId], references: [id])
+  proctoringSessions ProctorSession[]
+}
+
+model Candidate {
+  id            String    @id @default(cuid())
+  name          String
+  email         String
+  resumeUrl     String?
+  createdAt     DateTime  @default(now())
+  assignments   TestAssignment[]
+}
+
+model Answer {
+  id            String    @id @default(cuid())
+  questionId    String
+  testAssignmentId String
+  content       String?   @db.Text
+  recordingUrl  String?
+  codeSubmission String?  @db.Text
+  startedAt     DateTime?
+  submittedAt   DateTime?
+  question      Question  @relation(fields: [questionId], references: [id])
+  testAssignment TestAssignment @relation(fields: [testAssignmentId], references: [id])
+}
+
+model ProctorSession {
+  id            String    @id @default(cuid())
+  testAssignmentId String
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+  violations    Violation[]
+  testAssignment TestAssignment @relation(fields: [testAssignmentId], references: [id])
+}
+
+model Violation {
+  id            String    @id @default(cuid())
+  proctorSessionId String
+  type          String
+  severity      String
+  message       String?
+  timestamp     DateTime  @default(now())
+  proctorSession ProctorSession @relation(fields: [proctorSessionId], references: [id])
+}
+
+// Extend User model
+model User {
+  // Existing fields...
+  role          String    @default("USER") // "USER", "ADMIN", "INTERVIEWER"
+  tests         Test[]
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+}
+
+model Organization {
+  id            String    @id @default(cuid())
+  name          String
+  subscriptionStatus String @default("trial") // "trial", "active", "expired"
+  expiryDate    DateTime?
+  users         User[]
+}
+```
+
+#### Component Architecture
+
+1. **Pre-Interview Setup & Calibration**
+   - `frontend/components/setup/ThirdCameraSetup.tsx`: Handles optional third-camera positioning and validation with step-by-step UI
+   - `frontend/components/setup/MicrophoneTest.tsx`: Implements voice recognition test with audio quality analysis
+   - `frontend/app/setup/page.tsx`: Main setup flow with progress tracking
+   - `frontend/components/ui/steps.tsx`: Reusable step progress component
+   - `frontend/app/api/setup/validate-camera/route.ts`: API route for camera validation
+   - `frontend/app/api/setup/speech-test/get-sentence/route.ts`: API route for retrieving test sentences
+   - `frontend/app/api/setup/speech-test/process/route.ts`: API route for processing speech recognition
+   - `frontend/app/api/setup/camera/configure/route.ts`: API route for configuring camera settings
+
+2. **Interview Flow & Question Engine**
+   - `frontend/components/interview/QuestionRenderer.tsx`: Renders different question types
+   - `frontend/components/interview/ConversationalQuestion.tsx`: UI for conversational questions
+   - `frontend/components/interview/CodingQuestion.tsx`: Code editor for coding questions
+   - `frontend/lib/interview/questionState.ts`: State management for question flow
+
+3. **Admin Flow**
+   - `frontend/components/admin/UserManagement.tsx`: User CRUD operations
+   - `frontend/components/admin/SubscriptionManagement.tsx`: Subscription management
+   - `frontend/lib/admin/accessControl.ts`: Access control logic
+
+4. **Interviewer Flow**
+   - `frontend/components/admin/TestCreation.tsx`: Test creation interface
+   - `frontend/components/admin/QuestionGeneration.tsx`: AI question generation
+   - `frontend/components/admin/CandidateManagement.tsx`: Candidate management
+   - `frontend/components/admin/ProctoringSettings.tsx`: Configuration for proctoring options including third-camera toggle
+   - `frontend/lib/admin/testDistribution.ts`: Test assignment and link generation
+
+5. **AI Service Extensions**
+   - `ai_service/modules/multi_camera.py`: Multi-camera support with validation for both primary and secondary cameras
+     - Implements camera position validation logic
+     - Detects hands and keyboard visibility in secondary camera
+     - Provides guidance for optimal camera positioning
+     - Supports optional secondary camera configuration
+   - `ai_service/modules/speech_recognition.py`: Enhanced speech processing for voice recognition test
+     - Analyzes audio quality (volume, clarity, background noise)
+     - Provides speech recognition with accuracy scoring
+     - Generates feedback messages based on audio analysis
+     - Includes test sentence generation for voice recognition
+   - `ai_service/modules/question_generation.py`: LLM integration for question generation (planned for Phase B)
 
 ## Architectural Insights (as of 2025-09-12)
 
@@ -248,6 +405,8 @@ These files cover the most critical user journeys and are located in `frontend/c
 - **gaze_tracking.py**: Implements eye landmark detection, gaze direction calculation, attention monitoring, and violation detection. Designed for integration with face detection and attention analytics.
 - **object_detection.py**: Integrates YOLOv5 for object detection. Detects prohibited items, tracks objects, and computes confidence scores. Used in real-time proctoring.
 - **audio_processing.py**: Provides voice activity detection, sound classification, noise filtering, and audio segmentation. Supports both live and recorded audio streams.
+- **multi_camera.py**: Manages multiple camera streams for enhanced proctoring. Validates camera positions, detects hands and keyboard visibility, and provides positioning guidance.
+- **speech_recognition.py**: Handles speech recognition and audio quality analysis for the voice recognition test. Analyzes volume, clarity, background noise, and speech recognition accuracy.
 
 ### design-document.md
 - System architecture and components
@@ -299,3 +458,15 @@ These files cover the most critical user journeys and are located in `frontend/c
    - Tests provide regression protection for core detection, tracking, and analytics logic.
    - Synthetic data in tests ensures reproducibility and CI/CD reliability.
    - Future enhancements should maintain this pattern: every new module must have a corresponding, comprehensive test file.
+
+5. Database Schema ↔ Frontend Components
+   - The Prisma schema models directly inform the structure of frontend components
+   - Each model type has corresponding UI components for creation, editing, and display
+   - Changes to the schema should be reflected in component updates
+
+6. AI Proctoring Platform Components
+   - Pre-Interview Setup components use the existing face detection and audio processing modules
+   - Third-camera setup is optional and configurable by interviewers during test creation
+   - Interview Flow components interact with the database for question retrieval and answer submission
+   - Admin components manage users, tests, and subscriptions through the database
+   - All components follow the existing security architecture for authentication and authorization
