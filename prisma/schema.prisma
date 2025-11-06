@@ -193,8 +193,14 @@ model ProctorSession {
   secondaryCameraActive Boolean   @default(false)
   secondaryCameraRequired Boolean   @default(false)
   microphoneActive  Boolean   @default(true)
+  voiceCalibrationComplete Boolean @default(false)
+  thirdCameraSetupComplete Boolean @default(false)
+  browserInfo       Json?     // Browser and system information
+  ipAddress         String?
+  userAgent         String?
   testAssignment    TestAssignment @relation(fields: [testAssignmentId], references: [id])
   violations        Violation[]
+  calibrationData   Json?     // Voice calibration and camera setup data
 }
 
 model Violation {
