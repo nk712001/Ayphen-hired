@@ -144,14 +144,21 @@ model TestAssignment {
   testId        String
   candidateId   String
   uniqueLink    String    @unique
-  status        String    @default("pending") // "pending", "in_progress", "completed"
-  createdAt     DateTime  @default(now())
+  status        String    @default("pending") // "pending", "in_progress", "completed", "expired", "cancelled"
+  emailSent     Boolean   @default(false)
+  emailSentAt   DateTime?
+  expiresAt     DateTime?
   startedAt     DateTime?
   completedAt   DateTime?
+  currentQuestionIndex Int @default(0)
+  overallProgress Float   @default(0.0)
+  notes         String?   @db.Text
   test          Test      @relation(fields: [testId], references: [id])
   candidate     Candidate @relation(fields: [candidateId], references: [id])
   proctorSessions ProctorSession[]
   answers       Answer[]
+  inviterId     String?   // User who sent the invitation
+  inviter       User?     @relation("Inviter", fields: [inviterId], references: [id])
 }
 
 model Answer {
