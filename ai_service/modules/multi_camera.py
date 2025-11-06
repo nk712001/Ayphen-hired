@@ -9,6 +9,7 @@ class MultiCameraManager:
     """
     Manages multiple camera streams for enhanced proctoring.
     Supports primary (face) and secondary (environment) cameras.
+    Enhanced with setup guidance and validation features.
     """
     def __init__(self):
         self.primary_detector = FaceDetector()
@@ -21,6 +22,15 @@ class MultiCameraManager:
         self.position_history = []
         self.history_size = 10
         self.secondary_analysis_cache = None
+
+        # Enhanced features for third-camera setup
+        self.setup_overlay_active = False
+        self.setup_guidance_score = 0.0
+        self.face_detection_accuracy = 0.0
+        self.interviewer_control_enabled = False
+        self.third_camera_quality_threshold = 0.9
+        self.setup_validation_frames = []
+        self.max_validation_frames = 30
         
     def _decode_image(self, base64_string: str) -> np.ndarray:
         """Convert base64 image data to numpy array"""
