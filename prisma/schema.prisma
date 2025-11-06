@@ -56,6 +56,7 @@ model User {
   tests         Test[]
   auditLogs     AuditLog[]
   invitations   Invitation[] @relation("InvitedBy")
+  sentInvitations TestAssignment[] @relation("Inviter")
 }
 
 model VerificationToken {
