@@ -165,11 +165,21 @@ model Answer {
   id               String    @id @default(cuid())
   questionId       String
   testAssignmentId String
+  type             String    // "audio", "code", "text"
   content          String?   @db.Text
   recordingUrl     String?
   codeSubmission   String?   @db.Text
+  fileName         String?
+  fileSize         Int?
+  fileHash         String?
+  recordingMetadata Json?     // Metadata for audio recordings
   startedAt        DateTime?
   submittedAt      DateTime?
+  reviewStatus     String    @default("pending") // "pending", "reviewed", "flagged"
+  score            Float?
+  feedback         String?   @db.Text
+  language         String?   // For code answers
+  duration         Float?    // Duration in seconds for audio answers
   question         Question  @relation(fields: [questionId], references: [id])
   testAssignment   TestAssignment @relation(fields: [testAssignmentId], references: [id])
 }
