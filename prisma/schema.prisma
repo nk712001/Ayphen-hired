@@ -108,8 +108,15 @@ model Question {
   type          String    // "conversational" or "coding"
   text          String    @db.Text
   timeToStart   Int?      // Seconds to start answering, null for coding questions
+  timeLimit     Int?      // Time limit in minutes for coding questions
   difficulty    String?   // "Easy", "Intermediate", "Hard"
   order         Int       // Question order in the test
+  hints         String?   @db.Text
+  requiredLanguage String? // For coding questions
+  maxRecordingTime Int?  // For conversational questions in seconds
+  tags          String[]  @default([])
+  aiGenerated   Boolean   @default(false)
+  prompt        String?   @db.Text // AI generation prompt if applicable
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   test          Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
