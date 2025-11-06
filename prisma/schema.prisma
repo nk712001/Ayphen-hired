@@ -51,7 +51,11 @@ model User {
   password      String?
   organization  Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
+  lastLoginAt   DateTime?
+  status        String    @default("active") // "active", "inactive", "suspended"
   tests         Test[]
+  auditLogs     AuditLog[]
+  invitations   Invitation[] @relation("InvitedBy")
 }
 
 model VerificationToken {
