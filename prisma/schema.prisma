@@ -127,7 +127,13 @@ model Candidate {
   id            String    @id @default(cuid())
   name          String
   email         String
+  phone         String?
   resumeUrl     String?
+  experience    String?   @db.Text
+  skills        String[]  @default([])
+  notes         String?   @db.Text
+  source        String?   // "manual", "csv_import", "api"
+  status        String    @default("active") // "active", "inactive", "blacklisted"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   assignments   TestAssignment[]
