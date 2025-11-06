@@ -85,12 +85,21 @@ model Test {
   resumeUrl              String?
   duration               Int       // in minutes
   requiresSecondaryCamera Boolean   @default(false)
+  enableAIProctoring      Boolean   @default(true)
+  enableVoiceRecognition  Boolean   @default(true)
+  thirdCameraOptional     Boolean   @default(false)
+  proctoringLevel        String    @default("standard") // "basic", "standard", "strict"
+  jobRequirements        String?   @db.Text
+  difficulty             String?   // "Easy", "Intermediate", "Hard"
+  tags                   String[]  @default([])
+  status                 String    @default("draft") // "draft", "active", "archived"
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   createdBy              String
   user                   User      @relation(fields: [createdBy], references: [id])
   questions              Question[]
   assignments            TestAssignment[]
+  aiGeneratedQuestions   Boolean   @default(false)
 }
 
 model Question {
