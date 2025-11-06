@@ -206,12 +206,80 @@ model ProctorSession {
 model Violation {
   id               String    @id @default(cuid())
   proctorSessionId String
-  type             String    // "face_violation", "gaze_violation", "audio_violation", "object_violation"
+  type             String    // "face_violation", "gaze_violation", "audio_violation", "object_violation", "secondary_camera_violation"
   severity         String    // "CRITICAL", "MAJOR", "MINOR"
   description      String?
   timestamp        DateTime  @default(now())
   evidenceUrl      String?
+  evidenceData     Json?     // Additional evidence data
   cameraSource     String?   // "primary", "secondary"
   status           String    @default("PENDING_REVIEW") // "PENDING_REVIEW", "CONFIRMED", "DISMISSED"
+  aiConfidence     Float?    // AI detection confidence score
+  suppressed       Boolean   @default(false) // Whether violation was suppressed by secondary camera analysis
   proctorSession   ProctorSession @relation(fields: [proctorSessionId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // "create", "update", "delete", "login", "logout", "role_change"
+  resource    String   // Resource type that was acted upon
+  resourceId  String?  // ID of the resource
+  oldValue    Json?    // Previous value for updates
+  newValue    Json?    // New value for updates
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Invitation {
+  id          String   @id @default(cuid())
+  email       String
+  token       String   @unique
+  role        String   @default("USER") // "USER", "ADMIN", "INTERVIEWER"
+  organizationId String?
+  inviterId   String   // User who sent the invitation
+  acceptedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  inviter     User     @relation("InvitedBy", fields: [inviterId], references: [id])
+}
+
+model EmailNotification {
+  id          String   @id @default(cuid())
+  to          String
+  subject     String
+  template    String   // Template name used
+  data        Json?    // Template data
+  status      String   @default("pending") // "pending", "sent", "failed", "bounced"
+  sentAt      DateTime?
+  error       String?
+  retryCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QuestionTransition {
+  id              String @id @default(cuid())
+  testId          String
+  fromQuestionId  String?
+  toQuestionId    String
+  condition       String? // Condition for transition
+  createdAt       DateTime @default(now())
+}
+
+model CodeExecutionResult {
+  id          String   @id @default(cuid())
+  answerId    String
+  language    String
+  code        String   @db.Text
+  input       String?  @db.Text
+  output      String?  @db.Text
+  error       String?  @db.Text
+  executionTime Int     // Execution time in milliseconds
+  memoryUsage Int?    // Memory usage in bytes
+  status      String   // "success", "error", "timeout"
+  createdAt   DateTime @default(now())
 }
