@@ -368,7 +368,7 @@ async def health_check():
     else:
         return {"status": "not_ready"}
 
-@app.post("/setup/speech-test/get-sentence")
+@app.post("/api/speech-test/get-sentence")
 async def get_test_sentence(request: Request):
     """Get a random sentence for the speech recognition test"""
     try:
@@ -392,7 +392,7 @@ async def get_test_sentence(request: Request):
             content={"status": "error", "message": str(e)}
         )
 
-@app.post("/setup/speech-test/init-session")
+@app.post("/api/speech-test/init-session")
 async def init_speech_session(request: Request):
     """Initialize a speech recognition session"""
     try:
@@ -437,7 +437,7 @@ async def init_speech_session(request: Request):
             content={"status": "error", "message": str(e)}
         )
 
-@app.post("/setup/speech-test/process")
+@app.post("/api/speech-test/process")
 async def process_speech_test(request: Request):
     """Process speech recognition test with AI-powered transcription and comparison"""
     try:
@@ -460,12 +460,9 @@ async def process_speech_test(request: Request):
         
         session = manager.sessions[session_id]
         
-        # Set the reference text if provided
-        if reference_text:
-            session.speech_recognizer.current_sentence = reference_text
-        
-        # Process the audio with enhanced speech recognition
-        result = session.speech_recognizer.process_audio_chunk(audio_data)
+        # Process the complete audio recording (not streaming chunks)
+        print(f"[SPEECH] Processing complete audio for session {session_id}")
+        result = session.speech_recognizer.process_complete_audio(audio_data, reference_text)
         
         if result.get('status') == 'complete':
             # Convert numpy types to Python native types for JSON serialization

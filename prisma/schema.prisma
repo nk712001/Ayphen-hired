@@ -46,12 +46,17 @@ model User {
   sessions      Session[]
   role          String    @default("USER") // "USER", "ADMIN", "INTERVIEWER"
   phone         String?
+  resumeUrl     String?   // Resume file URL for candidates
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   password      String?
   organization  Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
   tests         Test[]
+  testAssignments TestAssignment[]
+  testAttempts  TestAttempt[]
+
+  @@map(name: "User")
 }
 
 model VerificationToken {
@@ -72,10 +77,24 @@ model Organization {
   users             User[]
 }
 
+model TestAIAnalysis {
+  id                  String    @id @default(cuid())
+  testId              String    @unique
+  test                Test      @relation(fields: [testId], references: [id])
+  overallScore        Float     // 0-100
+  technicalScore      Float     // 0-100
+  communicationScore  Float     // 0-100
+  confidenceScore     Float     // 0-100
+  detailedAnalysis    String    // JSON string of detailed analysis
+  recommendations     String    // JSON string of recommendations
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
 model Test {
   id                     String    @id @default(cuid())
   title                  String
-  jobDescription         String?   @db.Text
+  jobDescription         String?
   resumeUrl              String?
   duration               Int       // in minutes
   requiresSecondaryCamera Boolean   @default(false)
@@ -85,13 +104,18 @@ model Test {
   user                   User      @relation(fields: [createdBy], references: [id])
   questions              Question[]
   assignments            TestAssignment[]
+  aiGenerated            Boolean   @default(false)
+  skillsRequired         String?   // JSON string of required skills
+  experienceLevel        String?   // Junior, Mid, Senior
+  aiAnalysis            TestAIAnalysis?
+  testAttempts          TestAttempt[]
 }
 
 model Question {
   id            String    @id @default(cuid())
   testId        String
   type          String    // "conversational" or "coding"
-  text          String    @db.Text
+  text          String
   timeToStart   Int?      // Seconds to start answering, null for coding questions
   difficulty    String?   // "Easy", "Intermediate", "Hard"
   order         Int       // Question order in the test
@@ -99,42 +123,25 @@ model Question {
   updatedAt     DateTime  @updatedAt
   test          Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
   answers       Answer[]
+  metadata      String?   // JSON string for question-specific data
+  testAnswers   TestAnswer[]
 }
 
-model Candidate {
-  id            String    @id @default(cuid())
-  name          String
-  email         String
-  resumeUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  assignments   TestAssignment[]
-}
 
-model TestAssignment {
-  id            String    @id @default(cuid())
-  testId        String
-  candidateId   String
-  uniqueLink    String    @unique
-  status        String    @default("pending") // "pending", "in_progress", "completed"
-  createdAt     DateTime  @default(now())
-  startedAt     DateTime?
-  completedAt   DateTime?
-  test          Test      @relation(fields: [testId], references: [id])
-  candidate     Candidate @relation(fields: [candidateId], references: [id])
-  proctorSessions ProctorSession[]
-  answers       Answer[]
-}
+
+
 
 model Answer {
   id               String    @id @default(cuid())
   questionId       String
   testAssignmentId String
-  content          String?   @db.Text
+  content          String?
   recordingUrl     String?
-  codeSubmission   String?   @db.Text
+  codeSubmission   String?
   startedAt        DateTime?
   submittedAt      DateTime?
+  aiScore          Float?
+  aiAnalysis       String?   // JSON string of AI analysis
   question         Question  @relation(fields: [questionId], references: [id])
   testAssignment   TestAssignment @relation(fields: [testAssignmentId], references: [id])
 }
@@ -150,6 +157,8 @@ model ProctorSession {
   microphoneActive  Boolean   @default(true)
   testAssignment    TestAssignment @relation(fields: [testAssignmentId], references: [id])
   violations        Violation[]
+  aiAnalysis       String?   // JSON string of AI analysis
+  testAttempt       TestAttempt?
 }
 
 model Violation {
@@ -163,4 +172,70 @@ model Violation {
   cameraSource     String?   // "primary", "secondary"
   status           String    @default("PENDING_REVIEW") // "PENDING_REVIEW", "CONFIRMED", "DISMISSED"
   proctorSession   ProctorSession @relation(fields: [proctorSessionId], references: [id])
+  aiAnalysis       String?   // JSON string of AI analysis
+}
+
+model TestAttempt {
+  id               String    @id @default(cuid())
+  testId           String
+  userId           String
+  startTime        DateTime  @default(now())
+  endTime          DateTime?
+  status           String    @default("IN_PROGRESS") // "IN_PROGRESS", "COMPLETED", "SUBMITTED", "TIMED_OUT"
+  timeLimit        Int       // in seconds
+  timeRemaining    Int?      // in seconds
+  score            Float?
+  maxScore         Float?
+  isProctored      Boolean   @default(true)
+  proctorSession   ProctorSession? @relation(fields: [proctorSessionId], references: [id])
+  proctorSessionId String? @unique
+  answers          TestAnswer[]
+  test             Test      @relation(fields: [testId], references: [id])
+  user             User      @relation(fields: [userId], references: [id])
+  testAssignment   TestAssignment? @relation(fields: [testAssignmentId], references: [id])
+  testAssignmentId String?
+  
+  @@index([userId])
+  @@index([testId])
+  @@index([status])
+}
+
+model TestAnswer {
+  id               String    @id @default(cuid())
+  attemptId        String
+  questionId       String
+  answer           String?   // JSON string of the answer
+  isFlagged        Boolean   @default(false)
+  timeSpent        Int?      // in seconds
+  score            Float?
+  feedback         String?
+  submittedAt      DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  question         Question  @relation(fields: [questionId], references: [id])
+  attempt          TestAttempt @relation(fields: [attemptId], references: [id])
+  
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+// TestAssignment model with relation to TestAttempts
+model TestAssignment {
+  id            String    @id @default(cuid())
+  testId        String
+  candidateId   String
+  uniqueLink    String    @unique
+  status        String    @default("pending") // "pending", "in_progress", "completed"
+  createdAt     DateTime  @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  test          Test      @relation(fields: [testId], references: [id])
+  candidate     User      @relation(fields: [candidateId], references: [id])
+  proctorSessions ProctorSession[]
+  answers       Answer[]
+  testAttempts  TestAttempt[]
+  
+  @@index([testId])
+  @@index([candidateId])
+  @@index([status])
 }
