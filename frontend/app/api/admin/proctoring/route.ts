@@ -46,18 +46,18 @@ export async function GET(request: Request) {
         // Calculate statistics
         const stats = {
             totalSessions: proctoringSessions.length,
-            activeSessions: proctoringSessions.filter(s => !s.endedAt).length,
-            totalViolations: proctoringSessions.reduce((sum, s) => sum + s.violations.length, 0),
+            activeSessions: proctoringSessions.filter((s: any) => !s.endedAt).length,
+            totalViolations: proctoringSessions.reduce((sum: number, s: any) => sum + s.violations.length, 0),
             criticalViolations: proctoringSessions.reduce(
-                (sum, s) => sum + s.violations.filter(v => v.severity === 'CRITICAL').length,
+                (sum: number, s: any) => sum + s.violations.filter((v: any) => v.severity === 'CRITICAL').length,
                 0
             ),
             majorViolations: proctoringSessions.reduce(
-                (sum, s) => sum + s.violations.filter(v => v.severity === 'MAJOR').length,
+                (sum: number, s: any) => sum + s.violations.filter((v: any) => v.severity === 'MAJOR').length,
                 0
             ),
             minorViolations: proctoringSessions.reduce(
-                (sum, s) => sum + s.violations.filter(v => v.severity === 'MINOR').length,
+                (sum: number, s: any) => sum + s.violations.filter((v: any) => v.severity === 'MINOR').length,
                 0
             ),
         };
