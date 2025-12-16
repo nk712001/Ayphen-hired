@@ -1,38 +1,45 @@
-FROM python:3.10-slim-bookworm
+# Build stage
+FROM python:3.10-slim-bookworm as builder
 
-# Install system dependencies required for OpenCV and Dlib
-# cmake and g++ are needed to compile dlib
-# libgl1-mesa-glx and libglib2.0-0 are for opencv
-# bzip2 is for unzipping the model file
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     cmake \
     g++ \
     make \
-    libgl1 \
-    libglib2.0-0 \
     bzip2 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy requirements first to leverage caching
-COPY requirements.txt .
-
-# Upgrade pip and build tools
+# Upgrade pip and install wheels
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install Python dependencies
-# Warning: dlib compilation can take a few minutes
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
 
-# Copy the application code
+# Install dependencies into a temporary directory
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Final stage
+FROM python:3.10-slim-bookworm
+
+WORKDIR /app
+
+# Install runtime dependencies for OpenCV and others
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed python packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
 COPY . .
 
-# Unzip the landmark predictor if it's zipped
+# Unzip landmark predictor
 RUN if [ -f "shape_predictor_68_face_landmarks.dat.bz2" ]; then bzip2 -d shape_predictor_68_face_landmarks.dat.bz2; fi
 
-# Expose port
 EXPOSE 8000
 
-# Command to run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

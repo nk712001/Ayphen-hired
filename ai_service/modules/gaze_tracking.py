@@ -13,7 +13,8 @@ class GazeTracker:
         if self.detector is None or self.predictor is None:
             import dlib
             self.detector = dlib.get_frontal_face_detector()
-            self.predictor = dlib.shape_predictor('models/shape_predictor_68_face_landmarks.dat')
+            # Path matching Dockerfile location (root of /app)
+            self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
         self.EAR_THRESHOLD = 0.2
         self.CONSECUTIVE_FRAMES = 3
         
