@@ -2,94 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { analyzeResumeIntelligently } from '@/lib/intelligent-fallback';
-import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Unused local functions removed to prevent build errors with missing API keys
 
-async function extractTextFromFile(file: File): Promise<string> {
-  // Simple text extraction - in production, use proper PDF/DOC parsers
-  const text = await file.text();
-  return text;
-}
-
-async function extractTextFromUrl(url: string): Promise<string> {
-  try {
-    // Generate realistic resume content based on URL patterns or return sample content
-    // This simulates what would be extracted from an actual resume
-    const sampleResumeContent = `
-John Doe
-Software Engineer
-Email: john.doe@email.com
-Phone: (555) 123-4567
-
-EXPERIENCE
-Senior Software Engineer | Tech Company | 2020-Present
-- Developed and maintained React applications with TypeScript
-- Built RESTful APIs using Node.js and Express
-- Implemented CI/CD pipelines using Docker and Jenkins
-- Led a team of 4 developers on multiple projects
-- Improved application performance by 40% through optimization
-
-Software Developer | StartupCorp | 2018-2020
-- Created responsive web applications using JavaScript and React
-- Worked with PostgreSQL and MongoDB databases
-- Collaborated with cross-functional teams in Agile environment
-- Implemented automated testing with Jest and Cypress
-
-EDUCATION
-Bachelor of Science in Computer Science
-University of Technology | 2014-2018
-GPA: 3.8/4.0
-
-SKILLS
-Programming Languages: JavaScript, TypeScript, Python, Java
-Frontend: React, Angular, Vue.js, HTML5, CSS3
-Backend: Node.js, Express, Django, Spring Boot
-Databases: PostgreSQL, MongoDB, MySQL, Redis
-Tools: Git, Docker, Jenkins, AWS, Kubernetes
-Testing: Jest, Cypress, Mocha, JUnit
-
-ACHIEVEMENTS
-- Led migration of legacy system to modern React architecture
-- Reduced deployment time by 60% through automation
-- Mentored 5 junior developers
-- Published technical articles on Medium with 10K+ views
-    `.trim();
-
-    return sampleResumeContent;
-  } catch (error) {
-    throw new Error('Failed to extract text from resume URL');
-  }
-}
-
-async function analyzeResumeWithAI(resumeText: string) {
-  const prompt = `Analyze this resume and extract:
-1. Technical skills (programming languages, frameworks, tools)
-2. Years of experience
-3. Education background
-4. Key achievements
-
-Resume text:
-${resumeText.substring(0, 3000)}
-
-Return a JSON object with: skills (array), experience (string), education (string), achievements (array)`;
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [{ role: 'user', content: prompt }],
-    temperature: 0.3,
-    max_tokens: 500
-  });
-
-  const content = response.choices[0].message.content;
-  if (!content) {
-    throw new Error('No response from OpenAI');
-  }
-
-  return JSON.parse(content);
-}
 
 export async function POST(request: NextRequest) {
   let savedResumeUrl: string | undefined = undefined;
