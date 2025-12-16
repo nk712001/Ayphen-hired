@@ -44,6 +44,7 @@ export default async function SuperAdminLayout({
                             width={200}
                             height={64}
                             className="h-16 w-auto object-contain"
+                            unoptimized
                         />
                     </div>
                 </div>
