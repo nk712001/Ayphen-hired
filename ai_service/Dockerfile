@@ -18,6 +18,9 @@ WORKDIR /app
 # Copy requirements first to leverage caching
 COPY requirements.txt .
 
+# Upgrade pip and build tools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Install Python dependencies
 # Warning: dlib compilation can take a few minutes
 RUN pip install --no-cache-dir -r requirements.txt
