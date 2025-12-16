@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-bookworm
 
 # Install system dependencies required for OpenCV and Dlib
 # cmake and g++ are needed to compile dlib
