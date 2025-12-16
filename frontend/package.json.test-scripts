@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test:multi-tenant": "jest --config=jest.multi-tenant.config.js",
+    "test:multi-tenant:watch": "jest --config=jest.multi-tenant.config.js --watch",
+    "test:multi-tenant:coverage": "jest --config=jest.multi-tenant.config.js --coverage",
+    "test:multi-tenant:run": "node __tests__/multi-tenant/test-runner.js"
+  }
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accept Self-Signed Certificates</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: #dff0d8;
+      color: #3c763d;
+    }
+    .error {
+      background-color: #f2dede;
+      color: #a94442;
+    }
+    .warning {
+      background-color: #fcf8e3;
+      color: #8a6d3b;
+    }
+    .step {
+      margin-bottom: 30px;
+    }
+    .step h3 {
+      margin-bottom: 10px;
+    }
+    img {
+      max-width: 100%;
+      border: 1px solid #ddd;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Accept Self-Signed Certificates</h1>
+  
+  <div class="container warning">
+    <h2>⚠️ Certificate Warning</h2>
+    <p>You're seeing WebSocket connection errors because your browser is rejecting the self-signed certificates used for development.</p>
+    <p>To fix this issue, you need to manually accept the certificates for both the frontend and AI service.</p>
+  </div>
+  
+  <div class="step">
+    <h3>Step 1: Accept the Frontend Certificate</h3>
+    <p>You've already done this if you can see this page. If not, click the link below:</p>
+    <a href="https://localhost:3000" class="button" target="_blank">Accept Frontend Certificate</a>
+  </div>
+  
+  <div class="step">
+    <h3>Step 2: Accept the AI Service Certificate</h3>
+    <p>Click the button below to open the AI service health endpoint. You'll see a security warning:</p>
+    <a href="https://127.0.0.1:8000/health" class="button" target="_blank">Accept AI Service Certificate</a>
+    
+    <div class="container">
+      <h4>In Chrome:</h4>
+      <p>1. Click "Advanced"</p>
+      <p>2. Click "Proceed to 127.0.0.1 (unsafe)"</p>
+      
+      <h4>In Firefox:</h4>
+      <p>1. Click "Advanced..."</p>
+      <p>2. Click "Accept the Risk and Continue"</p>
+      
+      <h4>In Safari:</h4>
+      <p>1. Click "Show Details"</p>
+      <p>2. Click "visit this website"</p>
+      <p>3. Click "Visit Website" in the popup</p>
+    </div>
+  </div>
+  
+  <div class="step">
+    <h3>Step 3: Test WebSocket Connection</h3>
+    <p>After accepting both certificates, test the WebSocket connection:</p>
+    <a href="/test-websocket.html" class="button" target="_blank">Test WebSocket Connection</a>
+  </div>
+  
+  <div class="step">
+    <h3>Step 4: Return to the Application</h3>
+    <p>Now you can return to the application and the WebSocket connection should work:</p>
+    <a href="https://localhost:3000/test/proctoring-demo" class="button" target="_blank">Return to Application</a>
+  </div>
+  
+  <div class="container">
+    <h3>Why This Works</h3>
+    <p>WebSocket connections use the same certificate validation as regular HTTPS connections. By manually accepting the certificates for both services, you're telling your browser to trust them for all connection types, including WebSockets.</p>
+    <p>This is only needed for development with self-signed certificates. In production, you would use properly signed certificates from a trusted certificate authority.</p>
+  </div>
+</body>
+</html>

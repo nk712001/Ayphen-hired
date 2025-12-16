@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Tools</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .warning {
+      background-color: #fcf8e3;
+      color: #8a6d3b;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebSocket Tools</h1>
+  
+  <div class="container warning">
+    <h2>⚠️ WebSocket Connection Tools</h2>
+    <p>These tools will help you troubleshoot and fix WebSocket connection issues in the Ayphen Hire application.</p>
+  </div>
+  
+  <div class="container">
+    <h2>1. Accept Self-Signed Certificates</h2>
+    <p>If you're seeing certificate validation errors, use this tool to accept the self-signed certificates:</p>
+    <a href="/accept-certificates.html" class="button">Accept Certificates</a>
+  </div>
+  
+  <div class="container">
+    <h2>2. Test WebSocket Connection</h2>
+    <p>After accepting certificates, test if the WebSocket connection works:</p>
+    <a href="/direct-test.html" class="button" style="background-color: #ff9800;">⭐ NEW Direct Test Tool</a>
+    <a href="/test-websocket.html" class="button">Test Connection</a>
+    <a href="/simple-test.html" class="button">Simple Echo Test</a>
+    <p><strong>Recommended:</strong> Use the new Direct Test Tool which includes certificate acceptance links and better error handling.</p>
+  </div>
+  
+  <div class="container">
+    <h2>3. Documentation</h2>
+    <p>Read more about fixing WebSocket connection issues:</p>
+    <a href="/WEBSOCKET-GUIDE.md" class="button">Complete Guide</a>
+    <a href="/README-CERTIFICATES.md" class="button">Certificate Guide</a>
+  </div>
+  
+  <div class="container">
+    <h2>Return to Application</h2>
+    <p>Return to the main application:</p>
+    <a href="/" class="button">Go to Application</a>
+  </div>
+</body>
+</html>

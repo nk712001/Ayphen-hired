@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# Create a backup of the original file
+cp components/setup/ThirdCameraSetup.tsx components/setup/ThirdCameraSetup.tsx.bak5
+
+# Create a completely new file with the correct structure
+cat > components/setup/ThirdCameraSetup.tsx.new << 'EOT'
+'use client';
+
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import debounce from 'lodash/debounce';
+import { useProctoring } from '@/lib/proctoring/proctoring-context';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Badge, Alert, AlertDescription, AlertTitle, Progress, Button } from '../ui';
+import { AlertCircle, Camera, Check, ChevronRight, Video, Loader2, Info, ArrowLeft } from 'lucide-react';
+import SecureQRCodeInstructions from './SecureQRCodeInstructions';
+
+interface ThirdCameraSetupProps {
+  onComplete: () => void;
+  onSkip?: () => void;
+  isRequired?: boolean;
+}
+
+const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
+  onComplete,
+  onSkip,
+  isRequired = false
+}) => {
+  // State for the setup process
+  const [setupStep, setSetupStep] = useState<'initial' | 'secondary' | 'validation' | 'complete'>('initial');
+  const [error, setError] = useState<string | null>(null);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [mobileSessionId, setMobileSessionId] = useState<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [isCheckingMobileConnection, setIsCheckingMobileConnection] = useState(false);
+  
+  // Video refs
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const secondaryVideoRef = useRef<HTMLVideoElement>(null);
+  // Proctoring context
+  const { setSecondaryStream } = useProctoring();
+  
+  // Generate a unique session ID for the mobile camera connection
+  const generateSessionId = useCallback(() => {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  }, []);
+  
+  // Utility function for exponential backoff
+  const backoffDelay = (attempt: number, baseDelay = 1000, maxDelay = 10000) => {
+    return Math.min(baseDelay * Math.pow(1.5, attempt), maxDelay);
+  };
+
+  // Keep track of API call attempts
+  const apiCallAttemptsRef = useRef<{[key: string]: number}>({});
+  
+  // Debounced fetch function with exponential backoff
+  const debouncedFetch = useCallback(async (url: string, options?: RequestInit, maxRetries = 3) => {
+    const apiKey = url.split('?')[0]; // Use the base URL as the key
+    
+    // Initialize or increment attempt counter
+    if (!apiCallAttemptsRef.current[apiKey]) {
+      apiCallAttemptsRef.current[apiKey] = 0;
+    }
+    
+    const currentAttempt = apiCallAttemptsRef.current[apiKey];
+    
+    // If we've exceeded max retries, wait longer before trying again
+    if (currentAttempt > maxRetries) {
+      const delay = backoffDelay(currentAttempt, 2000, 30000);
+      console.log(`Too many attempts for ${apiKey}, waiting ${delay}ms before retry`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    try {
+      // Add a small random delay to prevent exact simultaneous requests
+      const jitter = Math.floor(Math.random() * 500);
+      await new Promise(resolve => setTimeout(resolve, jitter));
+      
+      apiCallAttemptsRef.current[apiKey]++;
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) {
+        // Rate limited - exponential backoff
+        const retryAfter = response.headers.get('Retry-After');
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 : backoffDelay(currentAttempt);
+        
+        console.log(`Rate limited (429) for ${apiKey}, retrying after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return debouncedFetch(url, options, maxRetries); // Retry
+      }
+      
+      // Success - reset counter
+      if (response.ok) {
+        apiCallAttemptsRef.current[apiKey] = 0;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error(`Error fetching ${apiKey}:`, error);
+      
+      // Network error - backoff and retry if we haven't exceeded max retries
+      if (currentAttempt <= maxRetries) {
+        const delay = backoffDelay(currentAttempt);
+        console.log(`Network error for ${apiKey}, retrying after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return debouncedFetch(url, options, maxRetries); // Retry
+      }
+      
+      throw error; // Re-throw if we've exceeded max retries
+    }
+  }, [backoffDelay]);
+
+  // Function to safely check and get video element
+  const checkVideoElement = useCallback(() => {
+    if (!videoRef.current) {
+      console.error("Video ref is not available during checkVideoElement");
+      return null;
+    }
+    
+    // Ensure the video element is properly initialized
+    if (!videoRef.current.id) {
+      videoRef.current.id = "primary-camera-video";
+    }
+    
+    // Make sure the video element is visible
+    videoRef.current.style.display = "block";
+    
+    return videoRef.current;
+  }, []);
+
+  // Track component mount state to avoid state updates after unmount
+  const isMountedRef = useRef(true);
+  // Ref to track retry timeout
+  let retryTimeout: NodeJS.Timeout | null = null;
+
+  // Cleanup function
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, []);
+
+  // Initialize video element with a delay to ensure DOM is ready
+  useEffect(() => {
+    // Short delay to ensure DOM is ready
+    const initTimeout = setTimeout(() => {
+      const videoElement = checkVideoElement();
+      if (videoElement) {
+        console.log("Video element initialized successfully");
+        videoElement.style.display = "block";
+      }
+    }, 500);
+    
+    return () => clearTimeout(initTimeout);
+  }, [checkVideoElement]);
+
+  // Rest of your component code...
+  
+  // Handle QR code generation
+  const handleShowQRCode = useCallback(() => {
+    // Generate the QR code URL first
+    const url = generateQRCode();
+    // Store the URL in state
+    setQrCodeUrl(url);
+    // Show the QR code
+    setShowQRCode(true);
+  }, [generateQRCode]);
+
+  // Handle completion
+  const handleComplete = useCallback(() => {
+    setSetupStep('complete');
+    onComplete();
+  }, [onComplete]);
+  
+  return (
+    <Card>
+      {/* Your JSX here */}
+      <CardHeader>
+        <CardTitle>Camera Setup</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Content */}
+      </CardContent>
+      <CardFooter>
+        {/* Footer */}
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default ThirdCameraSetup;
+EOT
+
+# Replace the original file with our fixed version
+mv components/setup/ThirdCameraSetup.tsx.new components/setup/ThirdCameraSetup.tsx
+
+echo "Created a fixed version of ThirdCameraSetup.tsx with proper async function"

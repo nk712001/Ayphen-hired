@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Question Generation</title>
+</head>
+<body>
+    <h1>Test Question Generation API</h1>
+    <button onclick="testQuestionGeneration()">Test Question Generation</button>
+    <div id="results"></div>
+
+    <script>
+        async function testQuestionGeneration() {
+            const assignmentId = 'cmih0at920007xzhy76nx5w3s';
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<p>Testing question generation...</p>';
+            
+            try {
+                const response = await fetch(`/api/assignments/${assignmentId}/generate-questions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.questions && data.questions.length > 0) {
+                    resultsDiv.innerHTML = `
+                        <h2>✅ Success!</h2>
+                        <p>Generated ${data.questions.length} questions</p>
+                        <h3>Questions:</h3>
+                        <ul>
+                            ${data.questions.map((q, i) => `
+                                <li><strong>[${q.type}]</strong> ${q.text}</li>
+                            `).join('')}
+                        </ul>
+                    `;
+                } else if (data.error) {
+                    resultsDiv.innerHTML = `
+                        <h2>❌ Error</h2>
+                        <p>${data.error}</p>
+                        ${data.details ? `<pre>${JSON.stringify(data.details, null, 2)}</pre>` : ''}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <h2>⚠️ Unexpected Response</h2>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `
+                    <h2>❌ Network Error</h2>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

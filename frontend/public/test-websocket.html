@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Connection Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .log {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: #dff0d8;
+      color: #3c763d;
+    }
+    .error {
+      background-color: #f2dede;
+      color: #a94442;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebSocket Connection Test</h1>
+  
+  <div class="container">
+    <h2>Connection Information</h2>
+    <p><strong>Page URL:</strong> <span id="pageUrl"></span></p>
+    <p><strong>Page Protocol:</strong> <span id="pageProtocol"></span></p>
+    <p><strong>Secure Context:</strong> <span id="secureContext"></span></p>
+    <p><strong>AI Service URL:</strong> https://127.0.0.1:8000</p>
+    <p><strong>Expected WebSocket URL:</strong> wss://127.0.0.1:8000/ws/proctor/test-session</p>
+  </div>
+  
+  <div class="container">
+    <h2>Test WebSocket Connection</h2>
+    <button id="testWs">Test Connection</button>
+    <button id="testHealth">Test AI Service Health</button>
+    <div id="status" class="status"></div>
+  </div>
+  
+  <div class="log" id="log">
+    <p>Connection logs will appear here...</p>
+  </div>
+  
+  <script src="/test-websocket.js"></script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+// This is your Prisma schema file for Multi-Tenant Hiring Platform
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// AUTHENTICATION MODELS
+// ============================================
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timestamp         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// CORE TENANT & USER MODELS
+// ============================================
+
+model Company {
+  id                 String   @id @default(cuid())
+  name               String
+  domain             String?  @unique
+  logo               String?
+  primaryColor       String?  @default("#de065d")
+  subscriptionTier   String   @default("trial") // trial, basic, pro, enterprise
+  subscriptionStatus String   @default("active") // active, suspended, cancelled
+  maxUsers           Int      @default(50)
+  maxOrganizations   Int      @default(10)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relationships
+  users           User[]
+  organizations   Organization[]
+  tests           Test[]
+  questions       Question[] // Library Questions
+  candidates      Candidate[]
+  testAssignments TestAssignment[]
+  auditLogs       AuditLog[]
+  companySettings CompanySettings?
+
+  @@map(name: "Company")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  role          String    @default("RECRUITER") // "SUPER_ADMIN", "COMPANY_ADMIN", "RECRUITER"
+  companyId     String? // NULL for SUPER_ADMIN, required for others
+  isActive      Boolean   @default(true)
+  phone         String?
+  image         String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  company       Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiterOrgs RecruiterOrganization[]
+  createdTests  Test[]                  @relation("TestCreator")
+  accounts      Account[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+
+  @@index([companyId])
+  @@index([email])
+  @@map(name: "User")
+}
+
+// ============================================
+// ORGANIZATION & RECRUITER MAPPING
+// ============================================
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  companyId   String // Tenant isolation
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  company    Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiters RecruiterOrganization[]
+  tests      Test[]
+  questions  Question[] // Organized Library Questions
+  candidates Candidate[]
+
+  @@index([companyId])
+  @@map(name: "Organization")
+}
+
+// Many-to-Many: Recruiter ↔ Organization
+model RecruiterOrganization {
+  id             String   @id @default(cuid())
+  recruiterId    String
+  organizationId String
+  assignedAt     DateTime @default(now())
+  assignedBy     String? // Company Admin who assigned
+
+  recruiter    User         @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, organizationId])
+  @@index([recruiterId])
+  @@index([organizationId])
+  @@map(name: "RecruiterOrganization")
+}
+
+// ============================================
+// HIRING PROCESS MODELS
+// ============================================
+
+model Test {
+  id                      String   @id @default(cuid())
+  title                   String
+  jobDescription          String?
+  resumeUrl               String?
+  duration                Int // in minutes
+  requiresSecondaryCamera Boolean  @default(false)
+  mcqQuestions            Int      @default(5)
+  conversationalQuestions Int      @default(3)
+  codingQuestions         Int      @default(2)
+  companyId               String // Tenant isolation
+  organizationId          String // Client isolation
+  createdBy               String // Recruiter
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relationships
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User             @relation("TestCreator", fields: [createdBy], references: [id])
+  questions    Question[]
+  assignments  TestAssignment[]
+
+  @@index([companyId])
+  @@index([organizationId])
+  @@index([createdBy])
+  @@map(name: "Test")
+}
+
+model Question {
+  id             String   @id @default(cuid())
+  testId         String?   // Optional: Null means it's a library question
+  companyId      String?   // Required for Library questions
+  organizationId String?   // Optional: For organization-specific library
+  type           String // "multiple_choice", "essay", "code", etc.
+  text           String
+  metadata       String? // JSON string
+  timeToStart    Int?
+  difficulty     String?
+  category       String?   // New: For filtering
+  tags           String?   // New: JSON string array
+  isLibrary      Boolean   @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  test         Test?         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  company      Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  answers      Answer[]
+
+  @@index([testId])
+  @@index([companyId])
+  @@index([isLibrary])
+  @@map(name: "Question")
+}
+
+model Candidate {
+  id             String   @id @default(cuid())
+  email          String
+  name           String?
+  phone          String?
+  resumeUrl      String?
+  resumeData     String?  // New: JSON string of analyzed data
+  skills         String?  // New: Flattened string for search
+  experienceYears Int?    // New
+  companyId      String
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignments  TestAssignment[]
+
+  @@unique([email, companyId, organizationId])
+  @@index([companyId])
+  @@index([organizationId])
+  @@map(name: "Candidate")
+}
+
+model TestAssignment {
+  id             String    @id @default(cuid())
+  testId         String
+  candidateId    String
+  uniqueLink     String    @unique
+  status         String    @default("pending") // "pending", "in_progress", "completed"
+  companyId      String // Tenant isolation
+  organizationId String // Client isolation
+  emailSent      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+  
+  // Scheduling fields
+  scheduledStartTime DateTime? // When the test window opens
+  scheduledEndTime   DateTime? // When the test window closes
+  isScheduled        Boolean   @default(false)
+  reminderSent       Boolean   @default(false)
+
+  // Scoring Aggregates
+  totalScore         Float?
+  maxTotalScore      Float?
+  cheatScore         Float?    // 0-100
+  scoreBreakdown     String?   // JSON string for detailed breakdown
+  recommendation     String?   // "Recommended", "Review Required", etc.
+
+  // Relationships
+  test            Test             @relation(fields: [testId], references: [id], onDelete: Cascade)
+  candidate       Candidate        @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  answers         Answer[]
+  proctorSessions ProctorSession[]
+
+  @@index([companyId])
+  @@index([organizationId])
+  @@index([testId])
+  @@index([candidateId])
+  @@map(name: "TestAssignment")
+}
+
+model Answer {
+  id               String    @id @default(cuid())
+  questionId       String
+  testAssignmentId String
+  content          String?
+  recordingUrl     String?
+  codeSubmission   String?
+  startedAt        DateTime?
+  submittedAt      DateTime?
+  
+  // Scoring & Status
+  status           String    @default("ANSWERED") // "ANSWERED", "SKIPPED", "IRRELEVANT"
+  score            Float?
+  maxScore         Float?
+  feedback         String?   // AI or rule-based feedback
+
+  question       Question       @relation(fields: [questionId], references: [id])
+  testAssignment TestAssignment @relation(fields: [testAssignmentId], references: [id])
+
+  @@map(name: "Answer")
+}
+
+model ProctorSession {
+  id                      String    @id @default(cuid())
+  testAssignmentId        String
+  startedAt               DateTime  @default(now())
+  endedAt                 DateTime?
+  primaryCameraActive     Boolean   @default(true)
+  secondaryCameraActive   Boolean   @default(false)
+  secondaryCameraRequired Boolean   @default(false)
+  microphoneActive        Boolean   @default(true)
+
+  testAssignment TestAssignment @relation(fields: [testAssignmentId], references: [id])
+  violations     Violation[]
+
+  @@map(name: "ProctorSession")
+}
+
+model Violation {
+  id               String   @id @default(cuid())
+  proctorSessionId String
+  type             String // "face_violation", "gaze_violation", "audio_violation", "object_violation"
+  severity         String // "CRITICAL", "MAJOR", "MINOR"
+  description      String?
+  timestamp        DateTime @default(now())
+  evidenceUrl      String?
+  cameraSource     String? // "primary", "secondary"
+  status           String   @default("PENDING_REVIEW") // "PENDING_REVIEW", "CONFIRMED", "DISMISSED"
+
+  proctorSession ProctorSession @relation(fields: [proctorSessionId], references: [id])
+
+  @@map(name: "Violation")
+}
+
+// ============================================
+// AUDIT & COMPLIANCE
+// ============================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  companyId  String? // NULL for super admin actions
+  userId     String
+  action     String // "CREATE_COMPANY", "ASSIGN_RECRUITER", etc.
+  entityType String // "Company", "User", "Organization", etc.
+  entityId   String?
+  metadata   String? // JSON string: Additional context
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  company Company? @relation(fields: [companyId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map(name: "AuditLog")
+}
+
+model CompanySettings {
+  id                String  @id @default(cuid())
+  companyId         String  @unique
+  emailDomain       String?
+  ssoEnabled        Boolean @default(false)
+  customBranding    Boolean @default(true)
+  aiProctoringLevel String  @default("standard")
+  dataRetention     Int     @default(365)
+  logoUrl           String?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map(name: "CompanySettings")
+}

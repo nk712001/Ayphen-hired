@@ -1,0 +1,58 @@
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+
+        if (!session || (session.user as any).role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Fetch all organizations with detailed stats
+        const organizations = await prisma.organization.findMany({
+            include: {
+                users: true,
+                tests: {
+                    include: {
+                        assignments: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        const organizationStats = organizations.map(org => {
+            const candidateCount = org.tests.reduce((sum, test) => sum + test.assignments.length, 0);
+            const activeTests = org.tests.filter(test =>
+                test.assignments.some(a => a.status === 'in_progress' || a.status === 'pending')
+            ).length;
+            const completedTests = org.tests.filter(test =>
+                test.assignments.every(a => a.status === 'completed')
+            ).length;
+
+            return {
+                id: org.id,
+                name: org.name,
+                subscriptionStatus: org.subscriptionStatus,
+                userCount: org.users.length,
+                testCount: org.tests.length,
+                candidateCount,
+                activeTests,
+                completedTests,
+            };
+        });
+
+        return NextResponse.json({ organizations: organizationStats });
+    } catch (error) {
+        console.error('Error fetching organization stats:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch organization stats' },
+            { status: 500 }
+        );
+    }
+}

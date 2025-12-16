@@ -1,0 +1,108 @@
+import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(
+  request: Request,
+  { params }: { params: { attemptId: string } }
+) {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { attemptId } = params;
+    const { timeRemaining } = await request.json();
+
+    // Start a transaction to ensure data consistency
+    const result = await prisma.$transaction(async (tx) => {
+      // Verify the attempt exists and belongs to the user
+      const attempt = await tx.testAttempt.findUnique({
+        where: { 
+          id: attemptId, 
+          userId,
+          status: 'IN_PROGRESS', // Only allow submission of in-progress attempts
+        },
+        include: {
+          test: {
+            include: {
+              questions: {
+                select: {
+                  id: true,
+                  type: true,
+                  metadata: true,
+                },
+              },
+            },
+          },
+          answers: {
+            select: {
+              id: true,
+              questionId: true,
+              answer: true,
+              isFlagged: true,
+              timeSpent: true,
+            },
+          },
+        },
+      });
+
+      if (!attempt) {
+        throw new Error('Test attempt not found or already submitted');
+      }
+
+      // Calculate time spent (in seconds)
+      const timeSpent = attempt.timeLimit - (timeRemaining || 0);
+      
+      // Update the attempt with final status and time spent
+      const updatedAttempt = await tx.testAttempt.update({
+        where: { id: attemptId },
+        data: {
+          status: 'SUBMITTED',
+          endTime: new Date(),
+          timeRemaining: Math.max(0, timeRemaining || 0),
+          // Calculate score (this is a simplified version - you might want to implement more complex scoring)
+          score: calculateScore(attempt.answers, attempt.test.questions),
+          maxScore: 100, // Or calculate based on question weights
+        },
+      });
+
+      // Update the test assignment status if it exists
+      if (attempt.testAssignmentId) {
+        await tx.testAssignment.update({
+          where: { id: attempt.testAssignmentId },
+          data: {
+            status: 'completed',
+            completedAt: new Date(),
+          },
+        });
+      }
+
+      return {
+        attemptId: updatedAttempt.id,
+        status: updatedAttempt.status,
+        score: updatedAttempt.score,
+        maxScore: updatedAttempt.maxScore,
+        timeSpent,
+        submittedAt: updatedAttempt.endTime,
+      };
+    });
+
+    // In a real app, you might want to trigger additional actions here:
+    // - Send email notifications
+    // - Generate reports
+    // - Update analytics
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error submitting test attempt:', error);
+    return NextResponse.json(
+      { error: 'Failed to submit test attempt' },
+      { status: 500 }
+    );
+  }
+}

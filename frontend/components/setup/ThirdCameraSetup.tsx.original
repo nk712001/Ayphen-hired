@@ -1,0 +1,1253 @@
+'use client';
+
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import debounce from 'lodash/debounce';
+import { useProctoring } from '@/lib/proctoring/proctoring-context';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Badge, Alert, AlertDescription, AlertTitle, Progress, Button } from '../ui';
+import { AlertCircle, Camera, Check, ChevronRight, Video, Loader2, Info, ArrowLeft } from 'lucide-react';
+import SecureQRCodeInstructions from './SecureQRCodeInstructions';
+
+interface ThirdCameraSetupProps {
+  onComplete: () => void;
+  onSkip?: () => void;
+  isRequired?: boolean;
+}
+
+const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
+  onComplete,
+  onSkip,
+  isRequired = false
+}) => {
+  // State for the setup process
+  const [setupStep, setSetupStep] = useState<'initial' | 'secondary' | 'validation' | 'complete'>('initial');
+  const [error, setError] = useState<string | null>(null);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [mobileSessionId, setMobileSessionId] = useState<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [isCheckingMobileConnection, setIsCheckingMobileConnection] = useState(false);
+  
+  // Video refs
+  const videoRef = useRef<HTMLVideoElement>(null);
+  // Function to safely check and get video element
+  const checkVideoElement = useCallback(() => {
+    if (!videoRef.current) {
+      console.error("Video ref is not available during checkVideoElement");
+      return null;
+    }
+    
+    // Ensure the video element is properly initialized
+    if (!videoRef.current.id) {
+      videoRef.current.id = "primary-camera-video";
+    }
+    
+    // Make sure the video element is visible
+    videoRef.current.style.display = "block";
+    
+    return videoRef.current;
+  }, []);
+
+  // Proctoring context
+  const { setSecondaryStream } = useProctoring();
+  
+  // Generate a unique session ID for the mobile camera connection
+  const generateSessionId = useCallback(() => {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  }, []);
+  
+  // Utility function for exponential backoff
+  const backoffDelay = (attempt: number, baseDelay = 1000, maxDelay = 10000) => {
+    return Math.min(baseDelay * Math.pow(1.5, attempt), maxDelay);
+  };
+
+  // Keep track of API call attempts
+  const apiCallAttemptsRef = useRef<{[key: string]: number}>({});
+  
+  // Debounced fetch function with exponential backoff
+  const debouncedFetch = useCallback(async (url: string, options?: RequestInit, maxRetries = 3) => {
+    const apiKey = url.split('?')[0]; // Use the base URL as the key
+    
+    // Initialize or increment attempt counter
+    if (!apiCallAttemptsRef.current[apiKey]) {
+      apiCallAttemptsRef.current[apiKey] = 0;
+    }
+    
+    const currentAttempt = apiCallAttemptsRef.current[apiKey];
+    
+    // If we've exceeded max retries, wait longer before trying again
+    if (currentAttempt > maxRetries) {
+      const delay = backoffDelay(currentAttempt, 2000, 30000);
+      console.log(`Too many attempts for ${apiKey}, waiting ${delay}ms before retry`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    try {
+      // Add a small random delay to prevent exact simultaneous requests
+      const jitter = Math.floor(Math.random() * 500);
+      await new Promise(resolve => setTimeout(resolve, jitter));
+      
+      apiCallAttemptsRef.current[apiKey]++;
+      const response = await fetch(url, options);
+      
+      if (response.status === 429) {
+        // Rate limited - exponential backoff
+        const retryAfter = response.headers.get('Retry-After');
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 : backoffDelay(currentAttempt);
+        
+        console.log(`Rate limited (429) for ${apiKey}, retrying after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return debouncedFetch(url, options, maxRetries); // Retry
+      }
+      
+      // Success - reset counter
+      if (response.ok) {
+        apiCallAttemptsRef.current[apiKey] = 0;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error(`Error fetching ${apiKey}:`, error);
+      
+      // Network error - backoff and retry if we haven't exceeded max retries
+      if (currentAttempt <= maxRetries) {
+        const delay = backoffDelay(currentAttempt);
+        console.log(`Network error for ${apiKey}, retrying after ${delay}ms`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return debouncedFetch(url, options, maxRetries); // Retry
+      }
+      
+      throw error; // Re-throw if we've exceeded max retries
+    }
+  }, [backoffDelay]);
+
+  // Check if current device is mobile
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  // Detect mobile device on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobileDevice(mobileCheck);
+      console.log('Device detection:', { isMobile: mobileCheck, userAgent: navigator.userAgent });
+    }
+  }, []);
+  
+  // State to store the network IP address
+  const [networkIp, setNetworkIp] = useState<string>('');
+  
+  // Fetch the network IP address on component mount
+  useEffect(() => {
+    // Function to get the network IP address
+    const getNetworkIp = async () => {
+      try {
+        // Try to fetch the IP from a local API endpoint
+        const response = await fetch('/api/network-ip');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.ip) {
+            console.log('Network IP fetched from API:', data.ip);
+            setNetworkIp(data.ip);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching network IP:', error);
+      }
+      
+      // Fallback: Use window.location.hostname or a default IP
+      const hostname = window.location.hostname;
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        console.log('Using hostname as network IP:', hostname);
+        setNetworkIp(hostname);
+      } else {
+        // Default to a common local network IP range
+        // Note: This is just a guess and may not work in all networks
+        const defaultIp = '192.168.1.X';
+        console.log('Using default network IP pattern:', defaultIp);
+        setNetworkIp(defaultIp);
+      }
+    };
+    
+    getNetworkIp();
+  }, []);
+  
+  // Generate QR code data
+  const generateQRCode = useCallback(() => {
+    const sessionId = generateSessionId();
+    setMobileSessionId(sessionId);
+    
+    // Use IP address instead of localhost for better compatibility with mobile devices
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    
+    // Use the specific system IP address 10.10.98.140 instead of dynamic detection
+    // This ensures consistent QR code generation across all environments
+    const host = '10.10.98.140';
+    
+    const port = window.location.port ? `:${window.location.port}` : '';
+    
+    // Add timestamp to prevent caching
+    const timestamp = Date.now();
+    const qrCodeUrl = `${protocol}//${host}${port}/mobile-camera?sessionId=${sessionId}&t=${timestamp}`;
+    console.log('Generated QR Code URL:', qrCodeUrl);
+    
+    // Log additional debugging information
+    console.log('QR Code generation details:', {
+      protocol,
+      host: '10.10.98.140', // Hardcoded IP address
+      port,
+      sessionId,
+      fullUrl: qrCodeUrl,
+      timestamp
+    });
+    
+    return qrCodeUrl;
+  }, [generateSessionId]);
+
+  // Track API call timestamps to prevent rate limiting
+  const apiCallTimestampsRef = useRef<{[key: string]: number}>({});
+  
+  // Function to handle rate-limited API calls
+  const fetchWithRateLimiting = async (url: string, options?: RequestInit) => {
+    const apiKey = url.split('?')[0]; // Use the base URL as the key
+    const now = Date.now();
+    const lastCallTime = apiCallTimestampsRef.current[apiKey] || 0;
+    const timeSinceLastCall = now - lastCallTime;
+    
+    // Enforce minimum time between calls (1000ms = 1 second)
+    if (timeSinceLastCall < 1000) {
+      const waitTime = 1000 - timeSinceLastCall;
+      console.log(`Rate limiting protection: waiting ${waitTime}ms before calling ${apiKey}`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    // Record this call time
+    apiCallTimestampsRef.current[apiKey] = Date.now();
+    
+    // Make the API call
+    const response = await fetch(url, options);
+    
+    // Handle 429 Too Many Requests
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 5000; // Default to 5 seconds
+      
+      console.log(`Received 429 Too Many Requests. Waiting ${waitTime}ms before retry.`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      
+      // Try again after waiting
+      return fetchWithRateLimiting(url, options);
+    }
+    
+    return response;
+  };
+  
+  // Check if the mobile camera is connected
+  const checkMobileConnection = useCallback(async () => {
+    if (!mobileSessionId) return false;
+    
+    try {
+      setIsCheckingMobileConnection(true);
+      const count = Date.now(); // Use timestamp to avoid caching
+      const response = await fetchWithRateLimiting(`/api/setup/check-mobile-camera?sessionId=${mobileSessionId}&count=${count}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.connected) {
+          console.log('Mobile camera connected!', data);
+          setIsCheckingMobileConnection(false);
+          
+          // Get the secondary stream from the API with a delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between API calls
+          
+          try {
+            const streamResponse = await fetchWithRateLimiting(`/api/setup/get-mobile-stream?sessionId=${mobileSessionId}`);
+            if (streamResponse.ok) {
+              const streamData = await streamResponse.json();
+              
+              if (streamData.streamUrl) {
+                // Create a new MediaStream from the URL
+                const secondaryStream = new MediaStream();
+                
+                // Set up the secondary video element
+                if (secondaryVideoRef.current) {
+                  secondaryVideoRef.current.src = streamData.streamUrl;
+                  secondaryVideoRef.current.onloadedmetadata = () => {
+                    secondaryVideoRef.current?.play().catch(err => {
+                      console.error('Error playing secondary video:', err);
+                    });
+                  };
+                  
+                  // Save the secondary stream to the proctoring context
+                  setSecondaryStream(secondaryStream);
+                } else {
+                  console.error('Secondary video ref is not available');
+                  // Store the URL for later when the ref becomes available
+                  setTimeout(() => {
+                    if (secondaryVideoRef.current) {
+                      console.log('Secondary video ref now available, setting up stream');
+                      secondaryVideoRef.current.src = streamData.streamUrl;
+                      secondaryVideoRef.current.onloadedmetadata = () => {
+                        secondaryVideoRef.current?.play().catch(err => {
+                          console.error('Error playing secondary video on retry:', err);
+                        });
+                      };
+                      setSecondaryStream(secondaryStream);
+                    }
+                  }, 500);
+                }
+              }
+            }
+          } catch (streamError) {
+            console.error('Error getting secondary stream:', streamError);
+          }
+          
+          // Move to validation step automatically
+          if (setupStep === 'secondary') {
+            console.log('Moving to validation step...');
+            setSetupStep('validation');
+          }
+          
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking mobile connection:', error);
+    }
+    
+    setIsCheckingMobileConnection(false);
+    return false;
+  }, [mobileSessionId, setupStep, setSecondaryStream]);
+
+  // Track component mount state to avoid state updates after unmount
+  const isMountedRef = useRef(true);
+  
+  // Function to check if camera is actually streaming data
+  const checkCameraStream = useCallback(() => {
+    if (!videoRef.current || !videoRef.current.srcObject) {
+      console.log('No video element or stream to check');
+      return false;
+    }
+    
+    try {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getVideoTracks();
+      
+      if (tracks.length === 0) {
+        console.log('No video tracks in stream');
+        return false;
+      }
+      
+      const settings = tracks[0].getSettings();
+      console.log('Video track settings:', settings);
+      
+      // Check if we're getting actual dimensions
+      if (!settings.width || !settings.height) {
+        console.log('No width/height in video track settings');
+        return false;
+      }
+      
+      console.log(`Camera is streaming: ${settings.width}x${settings.height} @ ${settings.frameRate || 'unknown'} fps`);
+      return true;
+    } catch (e) {
+      console.error('Error checking camera stream:', e);
+      return false;
+    }
+  }, []);
+  
+  // Use effect to initialize camera directly
+  useEffect(() => {
+    console.log('ThirdCameraSetup mounted, initializing camera directly');
+    
+    // Guaranteed fallback - force advance after 15 seconds no matter what
+    const guaranteedFallbackTimeout = setTimeout(() => {
+      console.log('GUARANTEED FALLBACK: Forcing advance to next step after timeout');
+      
+      // Check if camera is streaming before advancing
+      const isStreaming = checkCameraStream();
+      console.log('Camera streaming status before forced advance:', isStreaming);
+      
+      setSetupStep('secondary');
+    }, 15000);
+    
+    // Add a check after 5 seconds to see if camera is actually streaming
+    const streamCheckTimeout = setTimeout(() => {
+      const isStreaming = checkCameraStream();
+      console.log('Camera streaming check at 5s:', isStreaming);
+      
+      if (!isStreaming && videoRef.current) {
+        console.log('Camera not streaming properly, attempting to reinitialize');
+        // Try to reinitialize camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+              videoRef.current.play()
+                .then(() => console.log('Video reinitialized successfully'))
+                .catch(e => console.error('Error playing reinitialized video:', e));
+            }
+          })
+          .catch(e => console.error('Error reinitializing camera:', e));
+      }
+    }, 5000);
+    
+    return () => {
+      clearTimeout(guaranteedFallbackTimeout);
+      clearTimeout(streamCheckTimeout);
+    };
+  }, [checkCameraStream]);
+  
+  // Add MediaDevices API feature detection and polyfill
+  useEffect(() => {
+    // Feature detection and polyfill for older browsers
+    if (typeof navigator !== 'undefined') {
+      // Safely add mediaDevices if it doesn't exist
+      if (!navigator.mediaDevices) {
+        console.log('MediaDevices API not found, adding polyfill');
+        try {
+          // Use Object.defineProperty to avoid read-only property error
+          Object.defineProperty(navigator, 'mediaDevices', {
+            value: {},
+            writable: true,
+            configurable: true
+          });
+        } catch (e) {
+          console.error('Failed to polyfill mediaDevices:', e);
+        }
+      }
+
+      // Some browsers partially implement mediaDevices. We need to check if getUserMedia is a function
+      if (navigator.mediaDevices && !navigator.mediaDevices.getUserMedia) {
+        // Define legacy getUserMedia variants
+        type LegacyGetUserMedia = (constraints: MediaStreamConstraints, 
+                                  successCallback: (stream: MediaStream) => void,
+                                  errorCallback: (error: Error) => void) => void;
+        
+        const oldGetUserMedia = ((navigator as any).getUserMedia || 
+                              (navigator as any).webkitGetUserMedia || 
+                              (navigator as any).mozGetUserMedia || 
+                              (navigator as any).msGetUserMedia) as LegacyGetUserMedia | undefined;
+
+        if (oldGetUserMedia) {
+          console.log('Using legacy getUserMedia API with polyfill');
+          navigator.mediaDevices.getUserMedia = function(constraints: MediaStreamConstraints) {
+            return new Promise<MediaStream>((resolve, reject) => {
+              // Ensure constraints is not undefined
+              const safeConstraints = constraints || { video: true, audio: false };
+              oldGetUserMedia.call(navigator, safeConstraints, resolve, reject);
+            });
+          };
+        } else {
+          console.error('No getUserMedia support available in this browser');
+          setError('Your browser does not support camera access. Please try a modern browser like Chrome or Firefox.');
+        }
+      }
+
+      // Check for secure context
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+        console.warn('Not in a secure context, camera access may be restricted');
+        setError('Camera access requires a secure connection (HTTPS). You may experience issues accessing your camera.');
+      }
+    }
+  }, []);
+  
+  // Initialize the setup process
+  useEffect(() => {
+    let retryCount = 0;
+    const maxRetries = 10; // Increased from 5 to 10
+    let retryTimeout: NodeJS.Timeout | null = null;
+    let mediaStream: MediaStream | null = null;
+    let setupTimeoutId: NodeJS.Timeout | null = null;
+    
+    // Check if video element exists
+    const checkVideoElement = () => {
+      if (!videoRef.current && isMountedRef.current) {
+        console.log('Video element not found, will retry');
+        return null;
+      }
+      return videoRef.current;
+    };
+    
+    // Force proceed to next step after timeout
+    const setupFallbackTimeout = () => {
+      // First timeout - shorter, just to check if we're making progress
+      setupTimeoutId = setTimeout(() => {
+        if (setupStep === 'initial' && isMountedRef.current) {
+          console.log('Camera setup taking longer than expected, checking status...');
+          
+          // If we already have a media stream but UI is stuck, force advance
+          if (mediaStream) {
+            console.log('Media stream exists but UI is stuck, forcing advance');
+            setSetupStep('secondary');
+            return;
+          }
+          
+          // No media stream yet, set a more aggressive timeout
+          console.log('No media stream yet, setting aggressive timeout');
+          setTimeout(() => {
+            if (setupStep === 'initial' && isMountedRef.current) {
+              console.log('Camera setup taking too long, forcing advance to next step');
+              
+              // Try one last time with minimal constraints
+              try {
+                console.log('Attempting final camera access with minimal constraints');
+                navigator.mediaDevices.getUserMedia({ 
+                  video: { 
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    frameRate: { max: 15 }
+                  } 
+                })
+                .then(stream => {
+                  mediaStream = stream;
+                  console.log('Last attempt camera access successful, forcing advance');
+                  
+                  // Try to attach to video element if it exists
+                  if (videoRef.current) {
+                    try {
+                      videoRef.current.srcObject = stream;
+                      videoRef.current.play().catch(e => console.error('Play error:', e));
+                    } catch (e) {
+                      console.error('Error attaching stream to video:', e);
+                    }
+                  }
+                  
+                  setSetupStep('secondary');
+                })
+                .catch(err => {
+                  console.error('Last attempt camera access failed:', err);
+                  setError('Unable to access your camera. You can continue without camera access or refresh the page to try again.');
+                  // Still advance to allow user to proceed
+                  setSetupStep('secondary');
+                });
+              } catch (e) {
+                console.error('Error in final camera attempt:', e);
+                setError('Camera access failed. You can continue without camera access.');
+                setSetupStep('secondary');
+              }
+            }
+          }, 5000); // Additional 5 seconds (total 8 seconds)
+        }
+      }, 3000); // Initial 3 second timeout
+    };
+    
+    const initializeSetup = async () => {
+      try {
+        // Start the fallback timeout
+        setupFallbackTimeout();
+        
+        // Request access to the user's camera with more flexible constraints
+        console.log('Requesting camera access with flexible constraints...');
+        let stream;
+        
+        try {
+          // First try with ideal constraints
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            } 
+          });
+          console.log('Camera access granted with ideal constraints');
+        } catch (err) {
+          console.warn('Failed to get camera with ideal constraints, trying minimal constraints:', err);
+          // Try again with minimal constraints
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            video: true 
+          });
+          console.log('Camera access granted with minimal constraints');
+        }
+        
+        // Store the stream for potential retries
+        mediaStream = stream;
+        
+        // Log stream details for debugging
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length > 0) {
+          const settings = videoTracks[0].getSettings();
+          console.log('Camera stream settings:', settings);
+        }
+        
+        console.log('Setting up video stream...');
+        
+        // Check if we have a video element
+        const videoElement = checkVideoElement();
+        
+        if (videoElement && isMountedRef.current) {
+          console.log('Video element available, attaching stream');
+          try {
+            // Clean up any existing srcObject
+            if (videoElement.srcObject) {
+              try {
+                const oldStream = videoElement.srcObject as MediaStream;
+                oldStream.getTracks().forEach(track => track.stop());
+              } catch (e) {
+                console.error('Error cleaning up old stream:', e);
+              }
+            }
+            
+            // Try to attach the stream to the video element
+            videoElement.srcObject = stream;
+            console.log('Stream attached to video element');
+            
+            // Force video element to be visible
+            videoElement.style.display = 'block';
+            videoElement.style.width = '100%';
+            videoElement.style.height = '100%';
+            videoElement.style.objectFit = 'cover';
+            
+            // Add event listeners for better debugging
+            videoElement.onloadedmetadata = () => {
+              if (isMountedRef.current) {
+                console.log('Video metadata loaded, playing video');
+                // Try to play the video
+                const playPromise = videoElement.play();
+                
+                if (playPromise !== undefined) {
+                  playPromise
+                    .then(() => {
+                      console.log('Video playback started successfully');
+                      // Hide loading indicator
+                      const loadingIndicator = document.getElementById('video-loading-indicator');
+                      if (loadingIndicator) loadingIndicator.style.display = 'none';
+                      
+                      // Advance to next step
+                      setSetupStep('secondary');
+                    })
+                    .catch(err => {
+                      console.error('Error playing video:', err);
+                      // Try again with a delay
+                      setTimeout(() => {
+                        if (videoElement && isMountedRef.current) {
+                          console.log('Retrying video playback after delay');
+                          videoElement.play()
+                            .then(() => {
+                              console.log('Second play attempt successful');
+                              // Hide loading indicator
+                              const loadingIndicator = document.getElementById('video-loading-indicator');
+                              if (loadingIndicator) loadingIndicator.style.display = 'none';
+                            })
+                            .catch(e => console.error('Second play attempt failed:', e));
+                          setSetupStep('secondary');
+                        }
+                      }, 1000);
+                    });
+                } else {
+                  console.log('Play promise is undefined, cannot track playback');
+                  setSetupStep('secondary');
+                }
+              }
+            };
+            
+            videoElement.onloadeddata = () => {
+              console.log('Video data loaded');
+              // Try to ensure video is visible
+              if (videoElement) {
+                videoElement.style.display = 'block';
+              }
+            };
+            
+            videoElement.oncanplay = () => {
+              console.log('Video can play now');
+              // Hide loading indicator when video can play
+              const loadingIndicator = document.getElementById('video-loading-indicator');
+              if (loadingIndicator) loadingIndicator.style.display = 'none';
+            };
+            
+            videoElement.onerror = (e) => console.error('Video element error:', e);
+            
+            // Set a timeout to check if video is actually playing
+            setTimeout(() => {
+              if (videoElement && !videoElement.paused && videoElement.readyState >= 3) {
+                console.log('Video is playing successfully after timeout check');
+              } else {
+                console.warn('Video may not be playing properly after timeout check');
+                // Try to play again
+                if (videoElement) {
+                  videoElement.play().catch(e => console.error('Play attempt in timeout check failed:', e));
+                }
+              }
+            }, 2000);
+          } catch (err) {
+            console.error('Error attaching stream to video element:', err);
+            // Still advance to allow user to proceed
+            setSetupStep('secondary');
+          }
+        } else {
+          console.error('Video ref is not available');
+          
+          // Retry logic if video ref is not available yet
+          if (retryCount < maxRetries && isMountedRef.current) {
+            retryCount++;
+            console.log(`Retrying in 1000ms (attempt ${retryCount} of ${maxRetries})...`);
+            
+            retryTimeout = setTimeout(() => {
+              if (!isMountedRef.current) return;
+              
+              console.log(`Retry attempt ${retryCount}`);
+              // If we already have a stream, try to attach it again
+              const videoElement = checkVideoElement();
+              
+              if (mediaStream && videoElement) {
+                console.log('Attaching existing stream to video element');
+                videoElement.srcObject = mediaStream;
+                videoElement.onloadedmetadata = () => {
+                  if (isMountedRef.current) {
+                    console.log('Video metadata loaded on retry, playing video');
+                    videoElement.play().catch(err => {
+                      console.error('Error playing video on retry:', err);
+                    });
+                    setSetupStep('secondary');
+                  }
+                };
+              } else {
+                // If no stream or still no ref, try the whole setup again
+                initializeSetup();
+              }
+            }, 1000); // Increased from 500ms to 1000ms
+          } else if (isMountedRef.current) {
+            setError('Video element not found after multiple attempts. Please refresh the page and try again.');
+            // Still advance to allow user to proceed
+            setSetupStep('secondary');
+          }
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        if (isMountedRef.current) {
+          setError('Unable to access your camera. Please make sure you have granted permission.');
+          // Still advance to allow user to proceed
+          setSetupStep('secondary');
+        }
+      }
+    };
+    
+    console.log('Initializing camera setup immediately...');
+    // Initialize camera setup immediately without waiting
+    initializeSetup();
+    
+    return () => {
+      // Mark component as unmounted
+      isMountedRef.current = false;
+      
+      // Clean up video streams when component unmounts
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Clean up any pending retries
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+      
+      // Clean up the fallback timeout
+      if (setupTimeoutId) {
+        clearTimeout(setupTimeoutId);
+      }
+      
+      // Clean up the stored media stream if it exists
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [setupStep]);
+  
+  // Set isMountedRef to false when component unmounts
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Poll for mobile camera connection
+  useEffect(() => {
+    if (setupStep === 'secondary' && showQRCode && mobileSessionId) {
+      const checkInterval = setInterval(async () => {
+        const connected = await checkMobileConnection();
+        if (connected) {
+          clearInterval(checkInterval);
+        }
+      }, 2000);
+      
+      return () => clearInterval(checkInterval);
+    }
+    return undefined; // Explicit return for all code paths
+  }, [setupStep, showQRCode, mobileSessionId, checkMobileConnection]);
+  
+  // Ensure secondary video is properly initialized when entering validation step
+  useEffect(() => {
+    if (setupStep === 'validation') {
+      console.log('Validation step: checking secondary video ref');
+      // Give a small delay to ensure the DOM has updated
+      setTimeout(() => {
+        if (secondaryVideoRef.current && !secondaryVideoRef.current.srcObject && secondaryVideoRef.current.src === '') {
+          console.log('Secondary video not initialized in validation step, attempting to recover');
+          // Try to fetch the stream again
+          if (mobileSessionId) {
+            fetch(`/api/setup/get-mobile-stream?sessionId=${mobileSessionId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.streamUrl && secondaryVideoRef.current) {
+                  console.log('Recovered stream URL, applying to secondary video');
+                  secondaryVideoRef.current.src = data.streamUrl;
+                  secondaryVideoRef.current.onloadedmetadata = () => {
+                    secondaryVideoRef.current?.play().catch(err => {
+                      console.error('Error playing recovered secondary video:', err);
+                    });
+                  };
+                }
+              })
+              .catch(err => console.error('Error recovering secondary stream:', err));
+          }
+        }
+      }, 500);
+    }
+  }, [setupStep, mobileSessionId]);
+
+  // Handle QR code generation
+  const handleShowQRCode = useCallback(() => {
+    // Generate the QR code URL first
+    const url = generateQRCode();
+    // Store the URL in state
+    setQrCodeUrl(url);
+    // Show the QR code
+    setShowQRCode(true);
+    
+    console.log('QR code generated and ready to display:', url);
+  }, [generateQRCode]);
+
+  // Handle completion
+  const handleComplete = useCallback(() => {
+    setSetupStep('complete');
+    onComplete();
+  }, [onComplete]);
+
+  return (
+    <Card>
+      <CardHeader className="bg-gradient-to-r from-amber-600 to-rose-600 text-white pb-6">
+        <div className="flex items-center mb-2">
+          <Badge variant="secondary" className="bg-white/20 text-white">
+            {isRequired ? 'Required' : 'Optional'}
+          </Badge>
+        </div>
+        <CardTitle className="text-2xl font-bold text-white">Secondary Camera Setup</CardTitle>
+        <CardDescription className="text-amber-100">
+          {setupStep === 'initial' && 'Setting up your primary camera...'}
+          {setupStep === 'secondary' && 'Connect a mobile device as a secondary camera'}
+          {setupStep === 'validation' && 'Validating camera setup...'}
+          {setupStep === 'complete' && 'Camera setup complete!'}
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="space-y-6 pt-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {setupStep === 'initial' && (
+          <div className="flex flex-col items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-amber-600 mb-4" />
+            <p className="text-gray-700 font-medium">Initializing camera...</p>
+            <p className="text-gray-500 text-sm mt-2">This may take a few moments. Please grant camera permissions if prompted.</p>
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md">
+              <p className="text-blue-800 text-sm">
+                <strong>Tip:</strong> If setup is taking too long, it will automatically advance after 15 seconds.
+                You can then continue without camera access or refresh the page to try again.
+              </p>
+            </div>
+            
+            {/* Manual advance button */}
+            <button 
+              onClick={() => {
+                console.log('Manual advance button clicked');
+                setSetupStep('secondary');
+              }}
+              className="mt-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-colors"
+            >
+              Skip Camera Setup
+            </button>
+          </div>
+        )}
+        
+        {setupStep === 'secondary' && (
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 border rounded-lg overflow-hidden bg-black relative" style={{ minHeight: '250px' }}>
+                {error ? (
+                  <div className="w-full h-64 flex items-center justify-center bg-gray-100">
+                    <div className="text-center p-4">
+                      <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+                      <p className="font-medium text-gray-700">Camera Unavailable</p>
+                      <p className="text-gray-500 text-sm mt-1">Failed to initialize camera. You can continue without camera access</p>
+                      <button 
+                        onClick={() => {
+                          console.log('Attempting to reinitialize camera');
+                          setError(null);
+                          // Try to get camera access again
+                          navigator.mediaDevices.getUserMedia({ video: true })
+                            .then(stream => {
+                              if (videoRef.current) {
+                                videoRef.current.srcObject = stream;
+                                videoRef.current.play()
+                                  .then(() => console.log('Camera reinitialized successfully'))
+                                  .catch(e => console.error('Error playing reinitialized video:', e));
+                              }
+                            })
+                            .catch(e => {
+                              console.error('Error reinitializing camera:', e);
+                              setError('Camera access failed. Please check your browser settings.');
+                            });
+                        }}
+                        className="mt-4 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition-colors"
+                      >
+                        Retry Camera Access
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Add a loading indicator that will be hidden when video plays */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black z-10" 
+                         id="video-loading-indicator"
+                         style={{ opacity: 0.7 }}>
+                      <div className="text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                        <p className="text-white text-sm">Loading camera feed...</p>
+                        <button 
+                          onClick={() => {
+                            console.log('Manual camera refresh requested');
+                            // Hide loading indicator
+                            const loadingIndicator = document.getElementById('video-loading-indicator');
+                            if (loadingIndicator) loadingIndicator.style.display = 'none';
+                            
+                            // Try to reinitialize camera
+                            if (videoRef.current && videoRef.current.srcObject) {
+                              try {
+                                // Try to play the video
+                                videoRef.current.play()
+                                  .then(() => console.log('Video playback started successfully'))
+                                  .catch(err => console.error('Error playing video:', err));
+                              } catch (e) {
+                                console.error('Error playing video:', e);
+                              }
+                            } else {
+                              // Try to get camera access again
+                              navigator.mediaDevices.getUserMedia({ video: true })
+                                .then(stream => {
+                                  if (videoRef.current) {
+                                    videoRef.current.srcObject = stream;
+                                    videoRef.current.play()
+                                      .then(() => console.log('Camera reinitialized successfully'))
+                                      .catch(e => console.error('Error playing reinitialized video:', e));
+                                  }
+                                })
+                                .catch(e => console.error('Error reinitializing camera:', e));
+                            }
+                          }}
+                          className="mt-4 px-4 py-2 bg-white/20 hover:bg-white/30 text-white text-sm rounded-md transition-colors"
+                        >
+                          Refresh Camera
+                        </button>
+                      </div>
+                    </div>
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline 
+                      muted 
+                      className="w-full h-64 object-cover" 
+                      style={{ 
+                        display: 'block', 
+                        minHeight: '250px',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        backgroundColor: '#000'
+                      }}
+                      onError={(e) => console.error('Primary video error in secondary step:', e)}
+                      onLoadedMetadata={() => {
+                        console.log('Primary video metadata loaded in secondary step');
+                        // Ensure video plays
+                        if (videoRef.current && videoRef.current.paused) {
+                          console.log('Ensuring video plays in secondary step');
+                          // Force video element to be visible
+                          if (videoRef.current) {
+                            videoRef.current.style.display = 'block';
+                            videoRef.current.style.width = '100%';
+                            videoRef.current.style.height = '100%';
+                            videoRef.current.style.objectFit = 'cover';
+                          }
+                          
+                          videoRef.current.play()
+                            .then(() => {
+                              console.log('Video playing successfully in secondary step');
+                              // Hide loading indicator when video starts playing
+                              const loadingIndicator = document.getElementById('video-loading-indicator');
+                              if (loadingIndicator) loadingIndicator.style.display = 'none';
+                            })
+                            .catch(err => {
+                              console.error('Error playing video in secondary step:', err);
+                              // Try again with a delay
+                              setTimeout(() => {
+                                if (videoRef.current) {
+                                  videoRef.current.play()
+                                    .then(() => {
+                                      console.log('Second play attempt successful in secondary step');
+                                      const loadingIndicator = document.getElementById('video-loading-indicator');
+                                      if (loadingIndicator) loadingIndicator.style.display = 'none';
+                                    })
+                                    .catch(e => console.error('Second play attempt failed in secondary step:', e));
+                                }
+                              }, 1000);
+                            });
+                        }
+                      }}
+                      onLoadedData={() => {
+                        console.log('Primary video data loaded in secondary step');
+                        // Hide loading indicator when video data is loaded
+                        const loadingIndicator = document.getElementById('video-loading-indicator');
+                        if (loadingIndicator) loadingIndicator.style.display = 'none';
+                        
+                        // Force video element to be visible
+                        if (videoRef.current) {
+                          videoRef.current.style.display = 'block';
+                        }
+                      }}
+                      onCanPlay={() => {
+                        console.log('Primary video can play in secondary step');
+                        // Hide loading indicator
+                        const loadingIndicator = document.getElementById('video-loading-indicator');
+                        if (loadingIndicator) loadingIndicator.style.display = 'none';
+                      }}
+                      // Force re-render of video element with a key
+                      key={`primary-video-${Date.now()}`}
+                    />
+                  </>
+                )}
+                <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                  Primary Camera
+                </div>
+              </div>
+              
+              {!showQRCode ? (
+                <div className="flex-1 border rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <Video className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="font-medium text-gray-900">Add Secondary Camera</h3>
+                    
+                    {isMobileDevice ? (
+                      <>
+                        <p className="text-gray-500 text-sm mt-2">
+                          It looks like you're on a mobile device. You'll need another device to serve as a secondary camera.
+                        </p>
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3 text-left">
+                          <p className="text-amber-800 text-sm">
+                            <strong>Tip:</strong> Use a laptop or desktop as your primary device, and use this mobile device as a secondary camera.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-gray-500 text-sm mt-2">
+                        Use your mobile device as a secondary camera for better proctoring
+                      </p>
+                    )}
+                    
+                    <Button 
+                      onClick={handleShowQRCode} 
+                      className="mt-4 bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white"
+                    >
+                      Connect Mobile Camera
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 border rounded-lg overflow-hidden bg-gray-100">
+                  <div className="text-center p-4">
+                    <h3 className="font-medium text-gray-900 mb-2">Scan QR Code</h3>
+                    {qrCodeUrl ? (
+                      <SecureQRCodeInstructions qrCodeUrl={qrCodeUrl} />
+                    ) : (
+                      <div className="w-48 h-48 mx-auto flex items-center justify-center border border-gray-300 rounded">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                          <p className="text-gray-500">Generating<br />QR Code...</p>
+                        </div>
+                      </div>
+                    )}
+                    {isCheckingMobileConnection && (
+                      <div className="mt-4 flex items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span className="text-sm text-gray-500">Checking connection...</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex">
+                <Info className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0" />
+                <div>
+                  <h4 className="font-medium text-amber-800">Why use a secondary camera?</h4>
+                  <p className="text-amber-700 text-sm mt-1">
+                    A secondary camera provides an additional view during proctoring, 
+                    helping to ensure the integrity of the assessment process.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {setupStep === 'validation' && (
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 border rounded-lg overflow-hidden bg-black relative" style={{ minHeight: '250px' }}>
+                <div className="absolute inset-0 flex items-center justify-center bg-black z-10" 
+                     id="validation-video-loading-indicator"
+                     style={{ opacity: 0.7 }}>
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                    <p className="text-white text-sm">Loading camera feed...</p>
+                  </div>
+                </div>
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className="w-full h-64 object-cover" 
+                  style={{ display: 'block', minHeight: '250px' }}
+                  onError={(e) => console.error('Primary video error:', e)}
+                  onLoadedMetadata={() => {
+                    console.log('Primary video metadata loaded in validation step');
+                    // Ensure video plays
+                    if (videoRef.current && videoRef.current.paused) {
+                      console.log('Ensuring video plays in validation step');
+                      videoRef.current.play()
+                        .then(() => {
+                          console.log('Video playing successfully in validation step');
+                          // Hide loading indicator
+                          const loadingIndicator = document.getElementById('validation-video-loading-indicator');
+                          if (loadingIndicator) loadingIndicator.style.display = 'none';
+                        })
+                        .catch(err => console.error('Error playing video in validation step:', err));
+                    }
+                  }}
+                  onLoadedData={() => {
+                    console.log('Primary video data loaded in validation step');
+                    // Hide loading indicator
+                    const loadingIndicator = document.getElementById('validation-video-loading-indicator');
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                  }}
+                  key={`primary-video-validation-${Date.now()}`}
+                />
+                <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                  Primary Camera
+                </div>
+              </div>
+              
+              <div className="flex-1 border rounded-lg overflow-hidden bg-black relative" style={{ minHeight: '250px' }}>
+                <div className="absolute inset-0 flex items-center justify-center bg-black z-10" 
+                     id="secondary-video-loading-indicator"
+                     style={{ opacity: 0.7 }}>
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                    <p className="text-white text-sm">Loading secondary camera...</p>
+                  </div>
+                </div>
+                <video 
+                  ref={secondaryVideoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className="w-full h-64 object-cover" 
+                  style={{ display: 'block', minHeight: '250px' }}
+                  onError={(e) => console.error('Secondary video error:', e)}
+                  onLoadedMetadata={() => {
+                    console.log('Secondary video metadata loaded');
+                    // Ensure video plays
+                    if (secondaryVideoRef.current && secondaryVideoRef.current.paused) {
+                      console.log('Ensuring secondary video plays');
+                      secondaryVideoRef.current.play()
+                        .then(() => {
+                          console.log('Secondary video playing successfully');
+                          // Hide loading indicator
+                          const loadingIndicator = document.getElementById('secondary-video-loading-indicator');
+                          if (loadingIndicator) loadingIndicator.style.display = 'none';
+                        })
+                        .catch(err => console.error('Error playing secondary video:', err));
+                    }
+                  }}
+                  onLoadedData={() => {
+                    console.log('Secondary video data loaded');
+                    // Hide loading indicator
+                    const loadingIndicator = document.getElementById('secondary-video-loading-indicator');
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                  }}
+                  key={`secondary-video-${Date.now()}`}
+                />
+                <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                  Secondary Camera
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-green-100 p-3 mb-4">
+                  <Check className="h-8 w-8 text-green-600" />
+                </div>
+                <p className="text-lg font-medium text-gray-900">Mobile Camera Connected</p>
+                <p className="text-gray-500 mt-2 text-center">
+                  Your mobile camera has been successfully connected.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {setupStep === 'complete' && (
+          <div className="flex items-center justify-center p-8">
+            <div className="flex flex-col items-center">
+              <div className="rounded-full bg-green-100 p-3 mb-4">
+                <Check className="h-8 w-8 text-green-600" />
+              </div>
+              <p className="text-lg font-medium text-gray-900">Setup Complete</p>
+              <p className="text-gray-500 mt-2 text-center">
+                Both cameras have been successfully configured.
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+      
+      <CardFooter className="flex justify-between bg-gray-50 border-t border-gray-100 py-4 px-6">
+        {!isRequired && setupStep !== 'initial' && (
+          <Button 
+            variant="outline" 
+            onClick={onSkip}
+            className="border-gray-300 hover:bg-gray-100 hover:text-gray-900"
+          >
+            Skip Setup
+          </Button>
+        )}
+        
+        {setupStep === 'validation' && (
+          <Button 
+            onClick={handleComplete}
+            className="bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-700 hover:to-rose-700 text-white ml-auto"
+          >
+            Complete Setup <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default ThirdCameraSetup;

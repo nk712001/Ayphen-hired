@@ -1,0 +1,110 @@
+import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(
+  request: Request,
+  { params }: { params: { attemptId: string } }
+) {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { attemptId } = params;
+    const { questionId, answer, isFlagged, timeSpent } = await request.json();
+
+    if (!questionId) {
+      return NextResponse.json(
+        { error: 'Question ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Verify the attempt exists and belongs to the user
+    const attempt = await prisma.testAttempt.findUnique({
+      where: { 
+        id: attemptId,
+        userId,
+        status: 'IN_PROGRESS', // Only allow updates to in-progress attempts
+      },
+    });
+
+    if (!attempt) {
+      return NextResponse.json(
+        { error: 'Test attempt not found or not in progress' },
+        { status: 404 }
+      );
+    }
+
+    // Verify the question exists in the test
+    const question = await prisma.question.findFirst({
+      where: { 
+        id: questionId,
+        testId: attempt.testId,
+      },
+    });
+
+    if (!question) {
+      return NextResponse.json(
+        { error: 'Question not found in this test' },
+        { status: 404 }
+      );
+    }
+
+    // Prepare answer data
+    const answerData: any = {
+      attemptId,
+      questionId,
+      isFlagged: isFlagged || false,
+      updatedAt: new Date(),
+    };
+
+    // Only update answer if provided
+    if (answer !== undefined) {
+      answerData.answer = JSON.stringify(answer);
+      answerData.submittedAt = new Date();
+    }
+
+    // Update time spent if provided
+    if (timeSpent !== undefined) {
+      answerData.timeSpent = timeSpent;
+    }
+
+    // Upsert the answer
+    const savedAnswer = await prisma.testAnswer.upsert({
+      where: {
+        attemptId_questionId: {
+          attemptId,
+          questionId,
+        },
+      },
+      update: answerData,
+      create: {
+        ...answerData,
+        submittedAt: new Date(),
+      },
+      select: {
+        id: true,
+        questionId: true,
+        isFlagged: true,
+        submittedAt: true,
+      },
+    });
+
+    return NextResponse.json({ 
+      success: true,
+      data: savedAnswer,
+    });
+  } catch (error) {
+    console.error('Error saving answer:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to save answer',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}

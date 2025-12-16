@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple WebSocket Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .log {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      margin-top: 20px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple WebSocket Test</h1>
+  
+  <div class="container">
+    <h2>Connection Information</h2>
+    <p><strong>Page URL:</strong> <span id="pageUrl"></span></p>
+    <p><strong>Page Protocol:</strong> <span id="pageProtocol"></span></p>
+    <p><strong>Secure Context:</strong> <span id="secureContext"></span></p>
+  </div>
+  
+  <div class="container">
+    <h2>Test Simple WebSocket</h2>
+    <p>This tests a simple echo WebSocket server on port 8001:</p>
+    <input type="text" id="wsUrl" value="wss://127.0.0.1:8001/ws/proctor/test-session">
+    <button onclick="connectWebSocket()">Connect</button>
+    <button onclick="disconnectWebSocket()">Disconnect</button>
+    <div>
+      <input type="text" id="messageInput" placeholder="Type a message to send">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  
+  <div class="log" id="log">
+    <p>Connection logs will appear here...</p>
+  </div>
+  
+  <script>
+    // Update page info
+    document.getElementById('pageUrl').textContent = window.location.href;
+    document.getElementById('pageProtocol').textContent = window.location.protocol;
+    document.getElementById('secureContext').textContent = window.isSecureContext ? 'Yes' : 'No';
+    
+    // WebSocket connection
+    let ws = null;
+    
+    // Log function
+    function log(message, isError = false) {
+      const logElement = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.style.color = isError ? '#a94442' : '#333';
+      entry.style.borderBottom = '1px solid #eee';
+      entry.style.padding = '5px 0';
+      entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+      
+      // Also log to console
+      if (isError) {
+        console.error(message);
+      } else {
+        console.log(message);
+      }
+    }
+    
+    // Connect to WebSocket
+    function connectWebSocket() {
+      const url = document.getElementById('wsUrl').value;
+      log(`Connecting to ${url}...`);
+      
+      try {
+        ws = new WebSocket(url);
+        
+        ws.onopen = () => {
+          log(`✅ Connected to ${url}`);
+        };
+        
+        ws.onmessage = (event) => {
+          log(`Received: ${event.data}`);
+        };
+        
+        ws.onerror = (error) => {
+          log(`❌ Error: ${error}`, true);
+          console.error('WebSocket error:', error);
+        };
+        
+        ws.onclose = (event) => {
+          log(`Closed: Code ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
+          ws = null;
+        };
+      } catch (error) {
+        log(`❌ Connection error: ${error.message}`, true);
+      }
+    }
+    
+    // Disconnect WebSocket
+    function disconnectWebSocket() {
+      if (ws) {
+        log('Disconnecting...');
+        ws.close();
+      } else {
+        log('Not connected');
+      }
+    }
+    
+    // Send message
+    function sendMessage() {
+      const message = document.getElementById('messageInput').value;
+      if (!ws) {
+        log('❌ Not connected', true);
+        return;
+      }
+      
+      if (!message) {
+        log('❌ Please enter a message', true);
+        return;
+      }
+      
+      try {
+        ws.send(message);
+        log(`Sent: ${message}`);
+        document.getElementById('messageInput').value = '';
+      } catch (error) {
+        log(`❌ Send error: ${error.message}`, true);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "next": "13.4.19",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "typescript": "4.9.5",
+    "@types/node": "18.16.3",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.11"
+  }
+}

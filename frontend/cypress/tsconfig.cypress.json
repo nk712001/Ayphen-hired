@@ -1,0 +1,32 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es5", "dom", "es2015", "es2017"],
+    "types": [
+      "cypress",
+      "node",
+      "mocha",
+      "chai",
+      "@testing-library/cypress",
+      "cypress-wait-until",
+      "cypress-file-upload",
+      "cypress-websocket-testing",
+      "@types/jquery"
+    ],
+    "isolatedModules": false,
+    "allowJs": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "baseUrl": "../",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "types/**/*.ts",
+    "support/**/*.ts"
+  ]
+}

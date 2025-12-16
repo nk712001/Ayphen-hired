@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session ID Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>Session ID Extraction Test</h1>
+    <p>This page tests if session IDs are properly extracted from URLs</p>
+    
+    <div id="results"></div>
+    
+    <h2>Test URLs:</h2>
+    <ul>
+        <li><a href="?sessionId=4c329acd-98e2-4676-b72f-55f09c080dfc">Test with UUID session ID</a></li>
+        <li><a href="?sessionId=test-123-456">Test with short session ID</a></li>
+        <li><a href="?sessionId=null">Test with null string</a></li>
+        <li><a href="?other=value">Test with no session ID</a></li>
+    </ul>
+
+    <script>
+        function testSessionIdExtraction() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            
+            // Get current URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('sessionId');
+            
+            // Test 1: Check if session ID exists
+            if (sessionId) {
+                results.innerHTML += `<div class="info test-result">✓ Session ID found: ${sessionId}</div>`;
+            } else {
+                results.innerHTML += `<div class="error test-result">✗ No session ID found in URL</div>`;
+                return;
+            }
+            
+            // Test 2: Check if it's not null string
+            if (sessionId === 'null') {
+                results.innerHTML += `<div class="error test-result">✗ Session ID is null string</div>`;
+                return;
+            } else {
+                results.innerHTML += `<div class="success test-result">✓ Session ID is not null string</div>`;
+            }
+            
+            // Test 3: Check length
+            if (sessionId.length >= 36) {
+                results.innerHTML += `<div class="success test-result">✓ Session ID has valid length: ${sessionId.length}</div>`;
+            } else {
+                results.innerHTML += `<div class="error test-result">✗ Session ID too short: ${sessionId.length}</div>`;
+                return;
+            }
+            
+            // Test 4: Check UUID format
+            const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (uuidPattern.test(sessionId)) {
+                results.innerHTML += `<div class="success test-result">✓ Session ID is valid UUID format</div>`;
+            } else {
+                results.innerHTML += `<div class="info test-result">ℹ Session ID is not UUID format (might be emergency format)</div>`;
+            }
+            
+            // Test 5: Simulate mobile camera page logic
+            let finalSessionId = null;
+            
+            if (sessionId && sessionId !== 'null' && sessionId !== 'undefined' && sessionId.length >= 36) {
+                finalSessionId = sessionId;
+                results.innerHTML += `<div class="success test-result">✓ Mobile camera would use: ${finalSessionId}</div>`;
+            } else {
+                finalSessionId = `emergency-qr-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+                results.innerHTML += `<div class="error test-result">✗ Mobile camera would generate emergency ID: ${finalSessionId}</div>`;
+            }
+            
+            // Test 6: Show what would be sent to API
+            results.innerHTML += `<div class="info test-result">API calls would use session ID: <strong>${finalSessionId}</strong></div>`;
+        }
+        
+        // Run test on page load
+        testSessionIdExtraction();
+    </script>
+</body>
+</html>

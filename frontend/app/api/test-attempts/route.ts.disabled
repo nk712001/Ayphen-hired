@@ -1,0 +1,164 @@
+import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs';
+import prisma from '@/lib/db';
+import type { Prisma } from '@prisma/client';
+
+export async function POST(request: Request) {
+  try {
+    const { userId } = auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { testId } = await request.json();
+    
+    // Check if user has an active test attempt
+    const activeAttempt = await prisma.testAttempt.findFirst({
+      where: {
+        testId,
+        userId,
+        status: 'IN_PROGRESS',
+      },
+      orderBy: {
+        startTime: 'desc',
+      },
+    });
+
+    if (activeAttempt) {
+      // Return the existing attempt
+      const test = await prisma.test.findUnique({
+        where: { id: testId },
+        include: {
+          questions: {
+            orderBy: { order: 'asc' },
+            select: {
+              id: true,
+              type: true,
+              text: true,
+              metadata: true,
+              difficulty: true,
+              order: true,
+            },
+          },
+        },
+      });
+
+      if (!test) {
+        return NextResponse.json(
+          { error: 'Test not found' },
+          { status: 404 }
+        );
+      }
+
+      // Get saved answers
+      const answers = await prisma.testAnswer.findMany({
+        where: { attemptId: activeAttempt.id },
+      });
+
+      const answersMap = answers.reduce((acc, answer) => {
+        acc[answer.questionId] = answer.answer ? JSON.parse(answer.answer) : null;
+        return acc;
+      }, {} as Record<string, any>);
+
+      return NextResponse.json({
+        attemptId: activeAttempt.id,
+        test: {
+          id: test.id,
+          title: test.title,
+          description: test.jobDescription,
+          duration: test.duration,
+          questions: test.questions,
+        },
+        answers: answersMap,
+        timeRemaining: activeAttempt.timeRemaining || activeAttempt.timeLimit,
+      });
+    }
+
+    // Check if test exists and user is assigned
+    const assignment = await prisma.testAssignment.findFirst({
+      where: {
+        testId,
+        candidate: {
+          email: userId, // Assuming userId is the email for assignment lookup
+        },
+        status: 'pending',
+      },
+      include: {
+        test: true,
+      },
+    });
+
+    if (!assignment) {
+      return NextResponse.json(
+        { error: 'Test not found or not assigned' },
+        { status: 404 }
+      );
+    }
+
+    // Create new test attempt
+    const attempt = await prisma.testAttempt.create({
+      data: {
+        testId,
+        userId,
+        testAssignmentId: assignment.id,
+        startTime: new Date(),
+        status: 'IN_PROGRESS',
+        timeLimit: assignment.test.duration * 60, // Convert minutes to seconds
+        timeRemaining: assignment.test.duration * 60, // Initial time remaining
+      },
+    });
+
+    // Update assignment status
+    await prisma.testAssignment.update({
+      where: { id: assignment.id },
+      data: { 
+        status: 'in_progress',
+        startedAt: new Date(),
+      },
+    });
+
+    // Get test with questions
+    const test = await prisma.test.findUnique({
+      where: { id: testId },
+      include: {
+        questions: {
+          orderBy: { order: 'asc' },
+          select: {
+            id: true,
+            type: true,
+            text: true,
+            metadata: true,
+            difficulty: true,
+            order: true,
+          },
+        },
+      },
+    });
+
+    if (!test) {
+      return NextResponse.json(
+        { error: 'Test not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      attemptId: attempt.id,
+      test: {
+        id: test.id,
+        title: test.title,
+        description: test.jobDescription,
+        duration: test.duration,
+        questions: test.questions,
+      },
+      answers: {},
+      timeRemaining: attempt.timeRemaining,
+    });
+  } catch (error) {
+    console.error('Error starting test attempt:', error);
+    return NextResponse.json(
+      { error: 'Failed to start test attempt' },
+      { status: 500 }
+    );
+  }
+}
