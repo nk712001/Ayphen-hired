@@ -52,6 +52,8 @@ model User {
   password      String?
   organization  Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  companyId     String?
   tests         Test[]
   testAssignments TestAssignment[]
   testAttempts  TestAttempt[]
@@ -67,6 +69,37 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Company {
+  id                String    @id @default(cuid())
+  name              String
+  domain            String?   @unique
+  logo              String?
+  branding          String?   // JSON string
+  settings          String?   // JSON string
+  subscriptionTier  String    @default("basic") // basic, pro, enterprise
+  maxUsers          Int       @default(50)
+  maxTests          Int       @default(100)
+  features          String?   // JSON string
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  organizations     Organization[]
+  users            User[]
+  companySettings  CompanySettings?
+}
+
+model CompanySettings {
+  id                String   @id @default(cuid())
+  companyId         String   @unique
+  emailDomain       String?
+  ssoEnabled        Boolean  @default(false)
+  customBranding    Boolean  @default(false)
+  aiProctoringLevel String   @default("standard")
+  dataRetention     Int      @default(365)
+  
+  company           Company  @relation(fields: [companyId], references: [id])
+}
+
 model Organization {
   id                String    @id @default(cuid())
   name              String
@@ -74,7 +107,11 @@ model Organization {
   expiryDate        DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  companyId         String?
+  
+  company           Company?  @relation(fields: [companyId], references: [id])
   users             User[]
+  tests             Test[]
 }
 
 model TestAIAnalysis {
@@ -101,7 +138,9 @@ model Test {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   createdBy              String
+  organizationId         String?
   user                   User      @relation(fields: [createdBy], references: [id])
+  organization           Organization? @relation(fields: [organizationId], references: [id])
   questions              Question[]
   assignments            TestAssignment[]
   aiGenerated            Boolean   @default(false)

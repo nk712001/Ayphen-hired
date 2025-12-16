@@ -245,6 +245,11 @@ class ConnectionManager:
                 return {'status': 'error', 'message': 'Session not found'}
 
         if frame_type == 'video':
+            # Check if secondary frame data is present and auto-activate if needed
+            if secondary_frame_data and not session.secondary_camera_active:
+                print(f"[AUTO_ACTIVATE] Auto-activating secondary camera for session {session_id} due to received frame data")
+                session.secondary_camera_active = True
+
             if secondary_frame_data and session.secondary_camera_active:
                 # Process dual camera setup
                 dual_camera_result = session.multi_camera_manager.process_dual_camera(frame_data, secondary_frame_data)
