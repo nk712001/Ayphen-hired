@@ -73,7 +73,7 @@ export default function TestsPage() {
         {assignments.length === 0 ? (
           <div className="text-center py-12">
             <h2 className="text-xl font-medium text-gray-900 mb-2">No Tests Assigned</h2>
-            <p className="text-gray-500">You don't have any tests assigned yet. Please contact your interviewer.</p>
+            <p className="text-gray-500">You don&apos;t have any tests assigned yet. Please contact your interviewer.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,8 +83,8 @@ export default function TestsPage() {
                   <div className="flex justify-between items-start mb-2">
                     <h2 className="text-lg font-medium text-gray-900">{assignment.test.title}</h2>
                     <span className={`px-2 py-1 text-xs rounded-full ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        assignment.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
+                      assignment.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
                       {assignment.status.replace('_', ' ')}
                     </span>
@@ -124,8 +124,8 @@ export default function TestsPage() {
                     onClick={() => handleStartTest(assignment)}
                     disabled={assignment.status === 'completed'}
                     className={`w-full px-4 py-2 text-sm font-medium rounded-md ${assignment.status === 'completed'
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'text-white bg-primary hover:bg-primary-dark'
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'text-white bg-primary hover:bg-primary-dark'
                       }`}
                   >
                     {assignment.status === 'completed' ? 'Test Completed' :

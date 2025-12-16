@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Building2, Users, Calendar, MoreHorizontal } from 'lucide-react';
 import CreateCompanyDialog from '@/components/super-admin/CreateCompanyDialog';
 
+export const dynamic = 'force-dynamic';
+
 async function getCompanies() {
     return await prisma.company.findMany({
         include: {

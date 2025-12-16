@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import NextImage from 'next/image';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -68,16 +69,16 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       console.log('Using existing mobile session ID from localStorage:', existingId);
       return existingId;
     }
-    
+
     // Generate a new session ID
     const newId = uuidv4();
     console.log('Generated new mobile session ID:', newId);
-    
+
     // Store in localStorage for persistence
     if (typeof window !== 'undefined') {
       localStorage.setItem('mobileSessionId', newId);
     }
-    
+
     return newId;
   });
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
@@ -107,7 +108,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   const validateSecondaryCamera = async (frameData: string) => {
     try {
       console.log('[VALIDATION] Starting secondary camera validation for session:', mobileSessionId);
-      
+
       const response = await fetch('/api/setup/secondary-camera-validation', {
         method: 'POST',
         headers: {
@@ -118,7 +119,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           frameData: frameData
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('[VALIDATION] Validation result:', result);
@@ -144,25 +145,25 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       console.log('[PRIMARY_AI_ANALYSIS] Skipping analysis - already in progress');
       return null;
     }
-    
+
     try {
       setPrimaryAnalysisInProgress(true);
       console.log('[PRIMARY_AI_ANALYSIS] Starting WebSocket-based analysis for session:', mobileSessionId);
       console.log('[PRIMARY_AI_ANALYSIS] Frame data length:', frameData ? frameData.length : 0);
-      
+
       // Use the same WebSocket approach as the proctoring demo
       // Create a temporary ProctorClient-like connection for analysis
       const wsUrl = `wss://127.0.0.1:8000/ws/proctor/${mobileSessionId}`;
       console.log('[PRIMARY_AI_ANALYSIS] Connecting to WebSocket:', wsUrl);
-      
+
       const ws = new WebSocket(wsUrl);
-      
+
       return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           ws.close();
           reject(new Error('WebSocket analysis timeout'));
         }, 10000); // 10 second timeout
-        
+
         ws.onopen = () => {
           console.log('[PRIMARY_AI_ANALYSIS] WebSocket connected, sending frame');
           // Send video frame for analysis
@@ -171,27 +172,27 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             data: frameData
           }));
         };
-        
+
         ws.onmessage = (event) => {
           try {
             const result = JSON.parse(event.data);
             console.log('[PRIMARY_AI_ANALYSIS] WebSocket response:', result);
-            
+
             if (result.metrics) {
               // Use actual violations from the backend instead of creating simplified ones
               const actualViolations = result.violations || [];
               const activeViolations = result.active_violations || actualViolations.filter((v: any) => !v.suppressed);
-              
+
               console.log('[PRIMARY_AI_ANALYSIS] Actual violations from backend:', actualViolations);
               console.log('[PRIMARY_AI_ANALYSIS] Active violations:', activeViolations);
-              
+
               // Use actual face count from backend metrics
               const facesDetected = result.metrics.faces_detected || 0;
               console.log('[PRIMARY_AI_ANALYSIS] Faces detected from backend:', facesDetected);
-              
+
               const hasProhibitedItems = (result.metrics.objects_detected || 0) > 0;
               const hasFace = result.metrics.face_confidence > 0.5;
-              
+
               // Calculate overall score considering violations
               let overallScore = result.metrics.face_confidence || 0.0;
               if (activeViolations.length > 0) {
@@ -199,10 +200,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 const criticalViolations = activeViolations.filter((v: any) => v.severity === 'critical').length;
                 const highViolations = activeViolations.filter((v: any) => v.severity === 'high').length;
                 const mediumViolations = activeViolations.filter((v: any) => v.severity === 'medium').length;
-                
+
                 overallScore = Math.max(0, overallScore - (criticalViolations * 0.8) - (highViolations * 0.5) - (mediumViolations * 0.3));
               }
-              
+
               const analysis = {
                 overall_compliance: {
                   status: activeViolations.length === 0 ? 'compliant' : 'non_compliant',
@@ -219,10 +220,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 violations: actualViolations,
                 active_violations: activeViolations
               };
-              
+
               console.log('[PRIMARY_AI_ANALYSIS] Converted analysis:', analysis);
               setPrimaryAnalysisResults(analysis);
-              
+
               // Update primary camera violations using active violations
               if (activeViolations && activeViolations.length > 0) {
                 console.log('[PRIMARY_AI_ANALYSIS] Primary camera active violations detected:', activeViolations);
@@ -235,19 +236,19 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                   setShowUnifiedViolationOverlay(false);
                 }
               }
-              
+
               // Update violation prevention status
               const violationPrevention = analysis.violation_prevention;
               if (violationPrevention) {
                 setPrimaryViolationPreventionActive(
-                  violationPrevention.risk_level === 'low' && 
+                  violationPrevention.risk_level === 'low' &&
                   violationPrevention.confidence > 0.7
                 );
-                console.log('[PRIMARY_AI_ANALYSIS] Violation prevention active:', 
+                console.log('[PRIMARY_AI_ANALYSIS] Violation prevention active:',
                   violationPrevention.risk_level === 'low' && violationPrevention.confidence > 0.7
                 );
               }
-              
+
               clearTimeout(timeout);
               ws.close();
               resolve(analysis);
@@ -259,13 +260,13 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             reject(error);
           }
         };
-        
+
         ws.onerror = (error) => {
           console.error('[PRIMARY_AI_ANALYSIS] WebSocket error:', error);
           clearTimeout(timeout);
           reject(error);
         };
-        
+
         ws.onclose = (event) => {
           console.log('[PRIMARY_AI_ANALYSIS] WebSocket closed:', event.code, event.reason);
           clearTimeout(timeout);
@@ -274,7 +275,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           }
         };
       });
-      
+
     } catch (error) {
       console.error('[PRIMARY_AI_ANALYSIS] Failed to analyze frame:', error);
       return null;
@@ -290,12 +291,12 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       console.log('[AI_ANALYSIS] Skipping analysis - already in progress');
       return;
     }
-    
+
     try {
       setAnalysisInProgress(true);
       console.log('[AI_ANALYSIS] Starting analysis for session:', mobileSessionId);
       console.log('[AI_ANALYSIS] Frame data length:', frameData ? frameData.length : 0);
-      
+
       const response = await fetch('/api/setup/secondary-camera-analysis', {
         method: 'POST',
         headers: {
@@ -306,9 +307,9 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           frameData: frameData
         })
       });
-      
+
       console.log('[AI_ANALYSIS] Response status:', response.status);
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('[AI_ANALYSIS] Raw response:', result);
@@ -319,14 +320,14 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             console.log('[AI_ANALYSIS] Fallback reason:', result.fallback_reason);
           }
           setAiAnalysisResults(result.analysis);
-          
+
           // Update violation prevention status
           const violationPrevention = result.analysis.violation_prevention;
           if (violationPrevention) {
             const isActive = violationPrevention.risk_level === 'low' || violationPrevention.risk_level === 'medium';
             setViolationPreventionActive(isActive);
           }
-          
+
           // Check for secondary camera violations
           console.log('[VIOLATION_DEBUG] Full analysis result:', result.analysis);
           console.log('[VIOLATION_DEBUG] Analysis result keys:', Object.keys(result.analysis || {}));
@@ -343,13 +344,13 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           console.log('[VIOLATION_DEBUG] Keyboard analysis quality:', keyboardAnalysis?.analysis_quality);
           console.log('[VIOLATION_DEBUG] Hands detected count:', handAnalysis?.hands_detected);
           console.log('[VIOLATION_DEBUG] Hand confidence:', handAnalysis?.confidence);
-          
+
           const violations = [];
-          
+
           // Check if analysis failed or returned error
           if (analysisData.status === 'error') {
-            if (analysisData.error === 'Secondary camera not active' || 
-                analysisData.message === 'Session not found') {
+            if (analysisData.error === 'Secondary camera not active' ||
+              analysisData.message === 'Session not found') {
               console.log('[VIOLATION_DEBUG] AI service session issue - skipping violations:', analysisData.message || analysisData.error);
               // Don't create violations for AI service session issues
               // This will be fixed once the session is properly established
@@ -360,9 +361,9 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 message: 'Unable to analyze secondary camera feed - please check camera positioning'
               });
             }
-          } else if (handAnalysis?.analysis_quality === 'black_screen' || 
-                   keyboardAnalysis?.analysis_quality === 'black_screen' ||
-                   result.analysis.overall_compliance?.status === 'black_screen') {
+          } else if (handAnalysis?.analysis_quality === 'black_screen' ||
+            keyboardAnalysis?.analysis_quality === 'black_screen' ||
+            result.analysis.overall_compliance?.status === 'black_screen') {
             console.log('[VIOLATION_DEBUG] Black screen detected by AI analysis');
             violations.push({
               type: 'black_screen_detected',
@@ -371,7 +372,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           } else {
             // Normal violation checks - Real AI detection
             console.log('[VIOLATION_DEBUG] Running real AI violation detection');
-            
+
             if (!handAnalysis?.hands_visible) {
               console.log('[VIOLATION_DEBUG] Hands not visible violation detected');
               violations.push({
@@ -381,21 +382,21 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             } else {
               console.log('[VIOLATION_DEBUG] ✅ Hands are visible - no violation');
             }
-            
+
             if (!keyboardAnalysis?.keyboard_visible) {
               console.log('[VIOLATION_DEBUG] Keyboard not visible violation detected');
               violations.push({
-                type: 'keyboard_not_visible', 
+                type: 'keyboard_not_visible',
                 message: 'Keyboard not visible in secondary camera view'
               });
             } else {
               console.log('[VIOLATION_DEBUG] ✅ Keyboard is visible - no violation');
             }
           }
-          
+
           console.log('[VIOLATION_DEBUG] Setting violations:', violations);
           setSecondaryCameraViolations(violations);
-          
+
           // Reset dismissal time if violations are cleared
           if (violations.length === 0) {
             console.log('[VIOLATION_DEBUG] No secondary violations, checking primary violations');
@@ -411,10 +412,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             const now = Date.now();
             const timeSinceDismissal = overlayDismissedAt ? (now - overlayDismissedAt) : null;
             const shouldShowOverlay = (violations.length > 0 || primaryCameraViolations.length > 0) && (
-              !overlayDismissedAt || 
+              !overlayDismissedAt ||
               (now - overlayDismissedAt) > 5000 // 5 seconds (reduced from 10)
             );
-            
+
             console.log('[VIOLATION_DEBUG] ===== UNIFIED OVERLAY DECISION LOGIC =====');
             console.log('[VIOLATION_DEBUG] Secondary violations count:', violations.length);
             console.log('[VIOLATION_DEBUG] Primary violations count:', primaryCameraViolations.length);
@@ -424,16 +425,16 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             console.log('[VIOLATION_DEBUG] Time since dismissal (ms):', timeSinceDismissal);
             console.log('[VIOLATION_DEBUG] Should show overlay:', shouldShowOverlay);
             console.log('[VIOLATION_DEBUG] Current showUnifiedViolationOverlay state:', showUnifiedViolationOverlay);
-            
+
             setShowUnifiedViolationOverlay(shouldShowOverlay);
-            
+
             console.log('[VIOLATION_DEBUG] After setState - showUnifiedViolationOverlay should be:', shouldShowOverlay);
           }
-          
+
           // Update recommendations
           const recommendations = result.analysis.recommendations || [];
           setAnalysisRecommendations(recommendations);
-          
+
           return result.analysis;
         } else {
           console.log('[AI_ANALYSIS] No analysis in response or not successful:', result);
@@ -461,21 +462,21 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   // Generate QR code URL
   const generateQRCode = () => {
     if (!mobileSessionId) return '';
-    
+
     console.log('[QR Code] Generating QR code with session ID:', mobileSessionId);
     console.log('[QR Code] Network IP available:', networkIp);
-    
+
     // Use network IP if available, otherwise fallback to localhost
     const host = networkIp || window.location.hostname;
     const port = window.location.port || '3000';
     const protocol = window.location.protocol;
-    
+
     // Generate URL with network IP for mobile access
     const directUrl = `${protocol}//${host}:${port}/mobile-camera?sessionId=${mobileSessionId}`;
-    
+
     console.log('[QR Code] Generated QR code URL:', directUrl);
     console.log('[QR Code] Using host:', host, 'port:', port);
-    
+
     // Update state
     setQrCodeUrl(directUrl);
     return directUrl;
@@ -492,23 +493,23 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       // Create a canvas to capture the frame
       const canvas = document.createElement('canvas');
       const video = videoRef.current;
-      
+
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
-      
+
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         console.error('[PRIMARY_CAPTURE] Could not get canvas context');
         return null;
       }
-      
+
       // Draw the current video frame to canvas
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
+
       // Convert to base64
       const frameData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
       console.log('[PRIMARY_CAPTURE] Captured frame, size:', frameData.length);
-      
+
       return frameData;
     } catch (error) {
       console.error('[PRIMARY_CAPTURE] Error capturing frame:', error);
@@ -520,7 +521,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   const initializePrimaryCamera = async () => {
     console.log('[PRIMARY CAMERA] 🎥 Initializing primary camera...');
     console.log('[PRIMARY CAMERA] Current setup step:', setupStep);
-    
+
     try {
       // Get user media
       const constraints = {
@@ -535,19 +536,19 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       console.log('[PRIMARY CAMERA] Requesting user media with constraints:', constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       console.log('[PRIMARY CAMERA] ✅ Got media stream:', stream.id);
-      
+
       mediaStreamRef.current = stream;
 
       // Set the stream to the video element
       if (videoRef.current) {
         console.log('[PRIMARY CAMERA] ✅ Setting stream to video element');
         videoRef.current.srcObject = stream;
-        
+
         // Wait for video to load
         videoRef.current.onloadedmetadata = () => {
           console.log('[PRIMARY CAMERA] ✅ Video metadata loaded, playing...');
           videoRef.current?.play().catch(e => console.log('[PRIMARY CAMERA] Play error:', e));
-          
+
           // Start primary camera analysis when video is ready
           if (setupStep === SetupStep.MOBILE_CONNECTED) {
             startPrimaryCameraAnalysis();
@@ -575,12 +576,12 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   // Start primary camera analysis interval
   const startPrimaryCameraAnalysis = () => {
     console.log('[PRIMARY_ANALYSIS] Starting primary camera analysis interval');
-    
+
     // Clear any existing interval
     if (window.primaryAnalysisInterval) {
       clearInterval(window.primaryAnalysisInterval);
     }
-    
+
     // Start analysis every 3 seconds (less frequent than secondary camera)
     window.primaryAnalysisInterval = setInterval(() => {
       if (!isMountedRef.current || setupStep !== SetupStep.MOBILE_CONNECTED) {
@@ -591,11 +592,11 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         }
         return;
       }
-      
+
       const frameData = capturePrimaryCameraFrame();
       if (frameData) {
         console.log('[PRIMARY_ANALYSIS] Analyzing primary camera frame');
-        analyzePrimaryCameraWithAI(frameData).catch(e => 
+        analyzePrimaryCameraWithAI(frameData).catch(e =>
           console.error('[PRIMARY_ANALYSIS] Analysis error:', e)
         );
       }
@@ -604,7 +605,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
 
   // Track frame count for debugging
   const [frameCount, setFrameCount] = useState<number>(0);
-  
+
   // Check if the mobile camera is connected
   const checkMobileConnection = async (): Promise<boolean> => {
     // Make sure we have a valid session ID that's not null or 'null'
@@ -619,7 +620,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       let gotAnyResponse = false;
 
       console.log('Checking mobile connection for session ID:', mobileSessionId);
-      
+
       // Check if the mobile camera is connected
       const checkResponse = await fetchWithRetry(
         `/api/setup/check-mobile-camera?sessionId=${mobileSessionId}&debug=true&t=${Date.now()}`,
@@ -628,22 +629,22 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       );
 
       gotAnyResponse = true;
-      
+
       if (checkResponse.ok) {
         const checkData = await checkResponse.json();
         console.log('Mobile connection check response:', checkData);
-        
+
         // Only consider connected if we have real data and not test data
         // Log the full response for debugging
         console.log('Full mobile connection check response:', JSON.stringify(checkData));
-        
+
         // FIXED: Require verified connection with actual frames from mobile device
         // Only consider connected if we have verified frames from a real mobile device
         const hasFrames = checkData.frameCount > 0; // Must have at least 1 frame
         const isRecent = checkData.lastUpdated && (Date.now() - checkData.lastUpdated < 15000); // More strict: 15 seconds
         const hasValidConnection = checkData.connected; // Trust the server's connected flag
         const isVerified = checkData.verified === true; // NEW: Require verified flag from API
-        
+
         // Log detailed connection criteria
         console.log('Connection criteria:', {
           hasFrames,
@@ -654,28 +655,28 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           isVerified,
           forcedConnection: checkData.forcedConnection || false
         });
-        
+
         // FIXED: Require ALL criteria for a real connection - frames AND recent AND verified
         const isRealConnection = hasFrames && isRecent && hasValidConnection && isVerified;
-        
+
         // Update frame count for debugging
         setFrameCount(checkData.frameCount || 0);
-        
-        console.log('Is real connection:', isRealConnection, 
-          'frameCount:', checkData.frameCount || 0, 
+
+        console.log('Is real connection:', isRealConnection,
+          'frameCount:', checkData.frameCount || 0,
           'verified:', isVerified,
           'forcedConnection:', checkData.forcedConnection || false,
           'lastUpdated age:', checkData.lastUpdated ? Date.now() - checkData.lastUpdated : 'N/A',
           'streamUrl:', checkData.streamUrl || 'none');
-        
+
         if (isRealConnection && isMountedRef.current) {
           console.log('[CONNECTION] ✅ Mobile camera connected with frames!', checkData);
-          
+
           // Set mobile connected state to true - this will trigger auto-advance
           console.log('[CONNECTION] ✅ Setting isMobileConnected to true with frameCount:', checkData.frameCount);
           setIsMobileConnected(true);
           console.log('[CONNECTION] ✅ isMobileConnected state updated - auto-advance should trigger immediately');
-          
+
           // Only change the UI AFTER we've confirmed the connection
           // Create a dummy video stream since we can't get the real one
           if (secondaryVideoRef.current) {
@@ -685,7 +686,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               canvas.width = 640;
               canvas.height = 480;
               const ctx = canvas.getContext('2d');
-              
+
               if (ctx) {
                 // Draw initial placeholder
                 ctx.fillStyle = '#4CAF50';
@@ -693,131 +694,131 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 ctx.fillStyle = 'white';
                 ctx.font = '24px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText('Mobile Camera Connected', canvas.width/2, canvas.height/2 - 20);
-                ctx.fillText('✓', canvas.width/2, canvas.height/2 + 30);
-                
+                ctx.fillText('Mobile Camera Connected', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillText('✓', canvas.width / 2, canvas.height / 2 + 30);
+
                 // Create a stream from the canvas
                 try {
                   const stream = (canvas as any).captureStream(10); // 10fps for smoother video
                   secondaryVideoRef.current.srcObject = stream;
-                  
+
                   // Store the stream and canvas context for updates
                   setSecondaryStream(stream);
-                  
+
                   // Create regular variables instead of React hooks
                   // We can't use React hooks inside this function
                   const ctxRef = { current: ctx };
                   const lastFrameTimeRef = { current: Date.now() };
                   const failureCountRef = { current: 0 };
-                  
+
                   // AI analysis function is now defined globally at the top of the component
-                  
+
                   // Function to draw a fallback frame when no updates are received
                   const drawFallbackFrame = () => {
                     if (!ctxRef.current) return;
-                    
+
                     const ctx = ctxRef.current;
                     const timeSinceLastFrame = Date.now() - lastFrameTimeRef.current;
-                    
+
                     // Draw a warning message
                     ctx.fillStyle = '#333';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = '#FFA500'; // Orange warning color
                     ctx.font = '18px Arial';
                     ctx.textAlign = 'center';
-                    ctx.fillText('Reconnecting to mobile camera...', canvas.width/2, canvas.height/2 - 40);
-                    
+                    ctx.fillText('Reconnecting to mobile camera...', canvas.width / 2, canvas.height / 2 - 40);
+
                     if (timeSinceLastFrame > 1000) {
-                      ctx.fillText(`Last frame: ${Math.floor(timeSinceLastFrame/1000)}s ago`, canvas.width/2, canvas.height/2);
+                      ctx.fillText(`Last frame: ${Math.floor(timeSinceLastFrame / 1000)}s ago`, canvas.width / 2, canvas.height / 2);
                     } else {
-                      ctx.fillText('Establishing connection...', canvas.width/2, canvas.height/2);
+                      ctx.fillText('Establishing connection...', canvas.width / 2, canvas.height / 2);
                     }
-                    
-                    ctx.fillText('Please keep the camera app open', canvas.width/2, canvas.height/2 + 40);
-                    ctx.fillText(`Session ID: ${mobileSessionId}`, canvas.width/2, canvas.height/2 + 70);
-                    
+
+                    ctx.fillText('Please keep the camera app open', canvas.width / 2, canvas.height / 2 + 40);
+                    ctx.fillText(`Session ID: ${mobileSessionId}`, canvas.width / 2, canvas.height / 2 + 70);
+
                     // Add a timestamp to show the UI is still responsive
                     ctx.font = '12px Arial';
-                    ctx.fillText(`${new Date().toLocaleTimeString()}`, canvas.width/2, canvas.height - 20);
-                    
+                    ctx.fillText(`${new Date().toLocaleTimeString()}`, canvas.width / 2, canvas.height - 20);
+
                     // Try multiple reconnection strategies
-                    
+
                     // 1. Send a heartbeat ping
                     fetch(`/api/setup/check-mobile-camera?sessionId=${mobileSessionId}&heartbeat=true&t=${Date.now()}`, {
                       headers: { 'Cache-Control': 'no-cache' }
                     }).catch(e => console.log('Heartbeat error:', e));
-                    
+
                     // 2. Try to get a fresh frame
                     fetch(`/api/setup/mobile-frame/${mobileSessionId}?t=${Date.now()}&r=${Math.random()}`, {
-                      headers: { 
-                        'Cache-Control': 'no-cache', 
-                        'Pragma': 'no-cache' 
+                      headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
                       },
                       // Add a signal to abort the request after 5 seconds (increased timeout)
                       signal: AbortSignal.timeout(5000)
                     })
-                    .then(response => {
-                      if (response.ok) {
-                        console.log('Got frame response in fallback handler');
-                        return response.json();
-                      }
-                      throw new Error('Failed to get frame');
-                    })
-                    .then(data => {
-                      if (data && data.frameData) {
-                        console.log('Got frame data in fallback handler');
-                        // We got a frame, reset the failure counter
-                        failureCountRef.current = 0;
-                        lastFrameTimeRef.current = Date.now();
-                        
-                        // Create an image from the frame data
-                        const img = new Image();
-                        img.onload = () => {
-                          if (!ctxRef.current) return;
-                          
-                          const ctx = ctxRef.current;
-                          // Clear canvas
-                          ctx.fillStyle = '#000';
-                          ctx.fillRect(0, 0, canvas.width, canvas.height);
-                          // Draw the new frame
-                          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                          // Add a timestamp and frame number
-                          ctx.fillStyle = '#fff';
-                          ctx.font = '12px Arial';
-                          ctx.textAlign = 'left';
-                          ctx.fillText(`Frame #${data.frameCount || 0} | ${new Date().toLocaleTimeString()}`, 10, canvas.height - 10);
-                        };
-                        img.src = `data:image/jpeg;base64,${data.frameData}`;
-                      }
-                    })
-                    .catch(e => console.log('Frame fetch error in fallback:', e));
-                    
+                      .then(response => {
+                        if (response.ok) {
+                          console.log('Got frame response in fallback handler');
+                          return response.json();
+                        }
+                        throw new Error('Failed to get frame');
+                      })
+                      .then(data => {
+                        if (data && data.frameData) {
+                          console.log('Got frame data in fallback handler');
+                          // We got a frame, reset the failure counter
+                          failureCountRef.current = 0;
+                          lastFrameTimeRef.current = Date.now();
+
+                          // Create an image from the frame data
+                          const img = new Image();
+                          img.onload = () => {
+                            if (!ctxRef.current) return;
+
+                            const ctx = ctxRef.current;
+                            // Clear canvas
+                            ctx.fillStyle = '#000';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            // Draw the new frame
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            // Add a timestamp and frame number
+                            ctx.fillStyle = '#fff';
+                            ctx.font = '12px Arial';
+                            ctx.textAlign = 'left';
+                            ctx.fillText(`Frame #${data.frameCount || 0} | ${new Date().toLocaleTimeString()}`, 10, canvas.height - 10);
+                          };
+                          img.src = `data:image/jpeg;base64,${data.frameData}`;
+                        }
+                      })
+                      .catch(e => console.log('Frame fetch error in fallback:', e));
+
                     // 3. Reset the failure counter occasionally to allow fresh attempts
                     if (failureCountRef.current > 10) {
                       console.log('Resetting failure counter to allow fresh attempts');
                       failureCountRef.current = 2;
                     }
                   };
-                  
+
                   // Set up a periodic update to refresh the video
                   const updateInterval = setInterval(() => {
                     if (!isMountedRef.current) {
                       clearInterval(updateInterval);
                       return;
                     }
-                    
+
                     // Add a small random delay to avoid synchronized requests
                     const randomDelay = Math.floor(Math.random() * 100);
                     setTimeout(() => {
                       if (!isMountedRef.current) return;
-                      
+
                       console.log('Fetching frame for session:', mobileSessionId);
-                      
+
                       // Use a simple fetch without retry to avoid rate limiting
                       fetch(`/api/setup/mobile-frame/${mobileSessionId}?t=${Date.now()}&r=${Math.random()}`, {
-                        headers: { 
-                          'Cache-Control': 'no-cache', 
-                          'Pragma': 'no-cache' 
+                        headers: {
+                          'Cache-Control': 'no-cache',
+                          'Pragma': 'no-cache'
                         },
                         // Add a signal to abort the request after 5 seconds (increased timeout)
                         signal: AbortSignal.timeout(5000)
@@ -826,37 +827,37 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                           console.log('Got frame response');
                           try {
                             const data = await response.json();
-                            console.log('Frame data received:', data ? 'yes' : 'no', 
-                                      'frameData length:', data && data.frameData ? data.frameData.length : 0);
-                            
+                            console.log('Frame data received:', data ? 'yes' : 'no',
+                              'frameData length:', data && data.frameData ? data.frameData.length : 0);
+
                             if (data && data.frameData) {
                               // Reset failure counter on success
                               failureCountRef.current = 0;
-                              
+
                               // Update last frame time
                               lastFrameTimeRef.current = Date.now();
-                              
+
                               // Analyze frame with AI every 10th frame to reduce load
                               const shouldAnalyze = (data.frameCount || 0) % 10 === 0;
                               if (shouldAnalyze) {
                                 console.log('[DEBUG] Analyzing secondary camera frame #', data.frameCount);
-                                analyzeFrameWithAI(data.frameData).catch(e => 
+                                analyzeFrameWithAI(data.frameData).catch(e =>
                                   console.error('Secondary AI analysis error:', e)
                                 );
                               }
-                              
+
                               // Create an image from the frame data
                               const img = new Image();
                               img.onload = () => {
                                 if (!ctxRef.current) return;
-                                
+
                                 const ctx = ctxRef.current;
                                 // Clear canvas
                                 ctx.fillStyle = '#000';
                                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                                 // Draw the new frame
                                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                
+
                                 // Add AI analysis overlay
                                 if (violationPreventionActive) {
                                   ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
@@ -864,15 +865,15 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                                   ctx.fillStyle = '#00ff00';
                                   ctx.font = '14px Arial';
                                   ctx.textAlign = 'center';
-                                  ctx.fillText('🛡️ AI Violation Prevention Active', canvas.width/2, 20);
+                                  ctx.fillText('🛡️ AI Violation Prevention Active', canvas.width / 2, 20);
                                 }
-                                
+
                                 // Add a timestamp and frame number
                                 ctx.fillStyle = '#fff';
                                 ctx.font = '12px Arial';
                                 ctx.textAlign = 'left';
                                 ctx.fillText(`Frame #${data.frameCount || 0} | ${new Date().toLocaleTimeString()}`, 10, canvas.height - 10);
-                                
+
                                 console.log('Frame rendered successfully');
                               };
                               img.onerror = (err) => {
@@ -913,19 +914,19 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                       });
                     }, randomDelay);
                   }, 200); // Update every 200ms (5fps)
-                  
+
                   // Set up a heartbeat to ensure connection stays alive
                   const heartbeatInterval = setInterval(() => {
                     if (!isMountedRef.current) {
                       clearInterval(heartbeatInterval);
                       return;
                     }
-                    
+
                     // Send a heartbeat to keep the connection alive
                     fetch(`/api/setup/check-mobile-camera?sessionId=${mobileSessionId}&heartbeat=true&t=${Date.now()}`)
-                      .catch(() => {}); // Ignore errors
+                      .catch(() => { }); // Ignore errors
                   }, 10000); // Every 10 seconds
-                  
+
                   // Store interval IDs in refs that can be accessed from cleanup functions
                   if (!window.mobileIntervals) {
                     window.mobileIntervals = {};
@@ -942,13 +943,13 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               console.error('Error creating placeholder video:', e);
             }
           }
-          
+
           // FIXED: Set mobile connected state - auto-advance handled by useEffect
           console.log('VERIFIED mobile connection confirmed - setting isMobileConnected state');
-          
+
           // The useEffect watching isMobileConnected will handle the auto-advance
           console.log('Auto-advance will be handled by isMobileConnected useEffect');
-          
+
           return true;
         }
       }
@@ -974,7 +975,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   // Track component mount state and clean up intervals
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     // Check if mobile is already connected (in case we're returning to this component)
     const checkExistingConnection = async () => {
       try {
@@ -983,9 +984,9 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           console.error('No mobile session ID available for connection check');
           return;
         }
-        
+
         console.log('Checking for existing mobile connection with session ID:', mobileSessionId);
-        
+
         // First try to get debug info about all connections
         try {
           const debugResponse = await fetch('/api/setup/debug-storage');
@@ -996,19 +997,19 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         } catch (debugErr) {
           console.warn('Error fetching debug storage info:', debugErr);
         }
-        
+
         // Now check for our specific connection
         const response = await fetch(`/api/setup/check-mobile-camera?sessionId=${mobileSessionId}&enhanced=true&t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           console.log('Existing connection check result for session', mobileSessionId, ':', data);
-          
+
           // If we already have frames or connection, set the state
           if (data.connected || (data.frameCount && data.frameCount > 0)) {
             console.log('Existing mobile connection found for session', mobileSessionId);
             setIsMobileConnected(true);
             setFrameCount(data.frameCount || 0);
-            
+
             // If we're on the QR code step, advance to mobile connected
             if (setupStep === SetupStep.SHOW_QR) {
               console.log('Advancing to MOBILE_CONNECTED step due to existing connection');
@@ -1020,18 +1021,18 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
       } catch (e) {
         console.error('Error checking existing connection:', e);
       }
-      
+
       // If no existing connection, reset the state
       setIsMobileConnected(false);
       console.log('No existing connection found for session', mobileSessionId, ', connection state reset on component mount');
     };
-    
+
     // Check for existing connection
     checkExistingConnection();
-    
+
     return () => {
       isMountedRef.current = false;
-      
+
       // Clean up any intervals that might be running
       if (window.mobileIntervals && mobileSessionId && window.mobileIntervals[mobileSessionId]) {
         const { updateInterval, heartbeatInterval } = window.mobileIntervals[mobileSessionId];
@@ -1039,7 +1040,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         if (heartbeatInterval) clearInterval(heartbeatInterval);
         delete window.mobileIntervals[mobileSessionId];
       }
-      
+
       // Clean up primary camera analysis interval
       if (window.primaryAnalysisInterval) {
         clearInterval(window.primaryAnalysisInterval);
@@ -1098,7 +1099,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   // Initialize primary camera when component mounts or when returning to primary camera step
   useEffect(() => {
     console.log('Primary camera useEffect triggered, setupStep:', setupStep);
-    
+
     // FIXED: Only initialize camera for INIT step to prevent interference
     if (setupStep === SetupStep.INIT) {
       console.log('Initializing primary camera for INIT step');
@@ -1119,7 +1120,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         clearTimeout(initFallbackTimeoutRef.current);
         initFallbackTimeoutRef.current = null;
       }
-      
+
       // Always clean up media stream to prevent camera from staying on
       if (mediaStreamRef.current) {
         console.log('Cleaning up media stream in useEffect cleanup');
@@ -1128,13 +1129,13 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           track.stop();
         });
         mediaStreamRef.current = null;
-        
+
         // Clear video element
         if (videoRef.current) {
           videoRef.current.srcObject = null;
         }
       }
-      
+
       // Clean up WebRTC connections
       if (primarySignalingRef.current) primarySignalingRef.current.close();
       if (primaryPeerConnectionRef.current) primaryPeerConnectionRef.current.close();
@@ -1156,7 +1157,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               console.log('Mobile connected, clearing check interval');
               clearInterval(checkInterval);
               console.log('Mobile connection detected - automatically restarting primary camera');
-              
+
               // Automatically restart primary camera when mobile connection is established
               setTimeout(() => {
                 console.log('[AUTO_RESTART] Restarting primary camera after mobile connection');
@@ -1178,9 +1179,9 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         clearInterval(checkInterval);
       };
     }
-    
+
     // Return empty cleanup function when no mobileSessionId or not showing QR
-    return () => {};
+    return () => { };
   }, [mobileSessionId, setupStep]);
 
   // Auto-restart primary camera when transitioning to dual camera view
@@ -1191,7 +1192,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         initializePrimaryCamera();
       }, 500); // Small delay to ensure UI is ready
     }
-    
+
     // Start primary camera analysis when entering dual camera view
     if (setupStep === SetupStep.MOBILE_CONNECTED && mediaStreamRef.current) {
       console.log('[PRIMARY_ANALYSIS] Starting analysis for dual camera view');
@@ -1215,14 +1216,14 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   // Initialize mobile canvas when entering MOBILE_CONNECTED step
   useEffect(() => {
     console.log('[MOBILE CANVAS] useEffect triggered:', { setupStep, hasMobileCanvas: !!mobileCanvasRef.current, mobileSessionId });
-    
+
     if (setupStep === SetupStep.MOBILE_CONNECTED && mobileCanvasRef.current) {
       console.log('[MOBILE CANVAS] ✅ Initializing mobile canvas for dual camera view');
       const canvas = mobileCanvasRef.current;
       canvas.width = 640;
       canvas.height = 480;
       console.log('[MOBILE CANVAS] Canvas dimensions set:', { width: canvas.width, height: canvas.height });
-      
+
       const ctx = canvas.getContext('2d');
       if (ctx) {
         // Draw a placeholder until mobile frames arrive
@@ -1234,37 +1235,37 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         ctx.fillText('Mobile Camera Feed', canvas.width / 2, canvas.height / 2 - 10);
         ctx.fillText('Waiting for frames...', canvas.width / 2, canvas.height / 2 + 10);
       }
-      
+
       // Start fetching mobile camera frames actively
       if (mobileSessionId) {
         console.log('[MOBILE FRAMES] ✅ Starting active mobile frame fetching for session:', mobileSessionId);
-        
+
         const fetchMobileFrames = async () => {
           try {
             console.log('[MOBILE FRAMES] Fetching frame for session:', mobileSessionId);
             const response = await fetch(`/api/setup/mobile-frame/${mobileSessionId}`);
             console.log('[MOBILE FRAMES] Response status:', response.status);
-            
+
             if (response.ok) {
               const data = await response.json();
-              console.log('[MOBILE FRAMES] Frame data received:', { 
-                hasFrameData: !!data.frameData, 
-                frameCount: data.frameCount, 
+              console.log('[MOBILE FRAMES] Frame data received:', {
+                hasFrameData: !!data.frameData,
+                frameCount: data.frameCount,
                 isPlaceholder: data.isPlaceholder,
-                timestamp: data.timestamp 
+                timestamp: data.timestamp
               });
-              
+
               if (data.frameData) {
                 // Analyze frame with AI every 5th frame
                 // The AI service will auto-activate the secondary camera
                 const shouldAnalyze = (data.frameCount || 0) % 15 === 0;
                 if (shouldAnalyze) {
                   console.log('[MOBILE FRAMES] 🤖 Analyzing frame #', data.frameCount, 'with AI (auto-activation enabled)');
-                  analyzeFrameWithAI(data.frameData).catch(e => 
+                  analyzeFrameWithAI(data.frameData).catch(e =>
                     console.error('[MOBILE FRAMES] AI analysis error:', e)
                   );
                 }
-                
+
                 const img = new Image();
                 img.onload = () => {
                   if (ctx && canvas) {
@@ -1291,24 +1292,24 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             console.log('[MOBILE FRAMES] ❌ Error fetching mobile frame:', error);
           }
         };
-        
+
         // Fetch frames every 100ms for smooth video
         const frameInterval = setInterval(fetchMobileFrames, 100);
-        
+
         // Store interval for cleanup
         return () => {
           console.log('Cleaning up mobile frame fetching');
           clearInterval(frameInterval);
         };
       }
-      
+
       // Also restart the primary camera if it's not running
       console.log('[PRIMARY CAMERA] Checking primary camera status:', {
         hasMediaStream: !!mediaStreamRef.current,
         hasVideoRef: !!videoRef.current,
         videoSrcObject: videoRef.current?.srcObject
       });
-      
+
       if (videoRef.current) {
         if (!mediaStreamRef.current || !videoRef.current.srcObject) {
           console.log('[PRIMARY CAMERA] ✅ Restarting primary camera for dual view');
@@ -1320,21 +1321,21 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
         console.log('[PRIMARY CAMERA] ❌ No video element reference');
       }
     }
-    
+
     // Return empty cleanup function if no mobile session
-    return () => {};
+    return () => { };
   }, [setupStep, mobileSessionId]);
 
   const handleValidate = () => {
     setSetupStep(SetupStep.VALIDATE);
     setIsValidating(true);
     setValidationMessage('Validating camera position...');
-    
+
     // Simulate validation process and then show QR code
     setTimeout(() => {
       console.log('Validation complete, showing QR code');
       setValidationMessage('Camera position validated! Setting up mobile connection...');
-      
+
       // Transition to QR code step after brief delay
       setTimeout(() => {
         setSetupStep(SetupStep.SHOW_QR);
@@ -1358,7 +1359,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
     // Reset connection state
     setIsMobileConnected(false);
     setSetupStep(SetupStep.SHOW_QR);
-    
+
     // Try to reconnect
     checkMobileConnection();
   };
@@ -1369,17 +1370,17 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
   const renderQRCodeInstructions = () => {
     console.log('Rendering QR code instructions');
     console.log('QR code URL:', qrCodeUrl);
-    
+
     // Generate QR code URL if it doesn't exist
     if (!qrCodeUrl) {
       const url = generateQRCode();
       console.log('Generated new QR code URL:', url);
     }
-    
+
     return (
       <div className="flex flex-col items-center space-y-4 p-6 border-4 border-blue-600 rounded-lg bg-blue-50 shadow-lg mt-4">
         {/* Remove primary camera feed when showing QR code */}
-        
+
         <h3 className="text-xl font-bold text-blue-800 flex items-center justify-center">
           {isMobileConnected ? (
             <>
@@ -1405,20 +1406,20 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           )}
         </div>
         <p className="text-sm text-center max-w-md">
-          Open your mobile device's camera app and scan this QR code to connect your phone as a secondary camera.
+          Open your mobile device&apos;s camera app and scan this QR code to connect your phone as a secondary camera.
         </p>
         <div className="p-2 bg-blue-50 border border-blue-200 rounded-md text-sm">
           <div className="flex items-center justify-between mb-2">
             <span className="font-semibold">Network IP:</span>
-            <Button 
+            <Button
               onClick={async () => {
                 const ip = await getNetworkIp();
                 if (ip) {
                   // Regenerate QR code with new IP
                   generateQRCode();
                 }
-              }} 
-              variant="outline" 
+              }}
+              variant="outline"
               size="sm"
               className="h-7 text-xs"
             >
@@ -1446,11 +1447,11 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               {isCheckingMobileConnection ? 'Checking for mobile connection... ' : ''}
             </span>
           </div>
-          
+
           {/* Frame counter with progress bar */}
           <div className="w-full max-w-xs bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-            <div 
-              className={`${frameCount >= 1 ? 'bg-green-600' : 'bg-blue-600'} h-2.5 rounded-full transition-all duration-300 ease-in-out`} 
+            <div
+              className={`${frameCount >= 1 ? 'bg-green-600' : 'bg-blue-600'} h-2.5 rounded-full transition-all duration-300 ease-in-out`}
               style={{ width: `${Math.min(100, frameCount >= 1 ? 100 : (frameCount * 100))}%` }}
             ></div>
           </div>
@@ -1460,7 +1461,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             </span>
           </div>
         </div>
-        
+
         {/* Connection status and continue button */}
         <div className="mt-4 w-full max-w-md space-y-3">
           {/* Always show reset option */}
@@ -1468,22 +1469,22 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             <div className="text-center mb-2">
               <span className="text-sm text-yellow-700">Having connection issues?</span>
             </div>
-            <Button 
+            <Button
               onClick={() => {
                 console.log('Resetting mobile connection state...');
                 // Reset local state
                 setIsMobileConnected(false);
                 setFrameCount(0);
-                
+
                 // Clear server-side connections
                 fetch(`/api/setup/mobile-camera`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 
+                  body: JSON.stringify({
                     sessionId: mobileSessionId,
-                    connected: false, 
-                    reset: true, 
-                    forceReset: true 
+                    connected: false,
+                    reset: true,
+                    forceReset: true
                   })
                 }).then(() => {
                   console.log('Server connection state reset');
@@ -1492,14 +1493,14 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 }).catch(err => {
                   console.error('Failed to reset server state:', err);
                 });
-              }} 
+              }}
               variant="outline"
               className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100"
             >
               🔄 Reset Connection & Show Fresh QR Code
             </Button>
           </div>
-          
+
           {isMobileConnected ? (
             <div className="p-4 bg-green-50 border-2 border-green-500 rounded-lg">
               <div className="flex items-center justify-center mb-3">
@@ -1507,13 +1508,13 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 <span className="font-bold text-green-700">Mobile device connected!</span>
               </div>
               <div className="flex flex-col space-y-2">
-                <Button 
+                <Button
                   onClick={() => {
                     console.log('[MANUAL] User clicked Continue to Camera Setup');
                     console.log('[MANUAL] Current state:', { setupStep, isMobileConnected, frameCount });
                     setSetupStep(SetupStep.MOBILE_CONNECTED);
                     console.log('[MANUAL] Manually set setupStep to MOBILE_CONNECTED');
-                  }} 
+                  }}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 text-lg"
                 >
                   ✅ Continue to Dual Camera View
@@ -1526,7 +1527,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             </div>
           )}
         </div>
-        
+
         {error && (
           <Alert variant="destructive" className="mt-4">
             <AlertCircle className="h-4 w-4" />
@@ -1534,11 +1535,11 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
+
         {/* Action buttons */}
         <div className="mt-4 flex flex-wrap gap-2 justify-center">
-          <Button 
-            onClick={() => setSetupStep(SetupStep.PRIMARY_CAMERA)} 
+          <Button
+            onClick={() => setSetupStep(SetupStep.PRIMARY_CAMERA)}
             variant="outline"
           >
             Back to Camera View
@@ -1567,7 +1568,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               Primary Camera
             </div>
           </div>
-          
+
           {/* Secondary camera feed */}
           <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
             <video
@@ -1582,7 +1583,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
             </div>
           </div>
         </div>
-        
+
         <Alert className="mt-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Position Your Device</AlertTitle>
@@ -1615,7 +1616,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
     qrCodeUrl,
     error
   });
-  
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -1644,38 +1645,38 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                   </div>
                 </div>
                 <div className="w-full max-w-md mx-auto">
-                  <Button 
+                  <Button
                     onClick={() => {
                       console.log('Button clicked directly - resetting connections first');
-                      
+
                       // FIRST: Force clear all server connections for this session
                       console.log('Force clearing all server connections for session:', mobileSessionId);
-                      
+
                       // Reset all connection states
                       console.log('Resetting mobile connection state before showing QR...');
                       setIsMobileConnected(false);
                       setFrameCount(0);
-                      
+
                       // Stop the camera if it's running
                       if (mediaStreamRef.current) {
                         console.log('Stopping camera before showing QR code');
                         mediaStreamRef.current.getTracks().forEach(track => track.stop());
                         mediaStreamRef.current = null;
-                        
+
                         // Clear video element
                         if (videoRef.current) {
                           videoRef.current.srcObject = null;
                         }
                       }
-                      
+
                       // SECOND: Clear server-side connections
                       fetch(`/api/setup/mobile-camera`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
+                        body: JSON.stringify({
                           sessionId: mobileSessionId,
-                          connected: false, 
-                          reset: true, 
+                          connected: false,
+                          reset: true,
                           forceReset: true,
                           clearAll: true
                         })
@@ -1684,14 +1685,14 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                       }).catch(err => {
                         console.error('Failed to reset server state:', err);
                       });
-                      
+
                       // THIRD: Show QR code after a brief delay to ensure reset completes
                       setTimeout(() => {
                         console.log('Now showing QR code with clean state');
                         setSetupStep(SetupStep.SHOW_QR);
                         setShowQRCode(true);
                       }, 200);
-                    }} 
+                    }}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-3"
                   >
                     <Camera className="h-5 w-5" />
@@ -1705,31 +1706,31 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                   <div className="text-xs text-gray-500">
                     Current step: {setupStep} | Mobile Connected: {isMobileConnected ? 'YES' : 'NO'} | Frames: {frameCount}
                   </div>
-                  
+
                   {/* DEBUG: Manual transition button */}
                   {isMobileConnected && (setupStep as string) !== (SetupStep.MOBILE_CONNECTED as string) && (
-                    <Button 
+                    <Button
                       onClick={() => {
                         if (isTransitioning) {
                           console.log('[DEBUG] ⚠️ Transition already in progress, ignoring click');
                           return;
                         }
-                        
+
                         console.log('[DEBUG] ✅ MANUAL TRANSITION STARTED');
                         console.log('[DEBUG] Before:', { setupStep, isMobileConnected, frameCount });
-                        
+
                         // Lock to prevent interference
                         setIsTransitioning(true);
-                        
+
                         // Clear any existing timeouts that might interfere
                         if (initFallbackTimeoutRef.current) {
                           clearTimeout(initFallbackTimeoutRef.current);
                         }
-                        
+
                         // Force transition immediately
                         console.log('[DEBUG] Setting setupStep to MOBILE_CONNECTED NOW');
                         setSetupStep(SetupStep.MOBILE_CONNECTED);
-                        
+
                         // Keep lock for longer to ensure stability
                         setTimeout(() => {
                           setIsTransitioning(false);
@@ -1738,11 +1739,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                       }}
                       disabled={isTransitioning}
                       variant="outline"
-                      className={`w-full font-bold py-3 text-base ${
-                        isTransitioning 
-                          ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200'
-                      }`}
+                      className={`w-full font-bold py-3 text-base ${isTransitioning
+                        ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200'
+                        }`}
                     >
                       {isTransitioning ? '⏳ Transitioning...' : '✅ FORCE Show Dual Camera View'}
                     </Button>
@@ -1751,7 +1751,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               </div>
             )}
 
-            
+
             {/* QR code section */}
             {setupStep === SetupStep.SHOW_QR ? (
               renderQRCodeInstructions()
@@ -1769,7 +1769,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                 <p className="text-sm text-center text-muted-foreground mb-4">
                   Both cameras are now connected. You can see your primary camera (left) and mobile camera (right).
                 </p>
-                
+
                 {/* Two camera feeds side by side */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
                   {/* Primary camera feed */}
@@ -1796,7 +1796,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Secondary camera feed (mobile) */}
                   <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
                     <canvas
@@ -1808,7 +1808,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* AI Analysis Status Panel */}
                 {(aiAnalysisResults || primaryAnalysisResults) && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
@@ -1820,10 +1820,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                         </span>
                       )}
                     </h4>
-                    
+
                     {/* Camera Analysis Tabs */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      
+
                       {/* Primary Camera Analysis */}
                       {primaryAnalysisResults && (
                         <div className="space-y-4">
@@ -1835,7 +1835,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                               </span>
                             )}
                           </h5>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {/* Primary Overall Compliance */}
                             <div className="p-3 bg-white rounded border">
@@ -1849,22 +1849,21 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                                     </span>
                                   </div>
                                   <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className={`h-2 rounded-full ${
-                                        primaryAnalysisResults.overall_compliance.overall_score >= 0.8 ? 'bg-green-500' :
+                                    <div
+                                      className={`h-2 rounded-full ${primaryAnalysisResults.overall_compliance.overall_score >= 0.8 ? 'bg-green-500' :
                                         primaryAnalysisResults.overall_compliance.overall_score >= 0.6 ? 'bg-yellow-500' : 'bg-red-500'
-                                      }`}
+                                        }`}
                                       style={{ width: `${primaryAnalysisResults.overall_compliance.overall_score * 100}%` }}
                                     ></div>
                                   </div>
                                   <p className="text-xs text-gray-600 mt-1">
-                                    Faces: {primaryAnalysisResults.overall_compliance.faces_detected} | 
+                                    Faces: {primaryAnalysisResults.overall_compliance.faces_detected} |
                                     Items: {primaryAnalysisResults.overall_compliance.prohibited_items}
                                   </p>
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Primary Violation Prevention */}
                             <div className="p-3 bg-white rounded border">
                               <h6 className="font-medium text-sm text-gray-700 mb-2">Violation Prevention</h6>
@@ -1872,10 +1871,9 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                                 <div>
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-sm">Risk Level:</span>
-                                    <span className={`font-medium capitalize ${
-                                      primaryAnalysisResults.violation_prevention.risk_level === 'low' ? 'text-green-600' :
+                                    <span className={`font-medium capitalize ${primaryAnalysisResults.violation_prevention.risk_level === 'low' ? 'text-green-600' :
                                       primaryAnalysisResults.violation_prevention.risk_level === 'medium' ? 'text-yellow-600' : 'text-red-600'
-                                    }`}>
+                                      }`}>
                                       {primaryAnalysisResults.violation_prevention.risk_level}
                                     </span>
                                   </div>
@@ -1889,7 +1887,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Primary Recommendations */}
                           {primaryAnalysisRecommendations.length > 0 && (
                             <div className="p-3 bg-blue-50 rounded border border-blue-200">
@@ -1906,7 +1904,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                           )}
                         </div>
                       )}
-                      
+
                       {/* Secondary Camera Analysis */}
                       {aiAnalysisResults && (
                         <div className="space-y-4">
@@ -1918,7 +1916,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                               </span>
                             )}
                           </h5>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {/* Secondary Overall Compliance */}
                             <div className="p-3 bg-white rounded border">
@@ -1932,11 +1930,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                                     </span>
                                   </div>
                                   <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className={`h-2 rounded-full ${
-                                        aiAnalysisResults.analysis.overall_compliance.overall_score >= 0.8 ? 'bg-green-500' :
+                                    <div
+                                      className={`h-2 rounded-full ${aiAnalysisResults.analysis.overall_compliance.overall_score >= 0.8 ? 'bg-green-500' :
                                         aiAnalysisResults.analysis.overall_compliance.overall_score >= 0.6 ? 'bg-yellow-500' : 'bg-red-500'
-                                      }`}
+                                        }`}
                                       style={{ width: `${aiAnalysisResults.analysis.overall_compliance.overall_score * 100}%` }}
                                     ></div>
                                   </div>
@@ -1946,7 +1943,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Secondary Violation Prevention */}
                             <div className="p-3 bg-white rounded border">
                               <h6 className="font-medium text-sm text-gray-700 mb-2">Violation Prevention</h6>
@@ -1954,10 +1951,9 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                                 <div>
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-sm">Risk Level:</span>
-                                    <span className={`font-medium capitalize ${
-                                      aiAnalysisResults.violation_prevention.risk_level === 'low' ? 'text-green-600' :
+                                    <span className={`font-medium capitalize ${aiAnalysisResults.violation_prevention.risk_level === 'low' ? 'text-green-600' :
                                       aiAnalysisResults.violation_prevention.risk_level === 'medium' ? 'text-yellow-600' : 'text-red-600'
-                                    }`}>
+                                      }`}>
                                       {aiAnalysisResults.violation_prevention.risk_level}
                                     </span>
                                   </div>
@@ -1971,7 +1967,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                               )}
                             </div>
                           </div>
-                          
+
                           {/* Secondary Recommendations */}
                           {analysisRecommendations.length > 0 && (
                             <div className="p-3 bg-green-50 rounded border border-green-200">
@@ -1991,7 +1987,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                     </div>
                   </div>
                 )}
-                
+
                 <div className="flex flex-col space-y-4 mt-6">
                   <div className="flex space-x-4">
                     <Button onClick={handleValidate} variant="default">
@@ -2000,24 +1996,24 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                     <Button onClick={handleComplete} variant="outline">
                       Complete Setup
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => {
                         console.log('[TEST] Manually triggering secondary camera violations');
                         console.log('[TEST] Current overlayDismissedAt before reset:', overlayDismissedAt);
                         console.log('[TEST] Current showUnifiedViolationOverlay before reset:', showUnifiedViolationOverlay);
-                        
+
                         // Reset dismissal state first
                         setOverlayDismissedAt(null);
-                        
+
                         // Set violations
                         setSecondaryCameraViolations([
                           { type: 'hands_not_visible', message: 'Manual test: Hands not visible' },
                           { type: 'keyboard_not_visible', message: 'Manual test: Keyboard not visible' }
                         ]);
-                        
+
                         // Force show overlay
                         setShowUnifiedViolationOverlay(true);
-                        
+
                         console.log('[TEST] After setting - overlayDismissedAt:', null);
                         console.log('[TEST] After setting - showUnifiedViolationOverlay:', true);
                       }}
@@ -2026,7 +2022,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                     >
                       🧪 Test Secondary Violations
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => {
                         console.log('[RESET] Resetting overlay dismissal state');
                         setOverlayDismissedAt(null);
@@ -2066,7 +2062,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
 
       {/* Unified Violation Overlay */}
       {showUnifiedViolationOverlay && setupStep === SetupStep.MOBILE_CONNECTED && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4 overflow-y-auto"
           onClick={(e) => {
             // Close if clicking on backdrop
@@ -2085,7 +2081,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
           tabIndex={0}
         >
           <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-auto shadow-2xl max-h-[90vh] overflow-y-auto my-8"
-               onClick={(e) => e.stopPropagation()}>
+            onClick={(e) => e.stopPropagation()}>
             {/* Close button in top-right corner */}
             <div className="flex justify-end mb-4">
               <button
@@ -2124,10 +2120,10 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                   // Determine the primary violation type to show appropriate message
                   const primaryViolation = primaryCameraViolations[0];
                   const isNoFaceViolation = primaryViolation?.type === 'no_face';
-                  const isProhibitedDeviceViolation = primaryViolation?.type === 'prohibited_device' || 
+                  const isProhibitedDeviceViolation = primaryViolation?.type === 'prohibited_device' ||
                     primaryViolation?.type === 'object_detected' ||
                     (!isNoFaceViolation && primaryViolation?.message?.toLowerCase().includes('prohibited'));
-                  
+
                   return (
                     <>
                       <div className="w-24 h-24 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
@@ -2141,7 +2137,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                         {isNoFaceViolation ? 'No Face Detected' : 'Prohibited Device Detected'}
                       </h2>
                       <p className="text-gray-600 mb-6">
-                        {isNoFaceViolation 
+                        {isNoFaceViolation
                           ? 'Your face is not visible in the primary camera. Please ensure you are positioned correctly in front of the camera.'
                           : 'Your primary camera has detected a prohibited device in the frame.'
                         }
@@ -2152,9 +2148,11 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
               ) : (
                 // Only secondary camera has violations
                 <>
-                  <img 
-                    src="/images/secondary-camera-violation-overlay.svg" 
+                  <NextImage
+                    src="/images/secondary-camera-violation-overlay.svg"
                     alt="Secondary Camera Setup Guide"
+                    width={500}
+                    height={300}
                     className="w-full max-w-md mx-auto mb-6"
                   />
                   <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
@@ -2212,7 +2210,7 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                     {primaryCameraViolations.length > 0 && (() => {
                       const primaryViolation = primaryCameraViolations[0];
                       const isNoFaceViolation = primaryViolation?.type === 'no_face';
-                      
+
                       if (isNoFaceViolation) {
                         return (
                           <>
@@ -2264,18 +2262,17 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
                   </ul>
                 </div>
 
-                <Button 
+                <Button
                   onClick={() => {
                     setShowUnifiedViolationOverlay(false);
                     setOverlayDismissedAt(Date.now());
                   }}
-                  className={`mt-6 px-8 py-2 text-white ${
-                    primaryCameraViolations.length > 0 
-                      ? 'bg-red-600 hover:bg-red-700' 
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
+                  className={`mt-6 px-8 py-2 text-white ${primaryCameraViolations.length > 0
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
                 >
-                  I'll Fix These Issues
+                  I&apos;ll Fix These Issues
                 </Button>
               </div>
             </div>

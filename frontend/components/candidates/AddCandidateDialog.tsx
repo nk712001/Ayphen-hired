@@ -122,7 +122,7 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
           <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-800 font-medium">
-                Resume parsed successfully! Here's what our AI found:
+                Resume parsed successfully! Here&apos;s what our AI found:
               </p>
             </div>
 
@@ -227,8 +227,8 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-dashed rounded-lg transition-all duration-200 ${isDragging
-                      ? 'border-2 border-[#de065d] bg-[#de065d]/5 scale-[1.02]'
-                      : 'border-2 border-gray-300 hover:border-[#de065d] bg-gray-50/50'
+                    ? 'border-2 border-[#de065d] bg-[#de065d]/5 scale-[1.02]'
+                    : 'border-2 border-gray-300 hover:border-[#de065d] bg-gray-50/50'
                     }`}
                 >
                   <div className="space-y-1 text-center pointer-events-none">

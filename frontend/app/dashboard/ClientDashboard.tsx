@@ -82,26 +82,26 @@ export default function ClientDashboard() {
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <StatsCard 
-            title="Total Tests" 
-            value="12" 
+          <StatsCard
+            title="Total Tests"
+            value="12"
             icon={<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>} 
+            </svg>}
           />
-          <StatsCard 
-            title="Average Score" 
-            value="85%" 
+          <StatsCard
+            title="Average Score"
+            value="85%"
             icon={<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>} 
+            </svg>}
           />
-          <StatsCard 
-            title="Upcoming Tests" 
-            value="3" 
+          <StatsCard
+            title="Upcoming Tests"
+            value="3"
             icon={<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>} 
+            </svg>}
           />
         </div>
 
@@ -112,7 +112,7 @@ export default function ClientDashboard() {
             {/* Welcome Card */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-xl font-semibold mb-2">Welcome back, {session?.user?.name}!</h2>
-              <p className="text-gray-600 mb-4">Here's what's happening with your tests today.</p>
+              <p className="text-gray-600 mb-4">Here&apos;s what&apos;s happening with your tests today.</p>
               <div className="bg-primary-50 p-4 rounded-md">
                 <p className="text-sm text-primary-700">You have 1 test scheduled for today. Good luck!</p>
               </div>
@@ -161,7 +161,7 @@ export default function ClientDashboard() {
           {/* Right Column */}
           <div className="space-y-6">
             <RecentActivity />
-            
+
             {/* Profile Summary */}
             <div className="bg-white p-6 rounded-lg shadow">
               <h3 className="text-lg font-medium mb-4">Your Profile</h3>
@@ -177,8 +177,8 @@ export default function ClientDashboard() {
                   </span>
                 </div>
               </div>
-              <Link 
-                href="/profile" 
+              <Link
+                href="/profile"
                 className="block w-full text-center mt-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 View Full Profile

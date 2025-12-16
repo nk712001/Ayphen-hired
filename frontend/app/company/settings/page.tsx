@@ -163,7 +163,7 @@ export default function CompanySettingsPage() {
         <div className="p-8 md:p-12 relative z-10">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">Company Settings</h1>
           <p className="text-muted-foreground mt-2 max-w-2xl text-lg">
-            Manage your organization's profile, customize your candidate experience, and oversee your subscription.
+            Manage your organization&apos;s profile, customize your candidate experience, and oversee your subscription.
           </p>
         </div>
       </div>

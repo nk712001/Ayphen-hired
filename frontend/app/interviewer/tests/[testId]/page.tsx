@@ -94,11 +94,11 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
               </button>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${test.status === 'Published'
+                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${(test as any).status === 'Published'
                   ? 'bg-green-50 text-green-700 border-green-200'
                   : 'bg-yellow-50 text-yellow-700 border-yellow-200'
                   }`}>
-                  {test.status || 'Draft'}
+                  {(test as any).status || 'Draft'}
                 </span>
               </div>
               <p className="text-gray-500 mt-1 flex items-center gap-2 text-sm">

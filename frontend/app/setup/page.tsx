@@ -32,7 +32,7 @@ export default function SetupPage() {
       const response = await fetch('/api/tests/requirements', {
         method: 'GET'
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setIsSecondaryRequired(data.requiresSecondaryCamera || false);
@@ -43,7 +43,7 @@ export default function SetupPage() {
       setIsSecondaryRequired(false);
     }
   };
-  
+
   // Call checkTestRequirements when the component mounts
   useEffect(() => {
     checkTestRequirements();
@@ -85,7 +85,7 @@ export default function SetupPage() {
               </div>
               <CardTitle className="text-2xl font-bold text-white">Welcome to the Interview Setup</CardTitle>
               <CardDescription className="text-primary-100">
-                Let's prepare your environment for the interview.
+                Let&apos;s prepare your environment for the interview.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
@@ -95,7 +95,7 @@ export default function SetupPage() {
                   to ensure everything works correctly. This process will:
                 </p>
               </div>
-              
+
               <div className="bg-white rounded-xl p-5 shadow-sm border border-primary-100">
                 <ul className="list-disc pl-5 space-y-3 text-gray-700">
                   <li>Configure your primary camera for face detection</li>
@@ -104,19 +104,19 @@ export default function SetupPage() {
                   <li>Ensure your environment is ready for the interview</li>
                 </ul>
               </div>
-              
+
               <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 rounded-xl p-5 border border-primary-200">
                 <p className="text-primary-800 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  Please make sure you're in a quiet environment with good lighting.
-                  You'll need access to a webcam and microphone.
+                  Please make sure you&apos;re in a quiet environment with good lighting.
+                  You&apos;ll need access to a webcam and microphone.
                 </p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end bg-gray-50 border-t border-gray-100 py-4 px-6">
-              <Button 
+              <Button
                 onClick={handleStepComplete}
                 className="bg-gradient-to-r from-primary-500 to-primary hover:from-primary-600 hover:to-primary-dark text-white transition-colors flex items-center justify-center"
               >
@@ -125,21 +125,21 @@ export default function SetupPage() {
             </CardFooter>
           </Card>
         );
-        
+
       case 'camera':
         return (
-          <ThirdCameraSetup 
+          <ThirdCameraSetup
             onComplete={handleStepComplete}
             onSkip={handleSkipCamera}
             isRequired={isSecondaryRequired}
           />
         );
-        
+
       case 'microphone':
         return (
           <MicrophoneTest onComplete={handleStepComplete} />
         );
-        
+
       case 'complete':
         return (
           <Card className="w-full max-w-3xl mx-auto shadow-xl border-0 overflow-hidden bg-white/90 backdrop-blur-md rounded-xl border-primary-50">
@@ -152,7 +152,7 @@ export default function SetupPage() {
               </div>
               <CardTitle className="text-2xl font-bold text-white">Setup Complete</CardTitle>
               <CardDescription className="text-primary-100">
-                You're all set for your interview!
+                You&apos;re all set for your interview!
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-8">
@@ -163,14 +163,14 @@ export default function SetupPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-center max-w-md mx-auto">
                 <h3 className="font-semibold text-xl text-gray-800 mb-2">Ready to Begin</h3>
                 <p className="text-gray-600">
                   Your camera and microphone are configured and ready for the interview.
                 </p>
               </div>
-              
+
               <div className="bg-primary-50 rounded-xl p-5 border border-primary-100">
                 <h3 className="font-medium text-primary-900 mb-3 flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary-600" viewBox="0 0 20 20" fill="currentColor">
@@ -188,7 +188,7 @@ export default function SetupPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-center bg-gray-50 border-t border-gray-100 py-6 px-6">
-              <Button 
+              <Button
                 onClick={handleSetupComplete}
                 className="bg-gradient-to-r from-primary-500 to-primary hover:from-primary-600 hover:to-primary-dark text-white py-6 px-8 text-lg font-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center"
               >
@@ -197,7 +197,7 @@ export default function SetupPage() {
             </CardFooter>
           </Card>
         );
-      
+
       default:
         return (
           <Card className="w-full max-w-3xl mx-auto">
@@ -262,7 +262,7 @@ export default function SetupPage() {
               ))}
             </Steps>
           </div>
-          
+
           {renderStep()}
         </div>
       </div>

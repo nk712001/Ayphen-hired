@@ -10,12 +10,12 @@ export default function MobileCameraRedirect() {
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get('sessionId') || '';
   const urlsParam = searchParams?.get('urls') || '';
-  
+
   const [urls, setUrls] = useState<string[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   useEffect(() => {
     try {
       if (urlsParam) {
@@ -23,14 +23,14 @@ export default function MobileCameraRedirect() {
           // Try to parse the URLs as JSON
           const parsedUrls = JSON.parse(decodeURIComponent(urlsParam));
           setUrls(parsedUrls);
-          
+
           // Auto-select the first URL
           if (parsedUrls.length > 0) {
             setSelectedUrl(parsedUrls[0]);
           }
         } catch (jsonError) {
           console.error('Error parsing URLs as JSON:', jsonError);
-          
+
           // If JSON parsing fails, try to use the urlsParam directly as a single URL
           const directUrl = decodeURIComponent(urlsParam);
           if (directUrl.includes('http')) {
@@ -56,7 +56,7 @@ export default function MobileCameraRedirect() {
       }
     } catch (e) {
       console.error('Error in URL processing:', e);
-      
+
       // Last resort fallback - create a direct link
       if (sessionId) {
         const fallbackUrl = `/mobile-camera?sessionId=${sessionId}`;
@@ -69,28 +69,28 @@ export default function MobileCameraRedirect() {
     } finally {
       setIsLoading(false);
     }
-    
+
     // Try to detect if we're on a mobile device
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
     );
-    
+
     if (!isMobile) {
       setError('This page is designed for mobile devices. Please scan the QR code with your mobile device.');
     }
   }, [urlsParam]);
-  
+
   const handleConnect = () => {
     if (selectedUrl) {
       // Try to open the selected URL
       window.location.href = selectedUrl;
     }
   };
-  
+
   const handleSelectUrl = (url: string) => {
     setSelectedUrl(url);
   };
-  
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-md">
@@ -103,7 +103,7 @@ export default function MobileCameraRedirect() {
             Connect your mobile device as a secondary camera
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8">
@@ -119,20 +119,18 @@ export default function MobileCameraRedirect() {
                 <p className="text-sm text-gray-500 mb-2">
                   Select a connection option that works best for your network:
                 </p>
-                
+
                 <div className="space-y-2">
                   {urls.map((url, index) => (
-                    <div 
+                    <div
                       key={index}
-                      className={`p-3 border rounded-lg cursor-pointer flex items-center justify-between ${
-                        selectedUrl === url ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                      }`}
+                      className={`p-3 border rounded-lg cursor-pointer flex items-center justify-between ${selectedUrl === url ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                        }`}
                       onClick={() => handleSelectUrl(url)}
                     >
                       <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full mr-3 ${
-                          selectedUrl === url ? 'bg-blue-500' : 'bg-gray-200'
-                        }`}></div>
+                        <div className={`w-4 h-4 rounded-full mr-3 ${selectedUrl === url ? 'bg-blue-500' : 'bg-gray-200'
+                          }`}></div>
                         <div className="text-sm truncate max-w-[200px]">{url}</div>
                       </div>
                       {selectedUrl === url && <ArrowRight className="h-4 w-4 text-blue-500" />}
@@ -140,18 +138,18 @@ export default function MobileCameraRedirect() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded text-sm">
                 <p className="font-medium">Session ID: {sessionId}</p>
-                <p className="mt-1">Make sure you're connected to the same network as the main device.</p>
+                <p className="mt-1">Make sure you&apos;re connected to the same network as the main device.</p>
               </div>
             </>
           )}
         </CardContent>
-        
+
         <CardFooter>
-          <Button 
-            onClick={handleConnect} 
+          <Button
+            onClick={handleConnect}
             disabled={!selectedUrl || isLoading || !!error}
             className="w-full"
           >
@@ -160,10 +158,10 @@ export default function MobileCameraRedirect() {
           </Button>
         </CardFooter>
       </Card>
-      
+
       <div className="mt-4 text-center text-sm text-gray-500">
         <p>Having trouble connecting?</p>
-        <p>Try a different option or make sure you're on the same network.</p>
+        <p>Try a different option or make sure you&apos;re on the same network.</p>
       </div>
     </div>
   );

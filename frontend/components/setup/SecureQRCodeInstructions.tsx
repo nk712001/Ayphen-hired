@@ -26,24 +26,24 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
   useEffect(() => {
     // Check if we're in development mode
     setIsDevelopment(process.env.NODE_ENV === 'development');
-    
+
     // Check if we're in a secure context
     if (typeof window !== 'undefined') {
       setIsSecure(
-        window.isSecureContext || 
-        window.location.protocol === 'https:' || 
+        window.isSecureContext ||
+        window.location.protocol === 'https:' ||
         ['localhost', '127.0.0.1'].includes(window.location.hostname)
       );
-      
+
       setIsHttpProtocol(window.location.protocol === 'http:');
-      
+
       // Check if we're on a mobile device
       setIsMobileDevice(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-      
+
       // Check if we're on an iOS device
       setIsIOSDevice(/iPad|iPhone|iPod/.test(navigator.userAgent));
     }
-    
+
     // Validate URLs
     setQrCodeUrlValid(Boolean(qrCodeUrl && qrCodeUrl.startsWith('http')));
     setMobileUrlValid(Boolean(mobileUrl && mobileUrl.startsWith('http')));
@@ -70,7 +70,7 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           </div>
         </div>
       )}
-      
+
       {isDevelopment && isHttpProtocol && (
         <div className="bg-primary-50 border border-primary-200 text-primary-700 p-3 rounded-lg mb-4 flex items-start w-full">
           <Globe className="h-5 w-5 text-primary-600 mt-0.5 mr-2 flex-shrink-0" />
@@ -82,18 +82,18 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           </div>
         </div>
       )}
-      
+
       <p className="text-primary-800 text-sm text-center mb-4">
         {isSecure || isDevelopment
           ? "Scan this QR code with your mobile phone to use it as a secondary camera."
           : "Due to security restrictions, you may need to open the link directly on your mobile device:"}
       </p>
-      
+
       {isMobileDevice && (
         <div className="bg-primary-50 border border-primary-200 text-primary-700 p-3 rounded-lg mb-4 w-full text-left">
-          <p className="font-medium">You're on a mobile device</p>
+          <p className="font-medium">You&apos;re on a mobile device</p>
           <p className="text-sm mt-1">
-            It looks like you're already on a mobile device. You can:
+            It looks like you&apos;re already on a mobile device. You can:
           </p>
           <ul className="list-disc pl-5 mt-1 text-sm space-y-1">
             <li>Open the link directly by tapping the button below</li>
@@ -101,7 +101,7 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           </ul>
         </div>
       )}
-      
+
       {isIOSDevice && (
         <div className="bg-primary-50 border border-primary-200 text-primary-700 p-3 rounded-lg mb-4 w-full text-left">
           <p className="font-medium">iOS Device Detected</p>
@@ -115,7 +115,7 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           </ul>
         </div>
       )}
-      
+
       <div className="bg-white p-3 rounded-lg shadow-md mb-4 relative">
         {/* Connection status overlay */}
         {isChecking && (
@@ -127,7 +127,7 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
             </div>
           </div>
         )}
-        
+
         {isConnected && (
           <div className="absolute inset-0 bg-green-500/80 z-10 flex items-center justify-center rounded-lg">
             <div className="text-center text-white p-4">
@@ -141,7 +141,7 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
             </div>
           </div>
         )}
-        
+
         {/* QR Code */}
         {qrCodeUrl && qrCodeUrlValid ? (
           <div className="flex justify-center">
@@ -164,20 +164,20 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Always show the direct link button for easier access */}
       {mobileUrlValid ? (
-        <a 
+        <a
           href={mobileUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center bg-primary hover:bg-primary-dark text-white py-2 px-4 rounded-md transition-colors mb-4 w-full"
-          onClick={() => {}}
+          onClick={() => { }}
         >
           Open Camera Link <ExternalLink className="ml-2 h-4 w-4" />
         </a>
       ) : (
-        <button 
+        <button
           className="flex items-center justify-center bg-gray-400 text-white py-2 px-4 rounded-md mb-4 w-full cursor-not-allowed"
           disabled
           title="Invalid URL"
@@ -185,29 +185,29 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           Invalid Camera Link <AlertTriangle className="ml-2 h-4 w-4" />
         </button>
       )}
-      
+
       <div className="mt-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
         <p className="font-medium mb-2 text-yellow-800">Having trouble connecting?</p>
         <p className="text-sm mb-3 text-yellow-700">
           Try one of these direct links on your mobile device:
         </p>
-        
+
         {qrCodeUrl && qrCodeUrl.includes('sessionId=') && (
           <div className="space-y-3">
-            <a 
-              href={`/mobile-camera-direct?sessionId=${qrCodeUrl.split('sessionId=')[1]?.split('&')[0]}`} 
-              target="_blank" 
+            <a
+              href={`/mobile-camera-direct?sessionId=${qrCodeUrl.split('sessionId=')[1]?.split('&')[0]}`}
+              target="_blank"
               rel="noopener noreferrer"
               className="block text-sm bg-white p-3 rounded border border-yellow-300 text-blue-600 hover:text-blue-800 hover:bg-yellow-50 transition-colors flex items-center justify-between"
             >
               <span>Direct Link (Same Device)</span>
               <ExternalLink className="h-4 w-4" />
             </a>
-            
+
             <div className="text-sm bg-white p-3 rounded border border-yellow-300">
               <p className="font-medium mb-1">Direct Link (Mobile Device):</p>
               <p className="break-all font-mono text-xs">
-                {typeof window !== 'undefined' && 
+                {typeof window !== 'undefined' &&
                   `${window.location.protocol}//${window.location.hostname}${window.location.port ? ':' + window.location.port : ''}/mobile-camera-direct?sessionId=${qrCodeUrl.split('sessionId=')[1]?.split('&')[0]}`
                 }
               </p>
@@ -215,7 +215,7 @@ const SecureQRCodeInstructions: React.FC<SecureQRCodeInstructionsProps> = ({
           </div>
         )}
       </div>
-      
+
       <div className="mt-4 text-center text-sm text-primary-700">
         <p>After scanning or opening the link, allow camera access when prompted</p>
         {/* Debug info - show the actual URL */}

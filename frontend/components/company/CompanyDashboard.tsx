@@ -100,7 +100,7 @@ export default function CompanyDashboard({ companyId }: CompanyDashboardProps) {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Company Dashboard</h1>
-          <p className="text-gray-600">Monitor your organization's performance and growth metrics.</p>
+          <p className="text-gray-600">Monitor your organization&apos;s performance and growth metrics.</p>
         </div>
 
         {/* Stats Grid */}

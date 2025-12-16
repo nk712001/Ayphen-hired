@@ -137,7 +137,7 @@ export default function AssignTestDialog({ test, onClose, onSuccess }: Props) {
 
       toast({
         title: 'Test assigned successfully',
-        description: selectedCandidate?.resumeUrl ? 
+        description: selectedCandidate?.resumeUrl ?
           'AI-generated questions have been added to the test based on the candidate\'s resume.' :
           'Standard test questions have been assigned.'
       });
@@ -161,9 +161,9 @@ export default function AssignTestDialog({ test, onClose, onSuccess }: Props) {
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         <h2 className="text-xl font-semibold mb-4">Assign Test</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Select a candidate to assign the test "{test.title}"
+          Select a candidate to assign the test &quot;{test.title}&quot;
         </p>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Search Candidates</label>
@@ -234,7 +234,7 @@ export default function AssignTestDialog({ test, onClose, onSuccess }: Props) {
                   <CheckCircle className="w-5 h-5 mr-2" />
                   <div>
                     <p className="text-sm font-medium">Resume Available</p>
-                    <p className="text-xs text-gray-500">AI will generate personalized questions based on the candidate's resume.</p>
+                    <p className="text-xs text-gray-500">AI will generate personalized questions based on the candidate&apos;s resume.</p>
                   </div>
                 </div>
               ) : (

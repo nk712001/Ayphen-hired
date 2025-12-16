@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Camera, Mic, Monitor, CheckCircle, AlertCircle, QrCode, Calendar, Clock, Lock } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -400,7 +401,7 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
                                             {showSecondaryCameraQr && secondaryCameraQrUrl && !mobileConnected && (
                                                 <div className="mt-4 text-center border-t border-gray-100 pt-4">
                                                     <div className="bg-white p-2 inline-block rounded-lg border shadow-sm">
-                                                        <img src={secondaryCameraQrUrl} alt="Connect Mobile" className="w-32 h-32" />
+                                                        <Image src={secondaryCameraQrUrl} alt="Connect Mobile" width={128} height={128} className="w-32 h-32" unoptimized />
                                                     </div>
                                                     <p className="text-xs text-gray-500 mt-2">Scan with your phone</p>
                                                     {checkingMobileConnection && <p className="text-xs text-primary animate-pulse mt-1">Waiting for connection...</p>}

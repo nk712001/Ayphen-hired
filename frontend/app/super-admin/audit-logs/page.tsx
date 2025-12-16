@@ -9,6 +9,8 @@ import {
     Search
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 async function getAuditLogs() {
     const logs = await prisma.auditLog.findMany({
         take: 50,
@@ -62,8 +64,8 @@ export default async function AuditLogsPage() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start gap-4">
                                         <div className={`mt-1 w-8 h-8 rounded-lg flex items-center justify-center ${log.action.includes('DELETE') ? 'bg-red-100 text-red-600' :
-                                                log.action.includes('CREATE') ? 'bg-green-100 text-green-600' :
-                                                    'bg-blue-100 text-blue-600'
+                                            log.action.includes('CREATE') ? 'bg-green-100 text-green-600' :
+                                                'bg-blue-100 text-blue-600'
                                             }`}>
                                             <Activity className="w-4 h-4" />
                                         </div>

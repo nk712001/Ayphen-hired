@@ -70,8 +70,8 @@ export default function ThankYouPage() {
           <h2 className="font-medium text-gray-900 mb-2">What happens next?</h2>
           <ul className="text-sm text-gray-600 space-y-1">
             <li>• Your responses will be reviewed by our team</li>
-            <li>• You'll receive feedback within 2-3 business days</li>
-            <li>• We'll contact you regarding next steps</li>
+            <li>• You&apos;ll receive feedback within 2-3 business days</li>
+            <li>• We&apos;ll contact you regarding next steps</li>
           </ul>
         </div>
 

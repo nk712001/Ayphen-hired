@@ -129,7 +129,7 @@ export async function POST(
                 });
 
                 const emailData = {
-                    candidateName: updatedAssignment.candidate.name,
+                    candidateName: updatedAssignment.candidate.name || 'Candidate',
                     candidateEmail: updatedAssignment.candidate.email,
                     testTitle: updatedAssignment.test.title,
                     testDuration: updatedAssignment.test.duration,

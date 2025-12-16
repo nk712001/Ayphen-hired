@@ -1,5 +1,7 @@
+
 import { prisma } from '@/lib/prisma';
 import { Card } from '@/components/ui/card';
+export const dynamic = 'force-dynamic';
 import {
     BarChart3,
     TrendingUp,

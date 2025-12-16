@@ -318,7 +318,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                 Resume for {selectedCandidate?.name}
               </h3>
               <p className="text-sm text-gray-500">
-                Upload the candidate's resume to generate personalized questions
+                Upload the candidate&apos;s resume to generate personalized questions
               </p>
             </div>
 

@@ -57,7 +57,7 @@ export default function AssignmentPage({ params }: { params: { id: string } }) {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Assignment Not Found</h1>
-          <p className="text-gray-600 mb-4">The assignment you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-4">The assignment you&apos;re looking for doesn&apos;t exist.</p>
           <button
             onClick={() => router.push('/interviewer/candidates')}
             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
@@ -108,7 +108,7 @@ export default function AssignmentPage({ params }: { params: { id: string } }) {
                     Want to see the test questions and configuration?
                   </h3>
                   <p className="mt-1 text-sm text-blue-700">
-                    Click "Preview Test & Questions" above to see the complete test preview with auto-generated personalized questions.
+                    Click &quot;Preview Test & Questions&quot; above to see the complete test preview with auto-generated personalized questions.
                   </p>
                 </div>
               </div>
@@ -132,11 +132,10 @@ export default function AssignmentPage({ params }: { params: { id: string } }) {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Status</dt>
                   <dd className="mt-1">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      assignment.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                      assignment.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        assignment.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
                       {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
                     </span>
                   </dd>

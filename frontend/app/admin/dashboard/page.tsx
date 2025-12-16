@@ -49,26 +49,26 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {session.user.name}! Here's what's happening today.</p>
+          <p className="text-gray-600">Welcome back, {session.user.name}! Here&apos;s what&apos;s happening today.</p>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <StatsCard 
-            title="Total Users" 
-            value="256" 
+          <StatsCard
+            title="Total Users"
+            value="256"
             icon={<Users className="h-8 w-8 text-primary" />}
             gradient="bg-gradient-to-br from-primary/10 to-primary/20"
           />
-          <StatsCard 
-            title="Active Tests" 
-            value="12" 
+          <StatsCard
+            title="Active Tests"
+            value="12"
             icon={<TestTube className="h-8 w-8 text-secondary" />}
             gradient="bg-gradient-to-br from-secondary/10 to-secondary/20"
           />
-          <StatsCard 
-            title="Proctoring Sessions" 
-            value="48" 
+          <StatsCard
+            title="Proctoring Sessions"
+            value="48"
             icon={<MonitorCheck className="h-8 w-8 text-primary-400" />}
             gradient="bg-gradient-to-br from-primary-50 to-primary-100"
           />
@@ -137,11 +137,10 @@ export default function AdminDashboard() {
                 { action: 'System settings updated', time: '5 hours ago', type: 'system' },
               ].map((activity, index) => (
                 <div key={index} className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
-                  <div className={`h-3 w-3 rounded-full ${
-                    activity.type === 'user' ? 'bg-primary' :
-                    activity.type === 'test' ? 'bg-secondary' :
-                    activity.type === 'session' ? 'bg-primary-400' : 'bg-secondary-400'
-                  }`}></div>
+                  <div className={`h-3 w-3 rounded-full ${activity.type === 'user' ? 'bg-primary' :
+                      activity.type === 'test' ? 'bg-secondary' :
+                        activity.type === 'session' ? 'bg-primary-400' : 'bg-secondary-400'
+                    }`}></div>
                   <span className="text-gray-900 font-medium flex-1">{activity.action}</span>
                   <span className="text-gray-500 text-sm">{activity.time}</span>
                 </div>

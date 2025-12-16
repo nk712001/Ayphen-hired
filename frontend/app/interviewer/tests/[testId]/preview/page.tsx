@@ -75,7 +75,7 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
         <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200 text-center">
           <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Test Not Found</h1>
-          <p className="text-gray-600 mb-6">The test you're looking for could not be found.</p>
+          <p className="text-gray-600 mb-6">The test you&apos;re looking for could not be found.</p>
           <button
             onClick={() => router.push('/interviewer/tests')}
             className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-lg shadow-sm hover:bg-gray-800 transition-colors mx-auto"

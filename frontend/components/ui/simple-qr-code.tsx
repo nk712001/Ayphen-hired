@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 // Use dynamic import for client-side only code
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 
 interface SimpleQRCodeProps {
   value: string;
@@ -17,16 +18,16 @@ export const SimpleQRCode: React.FC<SimpleQRCodeProps> = ({ value, size = 250 })
   // Only run on client-side
   useEffect(() => {
     setIsMounted(true);
-    
+
     // Import QRCode only on client side
     const generateQR = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Dynamically import qrcode
         const QRCode = (await import('qrcode')).default;
-        
+
         // Generate QR code as data URL
         const url = await QRCode.toDataURL(value, {
           width: size,
@@ -37,7 +38,7 @@ export const SimpleQRCode: React.FC<SimpleQRCodeProps> = ({ value, size = 250 })
             light: '#FFFFFF'
           }
         });
-        
+
         setDataUrl(url);
         setIsLoading(false);
       } catch (err) {
@@ -46,11 +47,11 @@ export const SimpleQRCode: React.FC<SimpleQRCodeProps> = ({ value, size = 250 })
         setIsLoading(false);
       }
     };
-    
+
     if (isMounted) {
       generateQR();
     }
-    
+
     return () => {
       setIsMounted(false);
     };
@@ -79,7 +80,7 @@ export const SimpleQRCode: React.FC<SimpleQRCodeProps> = ({ value, size = 250 })
         </div>
       ) : dataUrl ? (
         <div className="flex flex-col items-center">
-          <img src={dataUrl} alt="QR Code" width={size} height={size} />
+          <Image src={dataUrl} alt="QR Code" width={size} height={size} unoptimized />
           <div className="mt-2 text-xs text-blue-700 font-medium text-center">
             Scan with your mobile device camera
           </div>

@@ -68,7 +68,7 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
         hasResume: !!assignment.candidate.resumeUrl,
         hasJobDescription: !!assignment.test.jobDescription
       });
-      
+
       const response = await fetch(`/api/assignments/${params.id}/generate-questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,9 +77,9 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
           personalized: true
         })
       });
-      
+
       console.log('Generate questions response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Generated questions data:', data);
@@ -109,12 +109,12 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
         console.log('Fetching preview data for assignment:', params.id);
         const response = await fetch(`/api/assignments/${params.id}/preview`);
         console.log('Preview API response status:', response.status);
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log('Preview data received:', data);
           setPreviewData(data);
-          
+
           // Auto-generate questions if none exist
           if (!data.generatedFromResume && data.questions.length === 0) {
             console.log('No personalized questions found, auto-generating...');
@@ -149,7 +149,7 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
           personalized: true
         })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setPreviewData(prev => prev ? {
@@ -271,9 +271,9 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                   <dt className="text-sm font-medium text-gray-500">Resume</dt>
                   <dd className="mt-1 text-sm text-gray-900">
                     {assignment.candidate.resumeUrl ? (
-                      <a 
-                        href={assignment.candidate.resumeUrl} 
-                        target="_blank" 
+                      <a
+                        href={assignment.candidate.resumeUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:text-primary-dark"
                       >
@@ -308,11 +308,10 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Secondary Camera</dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      assignment.test.requiresSecondaryCamera 
-                        ? 'bg-green-100 text-green-800' 
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.test.requiresSecondaryCamera
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
-                    }`}>
+                      }`}>
                       {assignment.test.requiresSecondaryCamera ? '📱 Required' : '❌ Not required'}
                     </span>
                   </dd>
@@ -366,8 +365,8 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                     <div className="space-y-2">
                       {(resumeAnalysis as ResumeAnalysisObject).skills && (
                         <div>
-                          <strong>Skills:</strong> {Array.isArray((resumeAnalysis as ResumeAnalysisObject).skills) 
-                            ? ((resumeAnalysis as ResumeAnalysisObject).skills as string[]).join(', ') 
+                          <strong>Skills:</strong> {Array.isArray((resumeAnalysis as ResumeAnalysisObject).skills)
+                            ? ((resumeAnalysis as ResumeAnalysisObject).skills as string[]).join(', ')
                             : (resumeAnalysis as ResumeAnalysisObject).skills}
                         </div>
                       )}
@@ -388,23 +387,23 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                       )}
                       {(resumeAnalysis as ResumeAnalysisObject).domains && (
                         <div>
-                          <strong>Domains:</strong> {Array.isArray((resumeAnalysis as ResumeAnalysisObject).domains) 
-                            ? ((resumeAnalysis as ResumeAnalysisObject).domains as string[]).join(', ') 
+                          <strong>Domains:</strong> {Array.isArray((resumeAnalysis as ResumeAnalysisObject).domains)
+                            ? ((resumeAnalysis as ResumeAnalysisObject).domains as string[]).join(', ')
                             : (resumeAnalysis as ResumeAnalysisObject).domains}
                         </div>
                       )}
-                      {(resumeAnalysis as ResumeAnalysisObject).achievements && 
-                       Array.isArray((resumeAnalysis as ResumeAnalysisObject).achievements) && 
-                       (resumeAnalysis as ResumeAnalysisObject).achievements!.length > 0 && (
-                        <div>
-                          <strong>Key Achievements:</strong>
-                          <ul className="list-disc list-inside mt-1">
-                            {(resumeAnalysis as ResumeAnalysisObject).achievements!.map((achievement: string, index: number) => (
-                              <li key={index}>{achievement}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      {(resumeAnalysis as ResumeAnalysisObject).achievements &&
+                        Array.isArray((resumeAnalysis as ResumeAnalysisObject).achievements) &&
+                        (resumeAnalysis as ResumeAnalysisObject).achievements!.length > 0 && (
+                          <div>
+                            <strong>Key Achievements:</strong>
+                            <ul className="list-disc list-inside mt-1">
+                              {(resumeAnalysis as ResumeAnalysisObject).achievements!.map((achievement: string, index: number) => (
+                                <li key={index}>{achievement}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>
@@ -432,7 +431,7 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                   )}
                 </div>
               </div>
-              
+
               {!assignment.candidate.resumeUrl && !assignment.test.resumeUrl && (
                 <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800">
@@ -440,19 +439,19 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                   </p>
                 </div>
               )}
-              
+
               {(assignment.candidate.resumeUrl || assignment.test.resumeUrl) && (
                 <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800">
-                    ✅ Resume available - Questions will be personalized based on candidate's background and job requirements.
+                    ✅ Resume available - Questions will be personalized based on candidate&apos;s background and job requirements.
                   </p>
                 </div>
               )}
-              
+
               {generatedFromResume && (
                 <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    🧠 <strong>Intelligent Question Generation:</strong> These questions have been personalized using advanced pattern matching and skill analysis. 
+                    🧠 <strong>Intelligent Question Generation:</strong> These questions have been personalized using advanced pattern matching and skill analysis.
                     {(assignment.candidate.resumeUrl || assignment.test.resumeUrl) ? ' Based on candidate resume and job requirements.' : ' Based on job description analysis.'}
                   </p>
                 </div>
@@ -494,18 +493,17 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                             {question.type.replace('_', ' ').toUpperCase()}
                           </span>
                           {question.difficulty && (
-                            <span className={`px-2 py-1 text-xs rounded ${
-                              question.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                              question.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
+                            <span className={`px-2 py-1 text-xs rounded ${question.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
+                                question.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                              }`}>
                               {question.difficulty}
                             </span>
                           )}
                         </div>
                       </div>
                       <p className="text-sm text-gray-700 mb-2">{question.text}</p>
-                      
+
                       {/* Show options for multiple choice questions */}
                       {question.type === 'multiple_choice' && question.metadata?.options && (
                         <div className="mt-2 ml-4">

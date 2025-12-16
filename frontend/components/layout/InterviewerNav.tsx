@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LogOut, Home, Users, FileText, Calendar, BookOpen } from 'lucide-react';
 import OrganizationSwitcher from '@/components/OrganizationSwitcher';
@@ -33,9 +34,11 @@ export default function InterviewerNav({ company }: InterviewerNavProps) {
         <div className="p-6 border-b border-gray-100">
           <Link href="/interviewer/dashboard" className="flex flex-col gap-3">
             {company?.logo ? (
-              <img
+              <Image
                 src={company.logo}
                 alt={company.name}
+                width={64}
+                height={64}
                 className="h-16 w-auto object-contain max-w-full"
               />
             ) : (

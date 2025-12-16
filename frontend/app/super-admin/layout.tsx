@@ -1,5 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import { authOptions } from '@/lib/auth';
 import Link from 'next/link';
 import {
@@ -37,9 +38,11 @@ export default async function SuperAdminLayout({
             <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10">
                 <div className="p-6 border-b border-gray-100">
                     <div className="flex justify-center items-center w-full">
-                        <img
+                        <Image
                             src="/ayphen-logo.png"
                             alt="Ayphen"
+                            width={200}
+                            height={64}
                             className="h-16 w-auto object-contain"
                         />
                     </div>

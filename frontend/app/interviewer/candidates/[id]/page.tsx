@@ -199,7 +199,7 @@ export default function CandidateProfilePage({ params }: { params: { id: string 
                     {candidate.assignments.length === 0 ? (
                       <tr>
                         <td className="px-6 py-4 text-center text-gray-500" colSpan={5}>
-                          No tests assigned yet. Click "Assign New Test" to get started.
+                          No tests assigned yet. Click &quot;Assign New Test&quot; to get started.
                         </td>
                       </tr>
                     ) : (

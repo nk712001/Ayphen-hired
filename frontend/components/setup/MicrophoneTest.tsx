@@ -67,23 +67,23 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
     const initSession = async () => {
       try {
         console.log(`[MIC TEST] Initializing session: ${sessionId}`);
-        
+
         const response = await fetch('/api/setup/speech-test/init-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: sessionId })
         });
-        
+
         if (!response.ok) {
           console.error('[MIC TEST] Failed to initialize speech session');
           setError('Failed to initialize speech test. Please refresh the page and try again.');
           setSessionReady(false);
           return;
         }
-        
+
         const result = await response.json();
         console.log('[MIC TEST] ✅ Session initialized:', result);
-        
+
         // Verify session was actually created
         if (result.status !== 'success') {
           console.error('[MIC TEST] Session initialization returned non-success status');
@@ -91,7 +91,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
           setSessionReady(false);
           return;
         }
-        
+
         // Session is ready
         setSessionReady(true);
         console.log('[MIC TEST] ✅ Session ready for recording');
@@ -101,9 +101,9 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         setSessionReady(false);
       }
     };
-    
+
     initSession();
-    
+
     // Cleanup on unmount
     return () => {
       if (recordingTimerRef.current) {
@@ -143,11 +143,11 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
 
   const startRecording = async () => {
     try {
-      
+
       // Reset recording state
       audioChunksRef.current = [];
       setIsRecording(true);
-      
+
       // Start recording timer with high precision
       const startTime = performance.now();
       recordingTimerRef.current = setInterval(() => {
@@ -156,7 +156,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         setRecordingDuration(newDuration);
         console.log(`[MIC TEST] ⏱️ Duration update: ${newDuration.toFixed(2)}s`);
       }, 50);
-      
+
       // Store start time in ref for final duration calculation
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.startTime = startTime;
@@ -170,19 +170,19 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         'audio/wav',
         'audio/mp4'
       ];
-      
+
       // Find best supported format
       let selectedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
       if (!selectedMimeType) {
         console.warn('[MIC TEST] No supported audio MIME types found, using default');
       }
-      
+
       // Configure recorder options
       let options: MediaRecorderOptions = {
         audioBitsPerSecond: 256000,  // 256 kbps for high quality
         mimeType: selectedMimeType
       };
-      
+
       console.log('[MIC TEST] Using audio format:', {
         mimeType: selectedMimeType,
         bitrate: options.audioBitsPerSecond
@@ -195,12 +195,12 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
           channelCount: 1,          // Mono audio
           sampleRate: 16000,        // Match backend sample rate
           sampleSize: 16,           // 16-bit audio
-          
+
           // Quality settings
           autoGainControl: true,     // Enable auto-gain for better levels
           echoCancellation: false,   // Disable echo cancellation
           noiseSuppression: false,   // Disable noise suppression
-          
+
           // Advanced settings if supported
           ...(typeof AudioContext !== 'undefined' && {
             latency: { ideal: 0 },
@@ -208,13 +208,13 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
           })
         }
       });
-      
+
       // Get and validate audio track
       const audioTrack = stream.getAudioTracks()[0];
       if (!audioTrack) {
         throw new Error('No audio track available');
       }
-      
+
       // Log detailed track info
       const settings = audioTrack.getSettings();
       const capabilities = audioTrack.getCapabilities();
@@ -225,7 +225,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         ready: audioTrack.readyState,
         muted: audioTrack.muted
       });
-      
+
       // Verify essential settings
       if (settings.sampleRate !== 16000) {
         console.warn(`[MIC TEST] Sample rate mismatch: got ${settings.sampleRate}Hz, wanted 16000Hz`);
@@ -253,15 +253,15 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         // Create audio blob with proper MIME type
         const mimeType = mediaRecorder.mimeType || 'audio/webm;codecs=opus';
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        
+
         // Store final duration in blob for async processing
         Object.defineProperty(audioBlob, 'duration', {
           value: finalDuration,
           writable: false
         });
-        
-        console.log('[MIC TEST] Created audio blob:', { 
-          size: audioBlob.size, 
+
+        console.log('[MIC TEST] Created audio blob:', {
+          size: audioBlob.size,
           type: audioBlob.type,
           chunks: audioChunksRef.current.length,
           chunkSizes: audioChunksRef.current.map(chunk => chunk.size)
@@ -270,7 +270,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         // Convert to base64
         const base64Audio = await blobToBase64(audioBlob);
         console.log('[MIC TEST] Converted to base64, length:', base64Audio.length);
-        
+
         // Process the recording
         await processRecording(base64Audio);
       };
@@ -282,7 +282,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
       const analyserNode = audioContext.createAnalyser();
       analyserNode.fftSize = 2048;
       sourceNode.connect(analyserNode);
-      
+
       // Monitor audio levels with improved sensitivity
       const bufferLength = analyserNode.frequencyBinCount;
       const dataArray = new Float32Array(bufferLength);
@@ -292,7 +292,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         const normalizedLevel = Math.min(1.0, rms * 100); // Scale up for better detection
         console.log(`[MIC TEST] Live audio level: ${normalizedLevel.toFixed(6)} (raw RMS: ${rms.toFixed(6)})`);
       }, 100);
-      
+
       // Start recording with small chunks
       mediaRecorder.start(50);  // 50ms chunks for better resolution
       console.log('[MIC TEST] Started recording:', {
@@ -301,7 +301,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         state: mediaRecorder.state,
         contextSampleRate: audioContext.sampleRate
       });
-      
+
       // Auto-stop after 10 seconds
       const stopTimeout = setTimeout(() => {
         if (mediaRecorder.state === 'recording') {
@@ -311,7 +311,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
           audioContext.close();
         }
       }, 10000);
-      
+
       // Store for cleanup
       (mediaRecorder as any).levelCheckInterval = levelCheckInterval;
       (mediaRecorder as any).audioContext = audioContext;
@@ -328,13 +328,13 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
     const finalDuration = recordingDuration;
     finalDurationRef.current = finalDuration; // Store in ref for onstop handler
     console.log(`[MIC TEST] 🎙️ Stopping recording at duration: ${finalDuration.toFixed(1)}s`);
-    
+
     // Stop duration timer
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
-    
+
     // Stop audio monitoring
     if (mediaRecorderRef.current) {
       const recorder = mediaRecorderRef.current as any;
@@ -348,14 +348,14 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         clearTimeout(recorder.stopTimeout);
       }
     }
-    
+
     // Stop recording if active
     if (mediaRecorderRef.current?.state === 'recording') {
       console.log(`[MIC TEST] 🎙️ Final duration before stop: ${finalDuration.toFixed(1)}s`);
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsProcessing(true);
-      
+
       // Log final state
       console.log('[MIC TEST] Recording stopped:', {
         duration: finalDuration,
@@ -370,7 +370,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
       // Get the final duration from ref
       const finalDuration = finalDurationRef.current;
       console.log(`[MIC TEST] Processing recording - Final duration: ${finalDuration.toFixed(1)}s`);
-      
+
       if (finalDuration < 2) {
         console.log(`[MIC TEST] ⚠️ Recording too short: ${finalDuration.toFixed(1)}s (minimum 2s required)`);
         setError(`Recording too short (${finalDuration.toFixed(1)}s). Please record for at least 3 seconds.`);
@@ -394,7 +394,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
         setTranscribedText(data.transcribed_text || '');
         setFeedback(data.feedback || '');
         setShowResults(true);
-        
+
         if (data.recognition_accuracy >= 0.8) {
           setStep('complete');
         }
@@ -438,7 +438,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
 
       {step === 'intro' && (
         <div className="text-center">
-          <p className="mb-4">Let's test your microphone to ensure it's working properly.</p>
+          <p className="mb-4">Let&apos;s test your microphone to ensure it&apos;s working properly.</p>
           <button
             onClick={() => setStep('permission')}
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
@@ -451,7 +451,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
       {step === 'permission' && (
         <div className="text-center">
           <h3 className="text-xl mb-4">Microphone Access</h3>
-          <p className="mb-4">Click "Start Test" to begin the microphone test.</p>
+          <p className="mb-4">Click &quot;Start Test&quot; to begin the microphone test.</p>
           <button
             onClick={() => setStep('quality')}
             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
@@ -476,17 +476,16 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
                 ⏺ Recording... {recordingDuration.toFixed(1)}s
               </div>
             )}
-            
+
             <button
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isProcessing || !testSentence || !sessionReady}
-              className={`px-6 py-2 rounded ${
-                isRecording
+              className={`px-6 py-2 rounded ${isRecording
                   ? 'bg-red-500 hover:bg-red-600'
                   : isProcessing || !sessionReady
-                  ? 'bg-gray-400'
-                  : 'bg-blue-500 hover:bg-blue-600'
-              } text-white`}
+                    ? 'bg-gray-400'
+                    : 'bg-blue-500 hover:bg-blue-600'
+                } text-white`}
             >
               {isProcessing ? (
                 'Processing...'
@@ -501,18 +500,17 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
           {showResults && recognitionAccuracy > 0 && (
             <div className="mt-6">
               <h4 className="text-lg font-medium mb-2">Results</h4>
-              
+
               <div className="mb-4">
                 <p className="text-gray-600">Audio Quality</p>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
-                    className={`h-2.5 rounded-full ${
-                      audioQuality >= 0.8
+                    className={`h-2.5 rounded-full ${audioQuality >= 0.8
                         ? 'bg-green-500'
                         : audioQuality >= 0.6
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                    }`}
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                      }`}
                     style={{ width: `${audioQuality * 100}%` }}
                   />
                 </div>
@@ -520,8 +518,8 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
                   {audioQuality >= 0.8
                     ? '✓ Excellent'
                     : audioQuality >= 0.6
-                    ? '⚠️ Fair'
-                    : '❌ Poor'}
+                      ? '⚠️ Fair'
+                      : '❌ Poor'}
                 </p>
               </div>
 
@@ -529,13 +527,12 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
                 <p className="text-gray-600">Recognition Accuracy</p>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div
-                    className={`h-2.5 rounded-full ${
-                      recognitionAccuracy >= 0.8
+                    className={`h-2.5 rounded-full ${recognitionAccuracy >= 0.8
                         ? 'bg-green-500'
                         : recognitionAccuracy >= 0.6
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
-                    }`}
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                      }`}
                     style={{ width: `${recognitionAccuracy * 100}%` }}
                   />
                 </div>
@@ -543,8 +540,8 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
                   {recognitionAccuracy >= 0.8
                     ? '✓ Excellent'
                     : recognitionAccuracy >= 0.6
-                    ? '⚠️ Fair'
-                    : '❌ Poor'}
+                      ? '⚠️ Fair'
+                      : '❌ Poor'}
                 </p>
               </div>
 
@@ -552,7 +549,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
                 <div className="mt-4 text-left">
                   <p className="text-gray-600 mb-2">📝 Reference Text:</p>
                   <p className="mb-4 font-medium">{testSentence}</p>
-                  
+
                   <p className="text-gray-600 mb-2">🎤 AI Heard:</p>
                   <p className="mb-4">{transcribedText}</p>
 
