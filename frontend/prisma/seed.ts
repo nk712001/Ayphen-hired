@@ -5,8 +5,8 @@ const bcrypt = require('bcryptjs')
 const prisma = new PrismaClient()
 
 async function main() {
-    const email = 'superadmin@example.com'
-    const password = 'superuser123'
+    const email = 'superadmin@ayphen.com'
+    const password = 'superadmin123'
     const role = 'SUPER_ADMIN'
 
     // Hash the password
