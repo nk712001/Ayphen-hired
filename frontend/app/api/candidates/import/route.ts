@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       select: { email: true }
     });
 
-    const existingEmails = new Set(existingCandidates.map(c => c.email));
+    const existingEmails = new Set(existingCandidates.map((c: any) => c.email));
 
     // Filter new candidates
     const newCandidates = candidates.filter(c => !existingEmails.has(c.email.toLowerCase().trim()));

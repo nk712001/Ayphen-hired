@@ -63,7 +63,7 @@ export async function GET(
     });
 
     // Filter questions that belong to this specific assignment
-    const existingQuestions = allQuestions.filter(question => {
+    const existingQuestions = allQuestions.filter((question: any) => {
       if (!question.metadata || typeof question.metadata !== 'string') return false;
       try {
         const metadata = JSON.parse(question.metadata);
@@ -79,7 +79,7 @@ export async function GET(
     // If no assignment-specific questions, check if there are any real (non-sample) questions for the test
     if (questions.length === 0 && allQuestions.length > 0) {
       // Use all test questions if they exist (they're real, not samples)
-      questions = allQuestions.map(q => ({
+      questions = allQuestions.map((q: any) => ({
         ...q,
         metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
       }));

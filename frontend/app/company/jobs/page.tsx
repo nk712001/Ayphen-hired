@@ -28,7 +28,7 @@ async function getCompanyJobs(companyId: string) {
         }
     });
 
-    return jobs.map(job => ({
+    return jobs.map((job: any) => ({
         ...job,
         _count: {
             candidates: job._count.assignments
@@ -91,7 +91,7 @@ export default async function CompanyJobsPage() {
                             </div>
                         </div>
                     ) : (
-                        jobs.map((job) => (
+                        jobs.map((job: any) => (
                             <div key={job.id} className="p-6 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-start gap-4">

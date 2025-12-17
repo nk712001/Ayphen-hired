@@ -49,7 +49,7 @@ export async function GET(request: Request) {
           select: { organizationId: true }
         });
 
-        const orgIds = assignments.map(a => a.organizationId);
+        const orgIds = assignments.map((a: any) => a.organizationId);
         whereClause.organizationId = { in: orgIds };
       }
     } else {
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     ]);
 
     // Decrypt phone numbers
-    const decryptedCandidates = candidates.map(c => ({
+    const decryptedCandidates = candidates.map((c: any) => ({
       ...c,
       phone: c.phone ? decrypt(c.phone) : c.phone
     }));

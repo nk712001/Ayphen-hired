@@ -101,7 +101,7 @@ export async function POST(
     }
 
     // 2. Calculate Cheat Score
-    const allViolations = assignment.proctorSessions.flatMap(s => s.violations);
+    const allViolations = assignment.proctorSessions.flatMap((s: any) => s.violations);
     const cheatScore = calculateCheatScore(allViolations, assignment.test.requiresSecondaryCamera);
 
     // 3. Generate Recommendation

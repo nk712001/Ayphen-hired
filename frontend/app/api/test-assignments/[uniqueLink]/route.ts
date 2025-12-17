@@ -60,13 +60,13 @@ export async function GET(
 
     // Filter questions according to test configuration
     if (assignment.test.questions) {
-      const mcqQuestions = assignment.test.questions.filter(q => q.type === 'multiple_choice').slice(0, assignment.test.mcqQuestions);
-      const conversationalQuestions = assignment.test.questions.filter(q => q.type === 'conversational' || q.type === 'essay').slice(0, assignment.test.conversationalQuestions);
-      const codingQuestions = assignment.test.questions.filter(q => q.type === 'code' || q.type === 'coding').slice(0, assignment.test.codingQuestions);
+      const mcqQuestions = assignment.test.questions.filter((q: any) => q.type === 'multiple_choice').slice(0, assignment.test.mcqQuestions);
+      const conversationalQuestions = assignment.test.questions.filter((q: any) => q.type === 'conversational' || q.type === 'essay').slice(0, assignment.test.conversationalQuestions);
+      const codingQuestions = assignment.test.questions.filter((q: any) => q.type === 'code' || q.type === 'coding').slice(0, assignment.test.codingQuestions);
 
       // Combine and reorder questions
       assignment.test.questions = [...mcqQuestions, ...conversationalQuestions, ...codingQuestions]
-        .sort((a, b) => a.order - b.order);
+        .sort((a: any, b: any) => a.order - b.order);
     }
 
     console.log('Assignment data:', JSON.stringify(assignment, null, 2));

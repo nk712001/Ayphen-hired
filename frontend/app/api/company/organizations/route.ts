@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         }
 
         // Create Organization + Audit Log
-        const org = await prisma.$transaction(async (tx) => {
+        const org = await prisma.$transaction(async (tx: any) => {
             const organization = await tx.organization.create({
                 data: {
                     name,

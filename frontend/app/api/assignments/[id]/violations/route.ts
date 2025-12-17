@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -20,8 +20,8 @@ export async function GET(
     const assignment = await prisma.testAssignment.findUnique({
       where: { id: assignmentId },
       include: {
-        test: { 
-          select: { 
+        test: {
+          select: {
             createdBy: true,
             requiresSecondaryCamera: true
           }
@@ -44,18 +44,18 @@ export async function GET(
     }
 
     // Calculate violation summary
-    const allViolations = assignment.proctorSessions.flatMap(session => session.violations);
-    
+    const allViolations = assignment.proctorSessions.flatMap((session: any) => session.violations);
+
     const violationSummary = {
       totalViolations: allViolations.length,
-      primaryCameraViolations: allViolations.filter(v => v.cameraSource === 'primary').length,
-      secondaryCameraViolations: allViolations.filter(v => v.cameraSource === 'secondary').length,
-      highSeverity: allViolations.filter(v => v.severity === 'CRITICAL' || v.severity === 'MAJOR').length,
-      mediumSeverity: allViolations.filter(v => v.severity === 'MINOR').length,
-      lowSeverity: allViolations.filter(v => !['CRITICAL', 'MAJOR', 'MINOR'].includes(v.severity)).length,
+      primaryCameraViolations: allViolations.filter((v: any) => v.cameraSource === 'primary').length,
+      secondaryCameraViolations: allViolations.filter((v: any) => v.cameraSource === 'secondary').length,
+      highSeverity: allViolations.filter((v: any) => v.severity === 'CRITICAL' || v.severity === 'MAJOR').length,
+      mediumSeverity: allViolations.filter((v: any) => v.severity === 'MINOR').length,
+      lowSeverity: allViolations.filter((v: any) => !['CRITICAL', 'MAJOR', 'MINOR'].includes(v.severity)).length,
       cheatScore: calculateCheatScore(allViolations, assignment.test.requiresSecondaryCamera),
       secondaryCameraRequired: assignment.test.requiresSecondaryCamera,
-      violations: allViolations.map(v => ({
+      violations: allViolations.map((v: any) => ({
         type: v.type,
         severity: v.severity,
         description: v.description,
@@ -74,14 +74,14 @@ export async function GET(
 
 function calculateCheatScore(violations: any[], isSecondaryRequired: boolean = false): number {
   if (violations.length === 0) return 0;
-  
+
   let score = 0;
   let primaryViolations = 0;
   let secondaryViolations = 0;
-  
+
   violations.forEach(violation => {
     let violationScore = 0;
-    
+
     switch (violation.severity) {
       case 'CRITICAL':
         violationScore = 25;
@@ -95,7 +95,7 @@ function calculateCheatScore(violations: any[], isSecondaryRequired: boolean = f
       default:
         violationScore = 2;
     }
-    
+
     // Apply secondary camera weighting only if secondary camera is required
     if (violation.cameraSource === 'secondary' && isSecondaryRequired) {
       // Secondary camera violations get 1.5x weight for workspace monitoring
@@ -104,15 +104,15 @@ function calculateCheatScore(violations: any[], isSecondaryRequired: boolean = f
     } else if (violation.cameraSource === 'primary') {
       primaryViolations++;
     }
-    
+
     score += violationScore;
   });
-  
+
   // Bonus penalty if both cameras detected violations and secondary is required
   if (isSecondaryRequired && primaryViolations > 0 && secondaryViolations > 0) {
     score += 10; // 10 point penalty for dual-camera violations
   }
-  
+
   // Cap at 100%
   return Math.min(100, score);
 }

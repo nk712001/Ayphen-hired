@@ -118,8 +118,8 @@ export async function DELETE(
     }
 
     // Deep delete transaction
-    await prisma.$transaction(async (tx) => {
-      const testAssignmentIds = candidate.assignments.map(a => a.id);
+    await prisma.$transaction(async (tx: any) => {
+      const testAssignmentIds = candidate.assignments.map((a: any) => a.id);
 
       if (testAssignmentIds.length > 0) {
         // Get proctor sessions
@@ -128,7 +128,7 @@ export async function DELETE(
           select: { id: true }
         });
 
-        const proctorSessionIds = proctorSessions.map(ps => ps.id);
+        const proctorSessionIds = proctorSessions.map((ps: any) => ps.id);
 
         // 1. Delete violations
         if (proctorSessionIds.length > 0) {

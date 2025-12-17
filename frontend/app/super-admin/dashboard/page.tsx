@@ -124,7 +124,7 @@ export default async function SuperAdminDashboard() {
                             No recent activity found.
                         </div>
                     ) : (
-                        stats.recentAuditLogs.map((log) => (
+                        stats.recentAuditLogs.map((log: any) => (
                             <div key={log.id} className="p-4 hover:bg-gray-50 transition-colors flex items-start gap-4">
                                 <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-500">
                                     <Activity className="w-4 h-4" />

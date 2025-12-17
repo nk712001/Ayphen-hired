@@ -70,7 +70,7 @@ export default async function AssessPage({ params }: PageProps) {
         codingQuestions: assignment.test.codingQuestions,
         requiresSecondaryCamera: assignment.test.requiresSecondaryCamera,
         questions: assignment.test.questions
-            .filter(q => {
+            .filter((q: any) => {
                 // Filter questions: Include if no assignmentId in metadata OR matches current assignment
                 try {
                     const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata || '{}') : q.metadata;
@@ -82,7 +82,7 @@ export default async function AssessPage({ params }: PageProps) {
                     return true; // Include if metadata parses error (assume safe)
                 }
             })
-            .map(q => ({
+            .map((q: any) => ({
                 id: q.id,
                 type: q.type as any,
                 text: q.text,

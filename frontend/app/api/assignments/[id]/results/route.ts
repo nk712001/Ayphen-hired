@@ -51,13 +51,13 @@ export async function GET(
     // Filter questions to match what the candidate saw (same logic as assignment API)
     if (assignmentResults.test.questions) {
       // 1. Identify answered questions
-      const answeredQuestionIds = new Set(assignmentResults.answers.map(a => a.questionId));
+      const answeredQuestionIds = new Set(assignmentResults.answers.map((a: any) => a.questionId));
 
       // 2. Deduplicate by TEXT, prioritizing answered questions
       const uniqueQuestions = new Map<string, any>();
 
       // Sort by order first to keep the "original" or intended order preference
-      assignmentResults.test.questions.sort((a, b) => a.order - b.order);
+      assignmentResults.test.questions.sort((a: any, b: any) => a.order - b.order);
 
       for (const q of assignmentResults.test.questions) {
         const existing = uniqueQuestions.get(q.text);

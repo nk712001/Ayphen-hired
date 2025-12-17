@@ -146,7 +146,7 @@ export default async function CompanyDashboard() {
                 No recruiters yet. Add your first team member!
               </div>
             ) : (
-              stats.recentRecruiters.map((recruiter) => (
+              stats.recentRecruiters.map((recruiter: any) => (
                 <div key={recruiter.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-medium">

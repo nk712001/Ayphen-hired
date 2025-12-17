@@ -39,7 +39,7 @@ export async function GET(
     });
 
     return NextResponse.json({
-      questions: questions.map(q => ({
+      questions: questions.map((q: any) => ({
         id: q.id,
         type: q.type,
         text: q.text,
@@ -132,7 +132,7 @@ export async function POST(
         select: { id: true }
       });
 
-      const existingQuestionIds = existingQuestions.map(q => q.id);
+      const existingQuestionIds = existingQuestions.map((q: any) => q.id);
 
       // Delete all answers that reference these questions first
       if (existingQuestionIds.length > 0) {
@@ -204,7 +204,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: `Successfully saved ${savedQuestions.length} questions`,
-      questions: savedQuestions.map(q => ({
+      questions: savedQuestions.map((q: any) => ({
         id: q.id,
         type: q.type,
         text: q.text,
@@ -255,7 +255,7 @@ export async function DELETE(
       select: { id: true }
     });
 
-    const questionIds = questions.map(q => q.id);
+    const questionIds = questions.map((q: any) => q.id);
 
     // Delete all answers that reference these questions first
     const deletedAnswers = await prisma.answer.deleteMany({

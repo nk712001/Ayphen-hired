@@ -127,7 +127,7 @@ export default async function CompanyDetailsPage({ params }: { params: { id: str
                             No users found in this company.
                         </div>
                     ) : (
-                        company.users.map((user) => (
+                        company.users.map((user: any) => (
                             <div key={user.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">

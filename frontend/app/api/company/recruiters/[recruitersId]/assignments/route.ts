@@ -58,7 +58,7 @@ export async function POST(
         }
 
         // Transaction: Clear old -> Create new
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
             // Delete all existing assignments for this recruiter
             await tx.recruiterOrganization.deleteMany({
                 where: { recruiterId: params.recruitersId }

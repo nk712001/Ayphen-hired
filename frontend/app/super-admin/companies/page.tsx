@@ -42,7 +42,7 @@ export default async function CompaniesPage() {
                         <p className="text-gray-500 mt-1">Companies created via signup will appear here.</p>
                     </div>
                 ) : (
-                    companies.map((company) => (
+                    companies.map((company: any) => (
                         <Card key={company.id} className="p-6 transition-all hover:shadow-md bg-white border border-gray-200">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">

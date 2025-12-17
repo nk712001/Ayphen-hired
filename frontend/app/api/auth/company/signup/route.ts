@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         }
 
         // 2. Transaction: Create Company, Admin, Settings, Audit Log
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx: any) => {
             // Create Company
             const company = await tx.company.create({
                 data: {

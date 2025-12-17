@@ -39,11 +39,11 @@ export async function GET(
     // Generate AI-based questions for preview (without saving to database)
     let questionCounts = { mcqCount: 3, conversationalCount: 2, codingCount: 1 };
     let previewQuestions: any[] = [];
-    
+
     try {
       // Use the resume from the test (interviewer-uploaded) or candidate profile
       const resumeUrl = assignment.test.resumeUrl || assignment.candidate.resumeUrl;
-      
+
       if (resumeUrl) {
         // Generate personalized questions based on resume and job description
         const questionsResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/ai/generate-test-questions`, {
@@ -112,9 +112,9 @@ export async function GET(
       candidateName: assignment.candidate.name,
       candidateEmail: assignment.candidate.email,
       questionCounts: {
-        mcqCount: previewQuestions.filter(q => q.type === 'multiple_choice').length,
-        conversationalCount: previewQuestions.filter(q => q.type === 'short_answer' || q.type === 'essay').length,
-        codingCount: previewQuestions.filter(q => q.type === 'code').length
+        mcqCount: previewQuestions.filter((q: any) => q.type === 'multiple_choice').length,
+        conversationalCount: previewQuestions.filter((q: any) => q.type === 'short_answer' || q.type === 'essay').length,
+        codingCount: previewQuestions.filter((q: any) => q.type === 'code').length
       },
       requiresSecondaryCamera: assignment.test.requiresSecondaryCamera,
       uniqueLink: assignment.uniqueLink,
@@ -128,7 +128,7 @@ export async function GET(
       aiGenerated: previewQuestions.length > 0 ? 'Yes' : 'No'
     };
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       assignment: testPreview,
       message: 'Test preview generated successfully'
     });

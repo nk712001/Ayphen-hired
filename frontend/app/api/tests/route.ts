@@ -45,7 +45,7 @@ export async function GET(request: Request) {
           select: { organizationId: true }
         });
 
-        const orgIds = assignments.map(a => a.organizationId);
+        const orgIds = assignments.map((a: any) => a.organizationId);
         whereClause.organizationId = { in: orgIds };
       }
     } else if (session.user.role === 'SUPER_ADMIN') {

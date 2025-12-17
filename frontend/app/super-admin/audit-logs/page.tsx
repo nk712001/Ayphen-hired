@@ -22,7 +22,7 @@ async function getAuditLogs() {
         }
     });
 
-    return logs.map(log => ({
+    return logs.map((log: any) => ({
         ...log,
         createdAt: log.timestamp, // Map timestamp to createdAt for component compatibility
         actor: log.user // Map user to actor
@@ -59,7 +59,7 @@ export default async function AuditLogsPage() {
                             <p className="text-gray-500 mt-1">System activity will appear here.</p>
                         </div>
                     ) : (
-                        logs.map((log) => (
+                        logs.map((log: any) => (
                             <div key={log.id} className="p-6 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-start gap-4">

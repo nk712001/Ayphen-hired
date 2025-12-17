@@ -33,7 +33,7 @@ async function getAnalytics() {
     ]);
 
     // Map the results to match the expected format if needed, OR just return data and adjust the component
-    const formattedRecentTests = recentTests.map(test => ({
+    const formattedRecentTests = recentTests.map((test: any) => ({
         ...test,
         _count: {
             candidates: test._count.assignments
@@ -119,7 +119,7 @@ export default async function AnalyticsPage() {
                     {data.recentTests.length === 0 ? (
                         <p className="text-gray-500 text-center py-8">No tests created yet.</p>
                     ) : (
-                        data.recentTests.map((test) => (
+                        data.recentTests.map((test: any) => (
                             <div key={test.id} className="flex items-center justify-between border-b border-gray-100 last:border-0 pb-4 last:pb-0">
                                 <div>
                                     <p className="font-medium text-gray-900">{test.title}</p>

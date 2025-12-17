@@ -9,7 +9,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -45,7 +45,7 @@ export async function POST(
     }
 
     // Delete only this candidate's assignment and related data
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Delete violations for this specific assignment
       await tx.violation.deleteMany({
         where: {

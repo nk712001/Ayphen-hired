@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Transaction: Create User + Audit Log
-        const recruiter = await prisma.$transaction(async (tx) => {
+        const recruiter = await prisma.$transaction(async (tx: any) => {
             const user = await tx.user.create({
                 data: {
                     name,
