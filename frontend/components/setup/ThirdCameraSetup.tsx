@@ -153,7 +153,13 @@ const ThirdCameraSetup: React.FC<ThirdCameraSetupProps> = ({
 
       // Use the same WebSocket approach as the proctoring demo
       // Create a temporary ProctorClient-like connection for analysis
-      const wsUrl = `wss://127.0.0.1:8000/ws/proctor/${mobileSessionId}`;
+      // Use dynamic WebSocket URL based on environment
+      const aiServiceUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://127.0.0.1:8000';
+      const wsProtocol = aiServiceUrl.startsWith('https') ? 'wss' : 'ws';
+      // Strip protocol from URL to get host
+      const host = aiServiceUrl.replace(/^https?:\/\//, '');
+      const wsUrl = `${wsProtocol}://${host}/ws/proctor/${mobileSessionId}`;
+
       console.log('[PRIMARY_AI_ANALYSIS] Connecting to WebSocket:', wsUrl);
 
       const ws = new WebSocket(wsUrl);

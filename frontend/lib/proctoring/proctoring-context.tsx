@@ -17,7 +17,9 @@ interface ProctoringContextType {
   metrics: any;
   stream: MediaStream | null;
   secondaryStream: MediaStream | null;
+  setSecondaryStream: (stream: MediaStream | null) => void;
   videoRef: React.RefObject<HTMLVideoElement>;
+  secondaryVideoRef: React.RefObject<HTMLVideoElement>;
   startProctoring: (options?: ProctoringOptions) => Promise<void>;
   stopProctoring: () => void;
   toggleCamera: () => Promise<void>;
@@ -40,6 +42,7 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [secondaryStream, setSecondaryStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const secondaryVideoRef = useRef<HTMLVideoElement>(null);
   const router = useRouter();
   const [proctorClient, setProctorClient] = useState<ProctorClient | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -65,16 +68,28 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
   }, [stream]);
 
+  // Attach secondary stream to secondary video element
+  useEffect(() => {
+    if (secondaryVideoRef.current && secondaryStream) {
+      secondaryVideoRef.current.srcObject = secondaryStream;
+    }
+  }, [secondaryStream]);
+
   // Helper to capture video frame as base64
   const captureVideoFrameAsBase64 = useCallback((video: HTMLVideoElement | null): string | null => {
-    if (!video) return null;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg').split(',')[1]; // base64 only
+    if (!video || !video.videoWidth || !video.videoHeight) return null;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.8).split(',')[1]; // base64 only
+    } catch (e) {
+      console.error('Error capturing frame:', e);
+      return null;
+    }
   }, []);
 
   // Helper to generate a session ID
@@ -83,7 +98,7 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Helper to capture audio data as base64
   const captureAudioData = useCallback((): string | null => {
     if (!analyserRef.current) {
-      console.log('No analyser available for audio capture');
+      // console.log('No analyser available for audio capture');
       return null;
     }
 
@@ -102,14 +117,14 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Calculate RMS with improved normalization
     const rms = Math.sqrt(dataArray.reduce((sum, val) => sum + val * val, 0) / dataArray.length);
     const normalizedRms = Math.min(1.0, rms * 100); // Scale up for better detection
-    console.log('[AUDIO] RMS level:', rms.toFixed(6), 'Normalized:', normalizedRms.toFixed(6), 'Buffer length:', bufferLength);
+    // console.log('[AUDIO] RMS level:', rms.toFixed(6), 'Normalized:', normalizedRms.toFixed(6), 'Buffer length:', bufferLength);
 
     // More sensitive threshold using normalized value
     const isVoice = normalizedRms >= 0.005; // Use normalized threshold
     if (!isVoice) {
-      console.log('[AUDIO] Frame too quiet, may be silence');
+      // console.log('[AUDIO] Frame too quiet, may be silence');
     } else {
-      console.log('[AUDIO] Voice activity detected, Level:', normalizedRms.toFixed(6));
+      // console.log('[AUDIO] Voice activity detected, Level:', normalizedRms.toFixed(6));
     }
 
 
@@ -228,8 +243,11 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (frameTimerRef.current) clearInterval(frameTimerRef.current);
       frameTimerRef.current = setInterval(() => {
         const frame = captureVideoFrameAsBase64(videoRef.current);
+        const secondaryFrame = captureVideoFrameAsBase64(secondaryVideoRef.current);
+
         if (frame && client) {
-          client.sendVideoFrame(frame);
+          // Send both frames if available
+          client.sendVideoFrame(frame, secondaryFrame);
         }
       }, 500);
 
@@ -269,7 +287,7 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setProctorClient(null);
     setSessionId(null);
 
-    // Stop all media tracks
+    // Stop all media tracks (primary)
     if (stream) {
       console.log('📹 Stopping media stream tracks:', stream.getTracks().length);
       stream.getTracks().forEach((track, index) => {
@@ -282,6 +300,13 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.log('⚠️ No media stream found to stop');
     }
 
+    // Stop secondary stream if active
+    if (secondaryStream) {
+      console.log('📹 Stopping secondary media stream tracks');
+      secondaryStream.getTracks().forEach(track => track.stop());
+      setSecondaryStream(null);
+    }
+
     // Update state
     setIsProctoringActive(false);
     setIsCameraActive(false);
@@ -289,7 +314,7 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsScreenShared(false);
 
     console.log('✅ stopProctoring() completed - all cameras and microphones should be off');
-  }, [proctorClient, stream]);
+  }, [proctorClient, stream, secondaryStream]);
 
   const toggleCamera = useCallback(async () => {
     // If no stream or no video track, always request a new stream
@@ -458,13 +483,13 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (audioTimerRef.current) clearInterval(audioTimerRef.current);
     audioTimerRef.current = setInterval(() => {
       if (!analyserRef.current) {
-        console.log('No analyser available, skipping audio frame');
+        // console.log('No analyser available, skipping audio frame');
         return;
       }
 
       const audioData = captureAudioData();
       if (audioData && proctorClient) {
-        console.log('✓ Sending audio frame, length:', audioData.length, 'client connected');
+        // console.log('✓ Sending audio frame, length:', audioData.length, 'client connected');
         proctorClient.sendAudioFrame(audioData);
       }
     }, 200);
@@ -494,7 +519,9 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     metrics,
     stream,
     secondaryStream,
+    setSecondaryStream, // EXPORTED NOW
     videoRef,
+    secondaryVideoRef, // EXPORTED NOW
     startProctoring,
     stopProctoring,
     toggleCamera,

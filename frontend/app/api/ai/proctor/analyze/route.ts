@@ -27,8 +27,9 @@ export async function POST(req: NextRequest) {
 
         // Prepare payload with optional secondary data
         // Aligning with WebSocket protocol: 'data' and 'secondary_data'
+        // FIX: Backend HTTP endpoint expects 'frameData'
         const payload: any = {
-            data: frameData,
+            frameData: frameData,
             timestamp: new Date().toISOString()
         };
         if (secondaryFrameData) {
