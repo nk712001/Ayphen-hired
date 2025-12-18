@@ -6,3 +6,4 @@ opencv-python-headless==4.9.0.80
 dlib
 pydantic==2.6.1
 python-multipart==0.0.9
+ultralytics>=8.0.0
