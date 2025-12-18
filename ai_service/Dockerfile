@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     bzip2 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed python packages from builder
