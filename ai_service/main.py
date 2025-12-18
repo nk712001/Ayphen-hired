@@ -621,7 +621,7 @@ async def analyze_primary_camera_direct(session_id: str, request: dict = Body(..
         object_analysis = session.object_detector.analyze_frame(session.multi_camera_manager._decode_image(frame_data), context='primary')
         
         # Get gaze tracking analysis
-        gaze_analysis = session.gaze_tracker.analyze_frame(session.multi_camera_manager._decode_image(frame_data))
+        gaze_analysis = session.gaze_tracker.analyze_gaze(session.multi_camera_manager._decode_image(frame_data))
         
         # Combine all analyses into a comprehensive result
         analysis_result = {
