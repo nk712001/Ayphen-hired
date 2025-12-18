@@ -22,7 +22,8 @@ RUN pip install --no-cache-dir --prefix=/install torch torchvision --index-url h
 
 # Install other dependencies
 # Ensure pip sees the previously installed torch by setting PYTHONPATH
-RUN PYTHONPATH=/install/lib/python3.10/site-packages pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Set CMAKE_BUILD_PARALLEL_LEVEL=1 to prevent OOM during dlib compilation under emulation
+RUN CMAKE_BUILD_PARALLEL_LEVEL=1 PYTHONPATH=/install/lib/python3.10/site-packages pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Final stage
 FROM python:3.10-slim-bookworm
