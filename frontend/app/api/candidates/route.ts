@@ -147,21 +147,13 @@ export async function POST(request: NextRequest) {
 
       // Handle File Upload
       if (resumeFile) {
-        // Save locally
+        // Process in memory only - Vercel is Read-Only
         const bytes = await resumeFile.arrayBuffer();
         const buffer = Buffer.from(bytes);
-        const timestamp = Date.now();
-        const safeName = resumeFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filename = `resume-${timestamp}-${safeName}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
 
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
-        const filePath = path.join(uploadDir, filename);
-        fs.writeFileSync(filePath, buffer as any);
-        resumeUrl = `/uploads/${filename}`;
+        // We cannot save the file to disk on Vercel without external storage (S3/Blob).
+        // We will proceed with AI analysis using the memory buffer.
+        resumeUrl = ''; // Or a placeholder if needed
 
         // Parse & Analyze
         try {
