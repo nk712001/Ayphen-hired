@@ -1,9 +1,7 @@
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import sharp from 'sharp';
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -20,15 +18,23 @@ export async function POST(req: Request) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const filename = `${crypto.randomUUID()}-${file.name.replace(/\s+/g, '_')}`;
-        const uploadDir = join(process.cwd(), 'public/uploads');
-        const filepath = join(uploadDir, filename);
 
-        await writeFile(filepath, buffer as any);
+        // Process image: resize to max 400px width (retina ready for 200px display), optimize
+        const optimizedBuffer = await sharp(buffer)
+            .resize(400, null, { // Max width 400px, maintain aspect ratio
+                withoutEnlargement: true,
+                fit: 'inside'
+            })
+            .webp({ quality: 80 }) // Compress as WebP
+            .toBuffer();
 
-        return NextResponse.json({ url: `/uploads/${filename}` });
+        // Convert to base64 data URI
+        const base64Image = `data:image/webp;base64,${optimizedBuffer.toString('base64')}`;
+
+        // Return the data URI directly. Frontend will save this string to the DB.
+        return NextResponse.json({ url: base64Image });
     } catch (error) {
-        console.error('Upload error:', error);
-        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+        console.error('Upload processing error:', error);
+        return NextResponse.json({ error: 'Image processing failed' }, { status: 500 });
     }
 }
