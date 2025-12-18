@@ -32,7 +32,7 @@ export default function CandidateProfilePage({ params }: { params: { id: string 
 
   const handleCopyTestLink = async (uniqueLink: string, assignmentId: string) => {
     try {
-      const testUrl = `${window.location.origin}/tests/start/${uniqueLink}`;
+      const testUrl = `${window.location.origin}/assess/${uniqueLink}`;
       await navigator.clipboard.writeText(testUrl);
       setCopiedLink(assignmentId);
       setTimeout(() => setCopiedLink(null), 2000); // Reset after 2 seconds

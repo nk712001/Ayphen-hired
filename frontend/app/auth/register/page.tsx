@@ -30,15 +30,15 @@ export default function RegisterPage() {
   useEffect(() => {
     // If coming from a test link, set role to USER (student/candidate) and pre-fill fields
     if (testLink) {
-      setFormData(prev => ({ 
-        ...prev, 
+      setFormData(prev => ({
+        ...prev,
         role: 'USER',
         email: emailParam || prev.email,
         fullName: nameParam || prev.fullName
       }));
     }
   }, [testLink, emailParam, nameParam]);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -49,7 +49,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -91,13 +91,13 @@ export default function RegisterPage() {
           password: formData.password,
           redirect: false
         });
-        
+
         if (signInResult?.ok) {
           // Redirect to test start page after successful sign-in
-          router.push(`/tests/start/${testLink}`);
+          router.push(`/assess/${testLink}`);
         } else {
           // If auto sign-in fails, redirect to login with test link
-          router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/tests/start/${testLink}`)}&email=${encodeURIComponent(formData.email)}`);
+          router.push(`/auth/login?callbackUrl=${encodeURIComponent(`/assess/${testLink}`)}&email=${encodeURIComponent(formData.email)}`);
         }
       } else {
         // Use the redirect URL from the response
@@ -127,13 +127,13 @@ export default function RegisterPage() {
               {/* Animated background elements */}
               <div className="absolute inset-0">
                 <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl animate-pulse"></div>
-                <div className="absolute bottom-20 right-10 w-24 h-24 bg-white/5 rounded-full blur-lg animate-bounce" style={{animationDelay: '1s'}}></div>
-                <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-md animate-ping" style={{animationDelay: '2s'}}></div>
+                <div className="absolute bottom-20 right-10 w-24 h-24 bg-white/5 rounded-full blur-lg animate-bounce" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-white/5 rounded-full blur-md animate-ping" style={{ animationDelay: '2s' }}></div>
               </div>
-              
+
               {/* Glassmorphism overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-              
+
               <div className="relative z-10">
                 <div className="mb-8">
                   {/* Modern logo container */}
@@ -145,7 +145,7 @@ export default function RegisterPage() {
                     </div>
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-secondary rounded-full animate-pulse"></div>
                   </div>
-                  
+
                   <div className="space-y-2 mb-6">
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
                       Welcome to
@@ -154,12 +154,12 @@ export default function RegisterPage() {
                       Ayphen Platform
                     </h2>
                   </div>
-                  
+
                   <p className="text-white/90 text-lg leading-relaxed font-light">
                     Join thousands of professionals using our cutting-edge platform for seamless collaboration and innovation.
                   </p>
                 </div>
-                
+
                 {/* Modern feature cards */}
                 <div className="space-y-3">
                   <div className="flex items-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/15 transition-all duration-300">
@@ -168,14 +168,14 @@ export default function RegisterPage() {
                     </div>
                     <span className="text-white/90 font-medium">Enterprise-grade security</span>
                   </div>
-                  
+
                   <div className="flex items-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/15 transition-all duration-300">
                     <div className="w-8 h-8 bg-gradient-to-br from-white/20 to-white/10 rounded-lg flex items-center justify-center mr-3">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     </div>
                     <span className="text-white/90 font-medium">AI-powered insights</span>
                   </div>
-                  
+
                   <div className="flex items-center p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/15 transition-all duration-300">
                     <div className="w-8 h-8 bg-gradient-to-br from-white/20 to-white/10 rounded-lg flex items-center justify-center mr-3">
                       <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -183,7 +183,7 @@ export default function RegisterPage() {
                     <span className="text-white/90 font-medium">Real-time collaboration</span>
                   </div>
                 </div>
-                
+
                 {/* Stats section */}
                 <div className="mt-8 pt-6 border-t border-white/20">
                   <div className="grid grid-cols-2 gap-4">
@@ -263,9 +263,8 @@ export default function RegisterPage() {
                         value={formData.role}
                         onChange={handleChange}
                         disabled={!!testLink}
-                        className={`w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-white ${
-                          testLink ? 'bg-gray-100 cursor-not-allowed' : ''
-                        }`}
+                        className={`w-full pl-9 pr-3 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-white ${testLink ? 'bg-gray-100 cursor-not-allowed' : ''
+                          }`}
                         required
                       >
                         <option value="USER">User</option>
