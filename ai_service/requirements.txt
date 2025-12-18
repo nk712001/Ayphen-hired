@@ -7,3 +7,6 @@ dlib
 pydantic==2.6.1
 python-multipart==0.0.9
 ultralytics>=8.0.0
+librosa
+soundfile
+scipy
