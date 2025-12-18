@@ -46,7 +46,7 @@ async def warmup_models():
         fd._ensure_model_loaded()
         dummy_img = np.zeros((720, 1280, 3), dtype=np.uint8)
         try:
-            fd.detector.detect_faces(dummy_img)
+            fd.detector(dummy_img, 0)
         except Exception as e:
             print(f"[WARMUP] FaceDetector error: {e}")
         # Warm up GazeTracker
