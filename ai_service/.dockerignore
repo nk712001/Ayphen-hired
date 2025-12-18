@@ -16,3 +16,4 @@ debug_*.jpg
 test_*.jpg
 face_*.jpg
 skin_test_*.jpg
+shape_predictor_68_face_landmarks.dat

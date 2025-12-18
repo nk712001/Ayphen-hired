@@ -45,7 +45,7 @@ COPY --from=builder /install /usr/local
 COPY . .
 
 # Unzip landmark predictor if needed
-RUN if [ -f "shape_predictor_68_face_landmarks.dat.bz2" ]; then bzip2 -d shape_predictor_68_face_landmarks.dat.bz2; fi
+RUN if [ -f "shape_predictor_68_face_landmarks.dat.bz2" ]; then bzip2 -df shape_predictor_68_face_landmarks.dat.bz2; fi
 
 EXPOSE 8000
 
