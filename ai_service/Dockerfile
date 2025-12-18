@@ -21,7 +21,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
 # Install other dependencies
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Ensure pip sees the previously installed torch by setting PYTHONPATH
+RUN PYTHONPATH=/install/lib/python3.10/site-packages pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Final stage
 FROM python:3.10-slim-bookworm
