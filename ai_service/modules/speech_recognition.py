@@ -55,13 +55,8 @@ class SpeechRecognizer:
             self.recognizer.pause_threshold = 0.8
             
         if WHISPER_AVAILABLE:
-            try:
-                # Load a lightweight Whisper model for better performance
-                self.whisper_model = whisper.load_model("base")
-                print("[INFO] Whisper model loaded successfully")
-            except Exception as e:
-                print(f"[WARNING] Failed to load Whisper model: {e}")
-                self.whisper_model = None
+            self.whisper_model = None  # Lazy load the model only when needed
+
         self.reference_slogans = [
             # Tech & Innovation Slogans
             "Innovation distinguishes between a leader and a follower",
@@ -297,8 +292,23 @@ class SpeechRecognizer:
     
     def _transcribe_with_whisper(self, audio_data: np.ndarray) -> Optional[str]:
         """Transcribe audio using OpenAI Whisper"""
+        if not WHISPER_AVAILABLE:
+            print("[SPEECH] ❌ Whisper library not available")
+            return None
+
+        # Lazy load model if not already loaded
+        if self.whisper_model is None:
+            try:
+                import whisper
+                print("[SPEECH] ⏳ Loading Whisper 'tiny' model (lazy load)...")
+                self.whisper_model = whisper.load_model("tiny")
+                print("[SPEECH] ✅ Whisper 'tiny' model loaded successfully")
+            except Exception as e:
+                print(f"[SPEECH] ❌ Failed to load Whisper model: {e}")
+                return None
+            
         if not self.whisper_model:
-            print("[SPEECH] ❌ Whisper model not available")
+            print("[SPEECH] ❌ Whisper model validation failed")
             return None
             
         # Validate audio duration

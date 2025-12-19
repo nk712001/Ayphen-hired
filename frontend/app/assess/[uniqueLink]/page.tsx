@@ -82,14 +82,23 @@ export default async function AssessPage({ params }: PageProps) {
                     return true; // Include if metadata parses error (assume safe)
                 }
             })
-            .map((q: any) => ({
-                id: q.id,
-                type: q.type as any,
-                text: q.text,
-                metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata,
-                difficulty: q.difficulty || undefined,
-                order: q.order
-            }))
+            .map((q: any) => {
+                let parsedMetadata = {};
+                try {
+                    parsedMetadata = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
+                } catch (e) {
+                    console.error(`[AssessPage] Error parsing metadata for question ${q.id}:`, e);
+                }
+
+                return {
+                    id: q.id,
+                    type: q.type as any,
+                    text: q.text,
+                    metadata: parsedMetadata,
+                    difficulty: q.difficulty || undefined,
+                    order: q.order
+                };
+            })
     };
 
     const branding = assignment.test.company?.companySettings?.customBranding !== false
