@@ -753,16 +753,18 @@ def _generate_primary_recommendations(validation, face_analysis, object_analysis
 
 
 # Add a main block to run the server with SSL if available
-if __name__ == "__main__":
+    # Get port from environment variable (default to 8000)
+    port = int(os.environ.get("PORT", 8000))
+    
     if ssl_context:
         # Run with HTTPS
         uvicorn.run(
             "main:app", 
             host="0.0.0.0", 
-            port=8000, 
+            port=port, 
             ssl_keyfile="../certs/key.pem",
             ssl_certfile="../certs/cert.pem"
         )
     else:
         # Run without HTTPS
-        uvicorn.run("main:app", host="0.0.0.0", port=8000)
+        uvicorn.run("main:app", host="0.0.0.0", port=port)

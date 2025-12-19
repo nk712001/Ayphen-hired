@@ -52,4 +52,4 @@ RUN if [ -f "shape_predictor_68_face_landmarks.dat.bz2" ]; then bzip2 -df shape_
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
