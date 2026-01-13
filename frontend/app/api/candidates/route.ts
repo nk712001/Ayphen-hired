@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
         const filePath = path.join(uploadsDir, filename);
 
         // Save file to disk
-        fs.writeFileSync(filePath, buffer);
+        fs.writeFileSync(filePath, buffer as any);
 
         // Set public URL
         resumeUrl = `/uploads/resumes/${filename}`;

@@ -14,7 +14,7 @@ type Props = {
 
 interface Question {
   id: string;
-  type: 'multiple_choice' | 'essay' | 'code';
+  type: 'multiple_choice' | 'essay' | 'code' | 'short_answer';
   text: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   order: number;

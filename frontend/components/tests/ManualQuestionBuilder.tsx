@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 export interface Question {
   id: string;
-  type: 'multiple_choice' | 'essay' | 'code';
+  type: 'multiple_choice' | 'essay' | 'code' | 'short_answer';
   text: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   order: number;
@@ -168,7 +168,7 @@ export default function ManualQuestionBuilder({
                   Question {index + 1}
                 </span>
                 <span className={`px-2 py-1 text-xs rounded ${question.type === 'multiple_choice' ? 'bg-purple-100 text-purple-800' :
-                  question.type === 'essay' ? 'bg-green-100 text-green-800' :
+                  question.type === 'essay' || question.type === 'short_answer' ? 'bg-green-100 text-green-800' :
                     'bg-orange-100 text-orange-800'
                   }`}>
                   {question.type.replace('_', ' ').toUpperCase()}
@@ -354,7 +354,7 @@ export default function ManualQuestionBuilder({
               </div>
             )}
 
-            {question.type === 'essay' && (
+            {(question.type === 'essay' || question.type === 'short_answer') && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
