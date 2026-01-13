@@ -4,8 +4,16 @@
 import { useEffect } from 'react';
 
 function hexToHSL(hex: string): string {
-    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return '222.2 47.4% 11.2%'; // Fallback
+    // Remove hash if present
+    const cleanHex = hex.replace('#', '');
+
+    // Handle short hex like 'fff'
+    const fullHex = cleanHex.length === 3
+        ? cleanHex.split('').map(c => c + c).join('')
+        : cleanHex;
+
+    let result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex);
+    if (!result) return '334 96% 45%'; // Fallback to Brand Pink
 
     let r = parseInt(result[1], 16);
     let g = parseInt(result[2], 16);
@@ -30,7 +38,6 @@ function hexToHSL(hex: string): string {
     }
 
     // Return in shadcn HSL format (deg saturation% lightness%)
-    // Note: shadcn variables are usually space separated without commas
     return `${(h * 360).toFixed(1)} ${(s * 100).toFixed(1)}% ${(l * 100).toFixed(1)}%`;
 }
 

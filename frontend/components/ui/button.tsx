@@ -17,15 +17,15 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2';
-  
+
   const variants: Record<ButtonVariant, string> = {
-    primary: 'bg-primary text-white hover:bg-primary-dark hover:shadow-md focus:ring-primary-400 border border-transparent transition-all duration-200',
-    secondary: 'bg-secondary text-white hover:bg-secondary-dark hover:shadow-md focus:ring-secondary-400 border border-transparent transition-all duration-200',
-    danger: 'bg-red-600 text-white hover:bg-red-700 hover:shadow-md focus:ring-red-500 border border-transparent transition-all duration-200',
-    ghost: 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm focus:ring-gray-300 border border-transparent transition-all duration-200',
-    outline: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 hover:border-primary-300 hover:text-primary-700 hover:shadow-md focus:ring-primary-100 shadow-sm transition-all duration-200',
-    link: 'bg-transparent text-primary hover:underline underline-offset-4 focus:ring-primary-100',
-    default: 'bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md focus:ring-gray-200 border border-gray-300 transition-all duration-200',
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-md focus:ring-primary/50 border border-transparent transition-all duration-200',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:shadow-md focus:ring-secondary/50 border border-transparent transition-all duration-200',
+    danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md focus:ring-destructive/50 border border-transparent transition-all duration-200',
+    ghost: 'hover:bg-accent hover:text-accent-foreground transition-all duration-200',
+    outline: 'bg-background text-primary border border-input hover:bg-accent hover:text-accent-foreground hover:border-primary hover:shadow-md focus:ring-primary/20 shadow-sm transition-all duration-200',
+    link: 'bg-transparent text-primary hover:underline underline-offset-4 focus:ring-primary/20',
+    default: 'bg-background text-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-md focus:ring-ring border border-input transition-all duration-200',
   };
 
   const sizes: Record<ButtonSize, string> = {

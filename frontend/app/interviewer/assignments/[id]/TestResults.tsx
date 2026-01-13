@@ -313,8 +313,22 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
               }
 
               return questionsToDisplay.map((question: any, index: number) => {
-                const answer = results.answers?.find((a: any) => a.questionId === question.id);
-                const answerScore = answerScores.find(s => s.questionId === question.id);
+                // Try to find answer by ID first, then fallback to order matching
+                let answer = results.answers?.find((a: any) => a.questionId === question.id);
+
+                if (!answer && question.order) {
+                  // Fallback: Match by question order within the test
+                  // The nested question object in answer usually preserves the original order
+                  answer = results.answers?.find((a: any) => a.question?.order === question.order);
+                }
+
+                // Try to find score by ID first, then fallback to finding via the matched answer
+                let answerScore = answerScores.find(s => s.questionId === question.id);
+
+                if (!answerScore && answer) {
+                  // If we found an answer (possibly via order), try to find its score using the answer's recorded questionId
+                  answerScore = answerScores.find(s => s.questionId === answer.questionId);
+                }
 
                 // Determine status badge
                 let statusBadge = null;

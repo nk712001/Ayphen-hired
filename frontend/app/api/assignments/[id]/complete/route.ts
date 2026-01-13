@@ -19,7 +19,49 @@ export async function POST(
     }
 
     const assignmentId = params.id;
+    const body = await request.json();
+    const { answers } = body;
+
     console.log(`🔍 Completing assignment: ${assignmentId} for user: ${session?.user?.id || 'Token Auth'}`);
+
+    // 0. Safety Net: Save all provided answers first to ensure data consistency
+    // This fixes the issue where individual save-answer calls might have failed
+    if (answers && Object.keys(answers).length > 0) {
+      console.log(`💾 Safety Save: Persisting ${Object.keys(answers).length} answers before completion`);
+
+      const savePromises = Object.entries(answers).map(async ([questionId, content]) => {
+        // Skip empty contents
+        if (content === undefined || content === null) return;
+
+        const normalizedContent = typeof content === 'string' ? content : JSON.stringify(content);
+
+        // Find existing answer first
+        const existing = await prisma.answer.findFirst({
+          where: { questionId, testAssignmentId: assignmentId }
+        });
+
+        if (existing) {
+          return prisma.answer.update({
+            where: { id: existing.id },
+            data: { content: normalizedContent, status: 'ANSWERED', submittedAt: new Date() }
+          });
+        } else {
+          return prisma.answer.create({
+            data: {
+              questionId,
+              testAssignmentId: assignmentId,
+              content: normalizedContent,
+              status: 'ANSWERED',
+              submittedAt: new Date()
+            }
+          });
+        }
+      });
+
+      // Wait for all saves to complete
+      await Promise.all(savePromises);
+      console.log('✅ Safety Save: All answers persisted');
+    }
 
     // 1. First check if assignment exists at all
     const assignmentExists = await prisma.testAssignment.findUnique({

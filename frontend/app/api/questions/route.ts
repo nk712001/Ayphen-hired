@@ -43,46 +43,47 @@ export async function POST(request: Request) {
     }
 
     // Prepare metadata based on question type
-    let metadata: any = {};
-    if (questionData.metadata) {
-      metadata = questionData.metadata; // Allow passing raw metadata if frontend handles it
-    } else {
-      // Fallback or specific extraction logic
-      switch (questionData.type) {
-        case 'multiple_choice':
-          metadata = {
-            options: questionData.options || [],
-            correctAnswer: questionData.correctAnswer,
-            points: questionData.points || 1
-          };
-          break;
-        case 'short_answer':
-          metadata = {
-            expectedAnswer: questionData.expectedAnswer,
-            acceptAlternateAnswers: questionData.acceptAlternateAnswers || false,
-            alternateAnswers: questionData.alternateAnswers || [],
-            points: questionData.points || 1
-          };
-          break;
-        case 'essay':
-          metadata = {
-            minWords: questionData.minWords || 50,
-            maxWords: questionData.maxWords || 1000,
-            evaluationCriteria: questionData.evaluationCriteria || [],
-            points: questionData.points || 10
-          };
-          break;
-        case 'code':
-          metadata = {
-            language: questionData.language || 'javascript',
-            starterCode: questionData.starterCode || '',
-            testCases: questionData.testCases || [],
-            timeLimit: questionData.timeLimit || 30,
-            memoryLimit: questionData.memoryLimit || 512,
-            points: questionData.points || 20
-          };
-          break;
-      }
+    let metadata: any = questionData.metadata || {};
+
+    // Merge/Validate metadata based on type
+    switch (questionData.type) {
+      case 'multiple_choice':
+        metadata = {
+          ...metadata,
+          options: metadata.options || questionData.options || [],
+          correctAnswer: metadata.correctAnswer ?? questionData.correctAnswer ?? 0,
+          points: metadata.points || questionData.points || 1
+        };
+        break;
+      case 'short_answer':
+        metadata = {
+          ...metadata,
+          expectedAnswer: metadata.expectedAnswer || questionData.expectedAnswer,
+          acceptAlternateAnswers: metadata.acceptAlternateAnswers ?? questionData.acceptAlternateAnswers ?? false,
+          alternateAnswers: metadata.alternateAnswers || questionData.alternateAnswers || [],
+          points: metadata.points || questionData.points || 1
+        };
+        break;
+      case 'essay':
+        metadata = {
+          ...metadata,
+          minWords: metadata.minWords || questionData.minWords || 50,
+          maxWords: metadata.maxWords || questionData.maxWords || 1000,
+          evaluationCriteria: metadata.evaluationCriteria || questionData.evaluationCriteria || [],
+          points: metadata.points || questionData.points || 10
+        };
+        break;
+      case 'code':
+        metadata = {
+          ...metadata,
+          language: metadata.language || questionData.language || 'javascript',
+          starterCode: metadata.starterCode || questionData.starterCode || '',
+          testCases: metadata.testCases || questionData.testCases || [],
+          timeLimit: metadata.timeLimit || questionData.timeLimit || 30,
+          memoryLimit: metadata.memoryLimit || questionData.memoryLimit || 512,
+          points: metadata.points || questionData.points || 20
+        };
+        break;
     }
 
     const question = await prisma.question.create({
@@ -175,9 +176,7 @@ export async function GET(request: Request) {
     const [questions, total] = await Promise.all([
       prisma.question.findMany({
         where,
-        orderBy: { order: 'asc' }, // Or createdAt desc? Order is good for test, but Library might prefer CreatedAt?
-        // For Library, Order 0 usually. Let's stick to Order or CreatedAt.
-        // Since schema might not have createdAt on Question (Need to check), keep Order.
+        orderBy: isLibrary ? { createdAt: 'desc' } : { order: 'asc' },
         skip,
         take: limit
       }),
@@ -191,6 +190,11 @@ export async function GET(request: Request) {
         limit,
         total,
         pages: Math.ceil(total / limit)
+      },
+      debug: {
+        userCompanyId: session.user.companyId,
+        queryWhere: where,
+        isLibraryParam: isLibrary
       }
     });
   } catch (error) {

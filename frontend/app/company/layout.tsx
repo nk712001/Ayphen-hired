@@ -31,7 +31,7 @@ export default async function CompanyAdminLayout({
     select: { name: true, primaryColor: true, logo: true }
   });
 
-  const primaryColor = company?.primaryColor || '#3B82F6';
+  const primaryColor = company?.primaryColor || '#de065d';
 
   const navigation = [
     { name: 'Dashboard', href: '/company/dashboard', icon: LayoutDashboard },

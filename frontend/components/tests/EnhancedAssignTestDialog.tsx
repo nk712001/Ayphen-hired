@@ -47,6 +47,94 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [saveToBank, setSaveToBank] = useState(false);
 
+  // Suggestions state
+  const [suggestedQuestions, setSuggestedQuestions] = useState<Question[]>([]);
+  const [extractedSkills, setExtractedSkills] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+  // Fetch suggested questions when entering preview step
+  useEffect(() => {
+    console.log('Suggestions Effect Triggered:', { step, extractedSkills: extractedSkills.length, currentSuggestions: suggestedQuestions.length });
+    if (step === 'preview' && suggestedQuestions.length === 0) {
+      const fetchSuggestions = async () => {
+        setIsLoadingSuggestions(true);
+        try {
+          // Fetch library questions
+          console.log('Fetching library questions for skills:', extractedSkills);
+          const res = await fetch('/api/questions?isLibrary=true&limit=50');
+          if (res.ok) {
+            const data = await res.json();
+            console.log('Suggestions Debug:', data.debug);
+            const libraryQs: any[] = data.questions || [];
+
+            let matches: Question[] = [];
+
+            if (extractedSkills.length === 0) {
+              // Fallback: Show latest 20 questions if no skills extracted
+              matches = libraryQs.slice(0, 20).map(q => ({
+                id: q.id,
+                type: q.type,
+                text: q.text,
+                difficulty: q.difficulty,
+                order: 0,
+                metadata: q.metadata
+              } as Question));
+            } else {
+              // Score questions based on matching tags and content
+              const scoredQs = libraryQs.map(q => {
+                let score = 0;
+                let qTags: string[] = [];
+                try {
+                  // Parse tags if string, or use if array
+                  qTags = typeof q.tags === 'string' ? JSON.parse(q.tags) : (q.tags || []);
+                } catch (e) {
+                  qTags = [];
+                }
+
+                const tagsArray = Array.isArray(qTags) ? qTags : [];
+
+                // 1. Tag Matches (Higher weight)
+                const matchCount = tagsArray.filter(tag =>
+                  extractedSkills.some(skill => skill.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(skill.toLowerCase()))
+                ).length;
+
+                // 2. Text Content Matches (Fallback)
+                const textMatches = extractedSkills.filter(skill =>
+                  q.text && q.text.toLowerCase().includes(skill.toLowerCase())
+                ).length;
+
+                score = (matchCount * 3) + textMatches;
+                return { ...q, score };
+              });
+
+              // Filter and sort
+              matches = scoredQs
+                .filter(q => q.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 20) // Increased from 5 to 20 matches
+                .map(q => ({
+                  id: q.id,
+                  type: q.type,
+                  text: q.text,
+                  difficulty: q.difficulty,
+                  order: 0,
+                  metadata: q.metadata
+                } as Question));
+            }
+
+            setSuggestedQuestions(matches);
+          }
+        } catch (e) {
+          console.error("Failed to fetch suggestions", e);
+        } finally {
+          setIsLoadingSuggestions(false);
+        }
+      };
+
+      fetchSuggestions();
+    }
+  }, [step, extractedSkills, suggestedQuestions.length]);
+
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
@@ -78,6 +166,18 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
     setSelectedCandidateId(candidateId);
     const candidate = candidates.find(c => c.id === candidateId);
     setSelectedCandidate(candidate || null);
+
+    // Populate skills from existing candidate data
+    if (candidate) {
+      const skillsStr = (candidate as any).skills;
+      if (skillsStr && typeof skillsStr === 'string') {
+        const skills = skillsStr.split(',').map(s => s.trim()).filter(Boolean);
+        console.log('Loaded skills from candidate:', skills);
+        setExtractedSkills(skills);
+      } else {
+        setExtractedSkills([]);
+      }
+    }
   };
 
   const handleResumeUpload = async (file: File) => {
@@ -98,11 +198,21 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
       }
 
       const data = await response.json();
+      console.log('Resume Analysis Result:', data);
+
       setUploadedResume(file);
+
+      // Save extracted skills for suggestion logic
+      if (data.analysis && Array.isArray(data.analysis.skills)) {
+        console.log('Extracted Skills:', data.analysis.skills);
+        setExtractedSkills(data.analysis.skills);
+      } else {
+        console.warn('No skills found in analysis');
+      }
 
       toast({
         title: 'Resume uploaded successfully',
-        description: 'Resume has been analyzed and is ready for question generation.'
+        description: 'Resume has been analyzed. Proceed to select questions.'
       });
 
       return true;
@@ -122,6 +232,25 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
   const generateQuestionPreview = async () => {
     setIsGeneratingPreview(true);
     try {
+      // Calculate remaining questions needed based on test config vs already selected questions
+      const currentQuestions = previewData?.questions || [];
+      const existingMcq = currentQuestions.filter(q => q.type === 'multiple_choice').length;
+      const existingCoding = currentQuestions.filter(q => q.type === 'code').length;
+      const existingConversational = currentQuestions.filter(q => q.type === 'essay' || q.type === 'short_answer').length;
+
+      const mcqCount = Math.max(0, (test.mcqQuestions || 0) - existingMcq);
+      const codingCount = Math.max(0, (test.codingQuestions || 0) - existingCoding);
+      const conversationalCount = Math.max(0, (test.conversationalQuestions || 0) - existingConversational);
+
+      if (mcqCount === 0 && codingCount === 0 && conversationalCount === 0) {
+        toast({
+          title: 'Question quota met',
+          description: 'You have already selected enough questions for this test configuration.'
+        });
+        setIsGeneratingPreview(false);
+        return;
+      }
+
       const response = await fetch('/api/ai/generate-test-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -130,9 +259,9 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
           candidateId: selectedCandidateId,
           resumeUrl: uploadedResume ? 'uploaded-resume' : selectedCandidate?.resumeUrl,
           jobDescription: test.jobDescription,
-          mcqCount: test.mcqQuestions || 2,
-          conversationalCount: test.conversationalQuestions || 2,
-          codingCount: test.codingQuestions || 1,
+          mcqCount,
+          conversationalCount,
+          codingCount,
           personalized: true
         })
       });
@@ -142,11 +271,19 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
       }
 
       const data = await response.json();
-      setPreviewData(data);
+
+      // Merge with existing manual selections if any
+      const existingQs = previewData?.questions || [];
+      const newQs = data.questions.map((q: any) => ({ ...q, order: existingQs.length + q.order })); // partial order fix
+
+      setPreviewData({
+        ...data,
+        questions: [...existingQs, ...newQs]
+      });
 
       toast({
         title: 'Questions generated',
-        description: `Generated ${data.questions.length} personalized questions for preview.`
+        description: `Generated ${data.questions.length} personalized questions.`
       });
 
       return true;
@@ -169,22 +306,72 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
       // 1. Save to Bank if requested
       if (saveToBank && previewData?.questions) {
         try {
-          await Promise.all(previewData.questions.map(q =>
-            fetch('/api/questions', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                text: q.text,
-                type: q.type,
-                difficulty: q.difficulty || 'Medium',
-                metadata: q.metadata,
-                isLibrary: true,
-                category: test.title || 'Personalized',
-                tags: (q as any).tags || previewData.resumeAnalysis?.skills || []
-              })
-            })
-          ));
-          toast({ title: 'Questions saved to bank', description: 'Generated questions have been added to your library.' });
+          // Only save questions that are likely new (not from library)
+          // Filter by IS_LIBRARY flag and known ID patterns for temporary questions
+          const questionsToSave = previewData.questions.filter(q => {
+            // If it's explicitly marked as library, skip
+            if ((q as any).isLibrary) return false;
+
+            // Broader check for temporary IDs:
+            // 1. Matches known prefixes
+            // 2. Contains underscore (CUIDs typically don't)
+            // 3. Shorter than 20 chars (CUIDs are 25)
+            const isTempId = q.id.startsWith('manual_') ||
+              q.id.startsWith('mcq_') ||
+              q.id.startsWith('conv_') ||
+              q.id.startsWith('code_') ||
+              q.id.includes('_') ||
+              q.id.length < 20;
+
+            console.log(`Checking question ${q.id}: isTemp=${isTempId}`);
+            return isTempId;
+          });
+
+          // Deduplicate by text content to be safe
+          const uniqueQuestionsToSave = questionsToSave.filter((q, index, self) =>
+            index === self.findIndex((t) => t.text === q.text)
+          );
+
+          if (uniqueQuestionsToSave.length > 0) {
+            console.log('Saving new questions to bank:', uniqueQuestionsToSave.length);
+            const savePromises = uniqueQuestionsToSave.map(async (q) => {
+              try {
+                const res = await fetch('/api/questions', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    text: q.text,
+                    type: q.type,
+                    difficulty: q.difficulty || 'Medium',
+                    metadata: q.metadata,
+                    isLibrary: true,
+                    category: test.title || 'Personalized',
+                    tags: (q as any).tags || previewData.resumeAnalysis?.skills || []
+                  })
+                });
+
+                if (!res.ok) {
+                  const errText = await res.text();
+                  console.error(`Failed to save question ${q.id}:`, errText);
+                  return { success: false, id: q.id, error: errText };
+                }
+                return { success: true, id: q.id };
+              } catch (err) {
+                console.error(`Network error saving question ${q.id}:`, err);
+                return { success: false, id: q.id, error: err };
+              }
+            });
+
+            const results = await Promise.all(savePromises);
+            const successCount = results.filter(r => r.success).length;
+            console.log(`Save Results: ${successCount}/${uniqueQuestionsToSave.length} successes`);
+
+            if (successCount > 0) {
+              toast({ title: 'Questions saved to bank', description: `${successCount} new questions have been added to your library.` });
+            } else {
+              toast({ title: 'Save Failed', description: 'Could not save questions to bank. Check console.', variant: 'destructive' });
+            }
+          }
         } catch (e) {
           console.error('Failed to save to bank', e);
         }
@@ -397,57 +584,125 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
           <div className="space-y-4">
             <div className="text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Question Preview
+                Question Selection
               </h3>
               <p className="text-sm text-gray-500">
-                Review and edit the personalized questions before assigning the test
+                Select questions from the bank or generate new ones using AI
               </p>
             </div>
 
-            {!previewData && (
-              <div className="text-center py-8">
-                <button
-                  onClick={generateQuestionPreview}
-                  disabled={isGeneratingPreview}
-                  className="px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGeneratingPreview ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
-                      Generating Questions...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 inline-block mr-2" />
-                      Generate Personalized Questions
-                    </>
-                  )}
-                </button>
+            {/* Suggestions Section */}
+            {step === 'preview' && (
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {extractedSkills.length > 0
+                      ? `Suggested from Bank (${extractedSkills.length} skills detected)`
+                      : 'Recent Questions from Bank'
+                    }
+                  </div>
+                  {isLoadingSuggestions && <div className="animate-spin h-3 w-3 border-b-2 border-blue-700 rounded-full"></div>}
+                </h4>
+
+                {suggestedQuestions.length === 0 && !isLoadingSuggestions ? (
+                  <p className="text-sm text-gray-500 italic">No matching questions found in the bank.</p>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {suggestedQuestions.map(q => {
+                      const isAdded = previewData?.questions.some(pq => pq.id === q.id);
+                      return (
+                        <div key={q.id} className="bg-white p-3 rounded border border-blue-200 flex justify-between items-start">
+                          <div className="flex-1 mr-2">
+                            <p className="text-sm font-medium text-gray-900 line-clamp-2">{q.text}</p>
+                            <div className="flex gap-2 mt-1">
+                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{q.type}</span>
+                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{q.difficulty}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newQ: Question = { ...q, order: (previewData?.questions.length || 0) + 1 };
+                              const currentQuestions = previewData?.questions || [];
+                              setPreviewData({
+                                questions: isAdded
+                                  ? currentQuestions.filter(pq => pq.id !== q.id)
+                                  : [...currentQuestions, newQ],
+                                personalized: previewData?.personalized || false,
+                                message: previewData?.message || 'Custom selection'
+                              });
+                            }}
+                            className={`px-3 py-1 text-xs font-medium rounded border ${isAdded
+                              ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                              : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
+                              }`}
+                          >
+                            {isAdded ? 'Added ✓' : 'Add'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
+            {/* Actions Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center py-4 border-b border-gray-100">
+              <button
+                onClick={generateQuestionPreview}
+                disabled={isGeneratingPreview}
+                className="flex-1 px-4 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-md hover:bg-purple-100 disabled:opacity-50 text-sm font-medium flex items-center justify-center"
+              >
+                {isGeneratingPreview ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-700 mr-2"></div>
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2" />
+                )}
+                {previewData ? 'Regenerate with AI' : 'Generate with AI'}
+              </button>
+
+              <button
+                onClick={() => {
+                  // Add an empty manual question
+                  const newQ: Question = {
+                    id: `manual_${Date.now()}`,
+                    type: 'multiple_choice',
+                    text: '',
+                    difficulty: 'Medium',
+                    order: (previewData?.questions.length || 0) + 1,
+                    metadata: { options: ['', ''], correctAnswer: 0 }
+                  };
+                  setPreviewData({
+                    questions: [...(previewData?.questions || []), newQ],
+                    personalized: previewData?.personalized || false,
+                    message: previewData?.message || 'Manual creation'
+                  });
+                }}
+                className="flex-1 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium flex items-center justify-center"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Add Custom Question
+              </button>
+            </div>
+
+            {/* Questions Builder / List */}
             {previewData && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center">
-                    <Sparkles className="w-5 h-5 text-green-600 mr-2" />
-                    <div>
-                      <p className="text-sm font-medium text-green-900">
-                        {previewData.questions.length} Personalized Questions Generated
-                      </p>
-                      <p className="text-xs text-green-700">{previewData.message}</p>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm text-gray-600">
+                  <span>Selected Questions: {previewData.questions.length}</span>
+                  {previewData.questions.length === 0 && <span className="text-amber-600">Select or generate questions to proceed</span>}
                 </div>
 
-                {/* Editable Builder */}
-                <div className="max-h-[60vh] overflow-y-auto border rounded-lg p-2">
-                  <ManualQuestionBuilder
-                    questions={previewData.questions} // Pass state
-                    onQuestionsChange={(qs) => setPreviewData({ ...previewData, questions: qs })} // Update state
-                    maxQuestions={20}
-                  />
-                </div>
+                {previewData.questions.length > 0 && (
+                  <div className="max-h-[50vh] overflow-y-auto border rounded-lg p-2">
+                    <ManualQuestionBuilder
+                      questions={previewData.questions}
+                      onQuestionsChange={(qs) => setPreviewData({ ...previewData, questions: qs })}
+                      maxQuestions={20}
+                    />
+                  </div>
+                )}
 
                 {/* Save to Bank Checkbox */}
                 <div className="flex items-center pt-2">
@@ -459,10 +714,9 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                     className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                   />
                   <label htmlFor="saveToBank" className="ml-2 block text-sm text-gray-900">
-                    Save these questions to the Question Bank library for future use
+                    Save newly created questions to the Question Bank
                   </label>
                 </div>
-
               </div>
             )}
 

@@ -151,9 +151,27 @@ export async function POST(request: NextRequest) {
         const bytes = await resumeFile.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // We cannot save the file to disk on Vercel without external storage (S3/Blob).
-        // We will proceed with AI analysis using the memory buffer.
-        resumeUrl = ''; // Or a placeholder if needed
+        // Local File Storage Implementation
+        const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'resumes');
+
+        // Ensure directory exists
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        // Sanitize filename
+        const safeName = (resumeFile.name || 'resume.pdf').replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filename = `${timestamp}-${safeName}`;
+        const filePath = path.join(uploadsDir, filename);
+
+        // Save file to disk
+        fs.writeFileSync(filePath, buffer);
+
+        // Set public URL
+        resumeUrl = `/uploads/resumes/${filename}`;
+        console.log(`✅ File saved to ${filePath}, URL: ${resumeUrl}`);
 
         // Parse & Analyze
         try {

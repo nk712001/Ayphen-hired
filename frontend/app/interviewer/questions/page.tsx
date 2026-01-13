@@ -34,13 +34,16 @@ export default function QuestionsPage() {
 
     useEffect(() => {
         fetchQuestions();
-    }, [filterDifficulty, filterRole, filterSkills]); // Auto-fetch on filter change
+    }, [filterDifficulty, filterRole, filterSkills, page]); // Auto-fetch on filter change or page change
 
     const fetchQuestions = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
             params.append('isLibrary', 'true');
+            params.append('page', page.toString());
+            params.append('limit', '10'); // Or make this dynamic if needed
+
             if (filterDifficulty) params.append('difficulty', filterDifficulty);
             if (filterRole) params.append('category', filterRole);
             if (filterSkills) params.append('tags', filterSkills);
@@ -49,6 +52,7 @@ export default function QuestionsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setQuestions(data.questions);
+                setTotalPages(data.pagination?.pages || 1);
             }
         } catch (error) {
             console.error('Failed to fetch questions:', error);
@@ -235,9 +239,44 @@ export default function QuestionsPage() {
                                                 })()}
                                             </div>
                                             <p className="text-sm font-medium text-gray-900 break-words whitespace-pre-wrap">{q.text}</p>
+
+                                            {/* Render MCQ Options */}
+                                            {q.type === 'multiple_choice' && (() => {
+                                                try {
+                                                    const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
+                                                    return (
+                                                        <div className="mt-2 pl-4 border-l-2 border-gray-200">
+                                                            <ul className="list-disc list-inside space-y-1">
+                                                                {meta.options?.map((opt: string, i: number) => (
+                                                                    <li key={i} className={`text-sm ${meta.correctAnswer === i ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                                                        {opt} {meta.correctAnswer === i && '✓'}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    );
+                                                } catch (e) { return null; }
+                                            })()}
+
+                                            {/* Render Essay details */}
+                                            {q.type === 'essay' && (() => {
+                                                try {
+                                                    const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
+                                                    return (
+                                                        <p className="mt-1 text-xs text-gray-500">
+                                                            Min Words: {meta.minWords || 50} | Max Words: {meta.maxWords || 200}
+                                                        </p>
+                                                    );
+                                                } catch (e) { return null; }
+                                            })()}
+
                                             {q.type === 'code' && (
                                                 <p className="mt-1 text-xs text-gray-500 font-mono">
-                                                    Language: {JSON.parse(q.metadata as string).language}
+                                                    Language: {(() => {
+                                                        try {
+                                                            return (typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata).language;
+                                                        } catch { return 'Unknown'; }
+                                                    })()}
                                                 </p>
                                             )}
                                         </div>

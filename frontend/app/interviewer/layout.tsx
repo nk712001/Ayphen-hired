@@ -28,7 +28,7 @@ export default async function InterviewerLayout({
   }) : null;
 
   const company = user?.company || null;
-  const primaryColor = company?.primaryColor || '#3B82F6';
+  const primaryColor = company?.primaryColor || '#de065d';
 
   return (
     <OrganizationProvider>
