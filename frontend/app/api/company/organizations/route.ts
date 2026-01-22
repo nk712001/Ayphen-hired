@@ -54,12 +54,29 @@ export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user || session.user.role !== 'COMPANY_ADMIN' || !session.user.companyId) {
+        if (!session?.user || !session.user.companyId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const isRecruiter = session.user.role === 'RECRUITER';
+        if (session.user.role !== 'COMPANY_ADMIN' && !isRecruiter) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        let whereClause: any = { companyId: session.user.companyId };
+
+        // If Recruiter, filter by assignments
+        if (isRecruiter) {
+            const assignments = await prisma.recruiterOrganization.findMany({
+                where: { recruiterId: session.user.id },
+                select: { organizationId: true }
+            });
+            const orgIds = assignments.map((a: any) => a.organizationId);
+            whereClause.id = { in: orgIds };
+        }
+
         const orgs = await prisma.organization.findMany({
-            where: { companyId: session.user.companyId },
+            where: whereClause,
             include: {
                 _count: {
                     select: { recruiters: true, tests: true, candidates: true }

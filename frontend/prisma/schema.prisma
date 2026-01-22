@@ -73,6 +73,7 @@ model Company {
   questions       Question[] // Library Questions
   candidates      Candidate[]
   testAssignments TestAssignment[]
+  questionSets    QuestionSet[]
   auditLogs       AuditLog[]
   companySettings CompanySettings?
 
@@ -97,6 +98,7 @@ model User {
   company       Company?                @relation(fields: [companyId], references: [id], onDelete: Cascade)
   recruiterOrgs RecruiterOrganization[]
   createdTests  Test[]                  @relation("TestCreator")
+  createdSets   QuestionSet[]           @relation("SetCreator")
   accounts      Account[]
   sessions      Session[]
   auditLogs     AuditLog[]
@@ -125,6 +127,7 @@ model Organization {
   tests      Test[]
   questions  Question[] // Organized Library Questions
   candidates Candidate[]
+  questionSets QuestionSet[]
 
   @@index([companyId])
   @@map(name: "Organization")
@@ -180,6 +183,29 @@ model Test {
   @@map(name: "Test")
 }
 
+model QuestionSet {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  level          String? // Easy, Medium, Hard
+  companyId      String // Tenant isolation
+  organizationId String? // Client isolation
+  createdBy      String // Recruiter
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User          @relation("SetCreator", fields: [createdBy], references: [id])
+  questions    Question[]
+
+  @@index([companyId])
+  @@index([organizationId])
+  @@index([createdBy])
+  @@map(name: "QuestionSet")
+}
+
 model Question {
   id             String   @id @default(cuid())
   testId         String?   // Optional: Null means it's a library question
@@ -192,6 +218,7 @@ model Question {
   difficulty     String?
   category       String?   // New: For filtering
   tags           String?   // New: JSON string array
+  isTechnical    Boolean   @default(true)
   isLibrary      Boolean   @default(false)
   order          Int      @default(0)
   createdAt      DateTime @default(now())
@@ -201,6 +228,8 @@ model Question {
   company      Company?      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   answers      Answer[]
+  questionSetId String?
+  questionSet   QuestionSet? @relation(fields: [questionSetId], references: [id])
 
   @@index([testId])
   @@index([companyId])

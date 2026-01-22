@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2, Search, Filter, BookOpen } from 'lucide-react';
 import ManualQuestionBuilder, { Question } from '@/components/tests/ManualQuestionBuilder';
+import GenerateQuestionnaireModal from '@/components/tests/GenerateQuestionnaireModal';
 
 interface LibraryQuestion {
     id: string;
@@ -13,18 +14,25 @@ interface LibraryQuestion {
     category?: string;
     tags?: string; // JSON string array
     metadata: any;
+    isTechnical?: boolean;
     createdAt: string;
 }
 
+import QuestionSetsList from '@/components/questions/QuestionSetsList';
+
 export default function QuestionsPage() {
     const router = useRouter();
+    const [activeTab, setActiveTab] = useState<'questions' | 'sets'>('questions');
     const [questions, setQuestions] = useState<LibraryQuestion[]>([]);
+    // ... existing state ...
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [filterDifficulty, setFilterDifficulty] = useState('');
-    const [filterPlatform, setFilterPlatform] = useState(''); // Mapping "Role" to Category temporarily or Platform? User said Role.
+    const [filterPlatform, setFilterPlatform] = useState('');
     const [filterRole, setFilterRole] = useState('');
     const [filterSkills, setFilterSkills] = useState('');
+    const [filterTechnical, setFilterTechnical] = useState<'all' | 'technical' | 'non-technical'>('all');
+    const [filterLanguage, setFilterLanguage] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -32,21 +40,34 @@ export default function QuestionsPage() {
     const [builderQuestions, setBuilderQuestions] = useState<Question[]>([]);
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        fetchQuestions();
-    }, [filterDifficulty, filterRole, filterSkills, page]); // Auto-fetch on filter change or page change
+    const [showBuilder, setShowBuilder] = useState(false);
+    const [showGenerator, setShowGenerator] = useState(false);
+    const [editingQuestion, setEditingQuestion] = useState<LibraryQuestion | null>(null);
 
+    useEffect(() => {
+        if (activeTab === 'questions') {
+            fetchQuestions();
+        }
+    }, [filterDifficulty, filterRole, filterSkills, filterTechnical, filterLanguage, page, activeTab]);
+
+    // ... existing functions fetchQuestions, handleDelete, openAddModal, handleSaveToLibrary ...
     const fetchQuestions = async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
             params.append('isLibrary', 'true');
             params.append('page', page.toString());
-            params.append('limit', '10'); // Or make this dynamic if needed
+            params.append('limit', '10');
 
             if (filterDifficulty) params.append('difficulty', filterDifficulty);
             if (filterRole) params.append('category', filterRole);
             if (filterSkills) params.append('tags', filterSkills);
+            if (filterTechnical !== 'all') {
+                params.append('isTechnical', filterTechnical === 'technical' ? 'true' : 'false');
+            }
+            if (filterLanguage && filterTechnical === 'technical') {
+                params.append('language', filterLanguage);
+            }
 
             const res = await fetch(`/api/questions?${params.toString()}`);
             if (res.ok) {
@@ -64,42 +85,30 @@ export default function QuestionsPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this question?')) return;
         try {
-            // We assume DELETE /api/questions/[id] exists. If not, we might need to create it.
-            // Actually, looking at route.ts, only GET and POST exist in /api/questions.
-            // I might need to check /api/questions or implement DELETE.
-            // Usually deletion is separate route.
-            // Let's assume standard REST, but I need to verify deletion endpoint.
-            // If it doesn't exist, I'll stick to listing/adding for now and fix delete later.
-
-            // Wait, I saw DELETE /api/assignments/[id] earlier.
-            // I should check if /api/questions/[id] exists.
-
-            // For now, let's implement the UI assuming I can add/list.
+            // ...
         } catch (e) {
             alert('Failed to delete');
         }
     };
 
     const openAddModal = () => {
-        setBuilderQuestions([]); // Start empty
+        setBuilderQuestions([]);
         setIsModalOpen(true);
     };
 
     const handleSaveToLibrary = async () => {
-        // We expect 1 question in the builder
         if (builderQuestions.length === 0) return;
-
         setIsSaving(true);
         try {
             const q = builderQuestions[0];
-            // Map ManualQuestionBuilder format to API format
             const payload = {
                 text: q.text,
                 type: q.type,
                 difficulty: q.difficulty,
                 metadata: q.metadata,
                 isLibrary: true,
-                category: 'General' // Could add category field later
+                isTechnical: q.isTechnical ?? true,
+                category: 'General'
             };
 
             const res = await fetch('/api/questions', {
@@ -120,11 +129,6 @@ export default function QuestionsPage() {
         }
     };
 
-    // Client-side search for text only
-    // const filteredQuestions = questions.filter(q =>
-    //     q.text.toLowerCase().includes(search.toLowerCase())
-    // );
-
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
@@ -132,189 +136,286 @@ export default function QuestionsPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
                     <p className="text-sm text-gray-500">Manage your reusable library of questions.</p>
                 </div>
-                <button
-                    onClick={openAddModal}
-                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark"
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Question
-                </button>
-            </div>
-
-            {/* Filter Bar */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
-                <div className="flex gap-4">
-                    {/* Text Search */}
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search by text..."
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && fetchQuestions()} // Search on Enter
-                            onBlur={() => fetchQuestions()}
-                        />
-                    </div>
-                    {/* Role Filter */}
-                    <div className="w-1/4">
-                        <input
-                            type="text"
-                            placeholder="Job Role / Category"
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                            value={filterRole}
-                            onChange={(e) => setFilterRole(e.target.value)}
-                        />
-                    </div>
-                    {/* Skills Filter */}
-                    <div className="w-1/4">
-                        <input
-                            type="text"
-                            placeholder="Skills / Tags"
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                            value={filterSkills}
-                            onChange={(e) => setFilterSkills(e.target.value)}
-                        />
-                    </div>
-                    {/* Experience/Difficulty Filter */}
-                    <div className="w-1/6">
-                        <select
-                            className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                            value={filterDifficulty}
-                            onChange={(e) => setFilterDifficulty(e.target.value)}
+                {activeTab === 'questions' && (
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => setShowGenerator(true)}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary mr-3"
                         >
-                            <option value="">All Levels</option>
-                            <option value="Easy">Entry (Easy)</option>
-                            <option value="Medium">Mid (Medium)</option>
-                            <option value="Hard">Senior (Hard)</option>
-                        </select>
+                            <BookOpen className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
+                            Generate Set
+                        </button>
+                        <button
+                            onClick={() => {
+                                setEditingQuestion(null);
+                                setShowBuilder(true);
+                            }}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-opacity-90 transition-opacity"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Question
+                        </button>
                     </div>
-                </div>
+                )}
+                {activeTab === 'sets' && (
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => {
+                                setActiveTab('questions');
+                                setShowGenerator(true);
+                            }}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-opacity-90 transition-opacity"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Question Set
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {/* Table */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-md mb-4">
-                <ul className="divide-y divide-gray-200">
-                    {loading ? (
-                        <li className="px-6 py-4 text-center text-gray-500">Loading library...</li>
-                    ) : questions.length === 0 ? (
-                        <li className="px-6 py-4 text-center text-gray-500">No questions found.</li>
-                    ) : (
-                        questions.map((q) => (
-                            <li key={q.id}>
-                                <div className="px-4 py-4 sm:px-6">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1 min-w-0 pr-4">
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+            {/* Tabs */}
+            <div className="border-b border-gray-200 mb-6">
+                <nav className="-mb-px flex space-x-8">
+                    <button
+                        onClick={() => setActiveTab('questions')}
+                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'questions'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                    >
+                        All Questions
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('sets')}
+                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'sets'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                    >
+                        Question Sets
+                    </button>
+                </nav>
+            </div>
+
+            {activeTab === 'sets' ? (
+                <QuestionSetsList />
+            ) : (
+                <>
+                    {/* Filter Bar */}
+                    <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
+                        <div className="flex gap-4">
+                            {/* Text Search */}
+                            <div className="relative flex-1">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search by text..."
+                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && fetchQuestions()} // Search on Enter
+                                    onBlur={() => fetchQuestions()}
+                                />
+                            </div>
+                            {/* Role Filter */}
+                            <div className="w-1/4">
+                                <input
+                                    type="text"
+                                    placeholder="Job Role / Category"
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    value={filterRole}
+                                    onChange={(e) => setFilterRole(e.target.value)}
+                                />
+                            </div>
+                            {/* Skills Filter */}
+                            <div className="w-1/4">
+                                <input
+                                    type="text"
+                                    placeholder="Skills / Tags"
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    value={filterSkills}
+                                    onChange={(e) => setFilterSkills(e.target.value)}
+                                />
+                            </div>
+                            {/* Experience/Difficulty Filter */}
+                            <div className="w-1/6">
+                                <select
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    value={filterDifficulty}
+                                    onChange={(e) => setFilterDifficulty(e.target.value)}
+                                >
+                                    <option value="">Level (All)</option>
+                                    <option value="Easy">Intern / Junior</option>
+                                    <option value="Medium">Mid-Level</option>
+                                    <option value="Hard">Senior / Lead</option>
+                                </select>
+                            </div>
+                            <div className="w-1/6">
+                                <select
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    value={filterTechnical}
+                                    onChange={(e) => setFilterTechnical(e.target.value as any)}
+                                >
+                                    <option value="all">Technical: All</option>
+                                    <option value="technical">Technical Only</option>
+                                    <option value="non-technical">Non-Technical Only</option>
+                                </select>
+                            </div>
+                            {/* Language Filter - Conditional */}
+                            {filterTechnical === 'technical' && (
+                                <div className="w-1/6">
+                                    <select
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                        value={filterLanguage}
+                                        onChange={(e) => setFilterLanguage(e.target.value)}
+                                    >
+                                        <option value="">Language (All)</option>
+                                        <option value="javascript">JavaScript</option>
+                                        <option value="python">Python</option>
+                                        <option value="java">Java</option>
+                                        <option value="c++">C++</option>
+                                        <option value="c#">C#</option>
+                                        <option value="sql">SQL</option>
+                                        <option value="html">HTML/CSS</option>
+                                        <option value="swift">Swift</option>
+                                        <option value="kotlin">Kotlin</option>
+                                        <option value="go">Go</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md mb-4">
+                        <ul className="divide-y divide-gray-200">
+                            {loading ? (
+                                <li className="px-6 py-4 text-center text-gray-500">Loading library...</li>
+                            ) : questions.length === 0 ? (
+                                <li className="px-6 py-4 text-center text-gray-500">No questions found.</li>
+                            ) : (
+                                questions.map((q) => (
+                                    <li key={q.id}>
+                                        <div className="px-4 py-4 sm:px-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex-1 min-w-0 pr-4">
+                                                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 ${q.type === 'multiple_choice' ? 'bg-purple-100 text-purple-800' :
-                                                        q.type === 'code' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>
-                                                    {q.type.replace('_', ' ').toUpperCase()}
-                                                </span>
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                                q.type === 'code' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>
+                                                            {q.type.replace('_', ' ').toUpperCase()}
+                                                        </span>
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 ${q.difficulty === 'Easy' ? 'bg-gray-100 text-gray-800' :
-                                                        q.difficulty === 'Hard' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                                    {q.difficulty}
-                                                </span>
-                                                {q.category && (
-                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                        {q.category}
-                                                    </span>
-                                                )}
-                                                {q.tags && (() => {
-                                                    try {
-                                                        const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : q.tags;
-                                                        if (Array.isArray(tags)) {
-                                                            return tags.map((tag: string, i: number) => (
-                                                                <span key={i} className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                                                                    {tag}
-                                                                </span>
-                                                            ));
-                                                        }
-                                                        return null;
-                                                    } catch (e) { return null; }
-                                                })()}
-                                            </div>
-                                            <p className="text-sm font-medium text-gray-900 break-words whitespace-pre-wrap">{q.text}</p>
+                                                                q.difficulty === 'Hard' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                            {q.difficulty}
+                                                        </span>
+                                                        {q.category && (
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                                {q.category}
+                                                            </span>
+                                                        )}
+                                                        {q.tags && (() => {
+                                                            try {
+                                                                const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : q.tags;
+                                                                if (Array.isArray(tags)) {
+                                                                    return tags.map((tag: string, i: number) => (
+                                                                        <span key={i} className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                                                            {tag}
+                                                                        </span>
+                                                                    ));
+                                                                }
+                                                                return null;
+                                                            } catch (e) { return null; }
+                                                        })()}
 
-                                            {/* Render MCQ Options */}
-                                            {q.type === 'multiple_choice' && (() => {
-                                                try {
-                                                    const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
-                                                    return (
-                                                        <div className="mt-2 pl-4 border-l-2 border-gray-200">
-                                                            <ul className="list-disc list-inside space-y-1">
-                                                                {meta.options?.map((opt: string, i: number) => (
-                                                                    <li key={i} className={`text-sm ${meta.correctAnswer === i ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
-                                                                        {opt} {meta.correctAnswer === i && '✓'}
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    );
-                                                } catch (e) { return null; }
-                                            })()}
+                                                        {q.isTechnical === false && (
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800">
+                                                                Non-Technical
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-900 break-words whitespace-pre-wrap">{q.text}</p>
 
-                                            {/* Render Essay details */}
-                                            {q.type === 'essay' && (() => {
-                                                try {
-                                                    const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
-                                                    return (
-                                                        <p className="mt-1 text-xs text-gray-500">
-                                                            Min Words: {meta.minWords || 50} | Max Words: {meta.maxWords || 200}
-                                                        </p>
-                                                    );
-                                                } catch (e) { return null; }
-                                            })()}
-
-                                            {q.type === 'code' && (
-                                                <p className="mt-1 text-xs text-gray-500 font-mono">
-                                                    Language: {(() => {
+                                                    {/* Render MCQ Options */}
+                                                    {q.type === 'multiple_choice' && (() => {
                                                         try {
-                                                            return (typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata).language;
-                                                        } catch { return 'Unknown'; }
+                                                            const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
+                                                            return (
+                                                                <div className="mt-2 pl-4 border-l-2 border-gray-200">
+                                                                    <ul className="list-disc list-inside space-y-1">
+                                                                        {meta.options?.map((opt: string, i: number) => (
+                                                                            <li key={i} className={`text-sm ${meta.correctAnswer === i ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                                                                {opt} {meta.correctAnswer === i && '✓'}
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            );
+                                                        } catch (e) { return null; }
                                                     })()}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center">
-                                            {/* 
+
+                                                    {/* Render Essay details */}
+                                                    {q.type === 'essay' && (() => {
+                                                        try {
+                                                            const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
+                                                            return (
+                                                                <p className="mt-1 text-xs text-gray-500">
+                                                                    Min Words: {meta.minWords || 50} | Max Words: {meta.maxWords || 200}
+                                                                </p>
+                                                            );
+                                                        } catch (e) { return null; }
+                                                    })()}
+
+                                                    {q.type === 'code' && (
+                                                        <p className="mt-1 text-xs text-gray-500 font-mono">
+                                                            Language: {(() => {
+                                                                try {
+                                                                    return (typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata).language;
+                                                                } catch { return 'Unknown'; }
+                                                            })()}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center">
+                                                    {/* 
                          TODO: Implement Edit/Delete
                          <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:text-red-900 p-2">
                             <Trash2 className="h-4 w-4" />
                          </button>
                         */}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            </li>
-                        ))
-                    )}
-                </ul>
-            </div>
+                                    </li>
+                                ))
+                            )}
+                        </ul>
+                    </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2">
-                    <button
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
-                    >
-                        Previous
-                    </button>
-                    <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
-                    <button
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                        className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
-                    >
-                        Next
-                    </button>
-                </div>
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center space-x-2">
+                            <button
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
+                            >
+                                Previous
+                            </button>
+                            <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
+                            <button
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Add/Edit Modal */}
@@ -335,7 +436,6 @@ export default function QuestionsPage() {
                                             Add Question to Library
                                         </h3>
                                         <div className="mt-2">
-                                            {/* Reuse ManualQuestionBuilder for the form logic */}
                                             <ManualQuestionBuilder
                                                 questions={builderQuestions}
                                                 onQuestionsChange={setBuilderQuestions}
@@ -374,6 +474,11 @@ export default function QuestionsPage() {
                     </div>
                 </div>
             )}
+            {/* Generator Modal */}
+            <GenerateQuestionnaireModal
+                isOpen={showGenerator}
+                onClose={() => setShowGenerator(false)}
+            />
         </div>
     );
 }

@@ -96,6 +96,7 @@ export async function POST(request: Request) {
         timeToStart: questionData.timeLimit || null,
         order: questionData.order || 0,
         isLibrary: questionData.isLibrary || false,
+        isTechnical: questionData.isTechnical ?? true,
         category: questionData.category || null,
         tags: questionData.tags ? JSON.stringify(questionData.tags) : null,
         metadata: JSON.stringify(metadata)
@@ -154,19 +155,63 @@ export async function GET(request: Request) {
       where.difficulty = difficulty;
     }
 
+    const search = searchParams.get('search');
+    if (search) {
+      where.OR = [
+        { text: { contains: search, mode: 'insensitive' } },
+        { category: { contains: search, mode: 'insensitive' } },
+        { tags: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
     const category = searchParams.get('category');
     if (category) {
       where.category = {
-        contains: category
+        contains: category,
+        mode: 'insensitive'
       };
     }
 
     const tags = searchParams.get('tags');
     if (tags) {
-      // Simple string contains for JSON/string tags
       where.tags = {
-        contains: tags
+        contains: tags,
+        mode: 'insensitive'
       };
+    }
+
+    const isTechnical = searchParams.get('isTechnical');
+    if (isTechnical !== null) {
+      where.isTechnical = isTechnical === 'true';
+    }
+
+    const language = searchParams.get('language');
+    if (language) {
+      const languageFilter = {
+        OR: [
+          {
+            metadata: {
+              contains: `"language":"${language.toLowerCase()}"`
+            }
+          },
+          {
+            tags: {
+              contains: language,
+              mode: 'insensitive'
+            }
+          }
+        ]
+      };
+
+      if (where.OR) {
+        where.AND = [
+          { OR: where.OR },
+          languageFilter
+        ];
+        delete where.OR;
+      } else {
+        Object.assign(where, languageFilter);
+      }
     }
 
     const page = parseInt(searchParams.get('page') || '1');

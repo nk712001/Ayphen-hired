@@ -15,7 +15,7 @@ interface TestFormData {
   codingQuestions: number;
 }
 
-type QuestionGenerationMode = 'ai' | 'manual' | 'mixed';
+type QuestionGenerationMode = 'ai' | 'manual' | 'mixed' | 'set';
 
 interface EnhancedTestCreationProps {
   candidateId?: string;
@@ -32,6 +32,9 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
   const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
   const [libraryQuestions, setLibraryQuestions] = useState<any[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryTab, setLibraryTab] = useState<'questions' | 'sets'>('questions');
+  const [availableSets, setAvailableSets] = useState<any[]>([]);
+  const [selectedSetId, setSelectedSetId] = useState<string | null>(null);
 
   // Fetch Library Questions when modal opens
   const fetchLibrary = async () => {
@@ -40,6 +43,82 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
       const res = await fetch('/api/questions?isLibrary=true');
       const data = await res.json();
       setLibraryQuestions(data.questions || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  const fetchSets = async () => {
+    setLibraryLoading(true);
+    try {
+      const res = await fetch('/api/question-sets');
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableSets(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  const handleImportSet = async (setId: string) => {
+    setLibraryLoading(true);
+    try {
+      const res = await fetch(`/api/question-sets/${setId}`);
+      if (res.ok) {
+        const set = await res.json();
+        const newQuestions = set.questions.map((q: any) => ({
+          id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: q.type,
+          text: q.text,
+          difficulty: q.difficulty,
+          order: manualQuestions.length + 1, // Logic needs to be smarter for bulk add, but fine for now
+          metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
+        }));
+
+        // Recalculate orders for bulk add
+        const startOrder = manualQuestions.length + 1;
+        newQuestions.forEach((q: any, i: number) => q.order = startOrder + i);
+
+        setManualQuestions(prev => [...prev, ...newQuestions]);
+        setIsLibraryModalOpen(false);
+      }
+    } catch (e) {
+      console.error("Failed to import set", e);
+      alert("Failed to import question set");
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  // Custom Handler for "Use This Set" in the dropdown
+  const handleSelectSetForCreation = async (setId: string) => {
+    if (!setId) {
+      setSelectedSetId(null);
+      return;
+    }
+    // Determine questions from the set
+    setLibraryLoading(true);
+    try {
+      const res = await fetch(`/api/question-sets/${setId}`);
+      if (res.ok) {
+        const set = await res.json();
+        const newQuestions = set.questions.map((q: any) => ({
+          id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: q.type,
+          text: q.text,
+          difficulty: q.difficulty,
+          order: manualQuestions.length + 1,
+          metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
+        }));
+        newQuestions.forEach((q: any, i: number) => q.order = i + 1);
+        setManualQuestions(newQuestions);
+        setSelectedSetId(setId);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -92,7 +171,7 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
   const validateManualQuestions = (): boolean => {
     const newErrors: string[] = [];
 
-    if (questionMode === 'manual' && manualQuestions.length === 0) {
+    if ((questionMode === 'manual' || questionMode === 'set') && manualQuestions.length === 0) {
       newErrors.push('At least one manual question is required');
     }
 
@@ -123,10 +202,96 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
   const handleNextStep = () => {
     if (currentStep === 'basic') {
       if (validateBasicForm()) {
+        if (questionMode === 'set' && !selectedSetId) {
+          setErrors(['Please select a Question Set']);
+          return;
+        }
         setCurrentStep('questions');
       }
     }
   };
+
+  // ... 
+
+  // In the JSX for Question Generation Method:
+  <div className="space-y-3">
+    <label className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+      <input
+        type="radio"
+        name="questionMode"
+        value="ai"
+        checked={questionMode === 'ai'}
+        onChange={(e) => setQuestionMode(e.target.value as QuestionGenerationMode)}
+        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+      />
+      <div>
+        <div className="font-medium text-gray-900">🤖 AI Generated Questions</div>
+        <div className="text-sm text-gray-500">
+          Automatically generate questions based on job description and question counts
+        </div>
+      </div>
+    </label>
+
+    <label className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+      <input
+        type="radio"
+        name="questionMode"
+        value="manual"
+        checked={questionMode === 'manual'}
+        onChange={(e) => setQuestionMode(e.target.value as QuestionGenerationMode)}
+        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+      />
+      <div>
+        <div className="font-medium text-gray-900">✏️ Manual Questions</div>
+        <div className="text-sm text-gray-500">
+          Create custom questions with full control over content and format
+        </div>
+      </div>
+    </label>
+
+    <label className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+      <input
+        type="radio"
+        name="questionMode"
+        value="set"
+        checked={questionMode === 'set'}
+        onChange={(e) => {
+          setQuestionMode('set');
+          if (availableSets.length === 0) fetchSets();
+        }}
+        className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+      />
+      <div className="w-full">
+        <div className="font-medium text-gray-900">📚 From Question Set</div>
+        <div className="text-sm text-gray-500">
+          Start with a pre-defined set of questions
+        </div>
+
+        {questionMode === 'set' && (
+          <div className="mt-3">
+            {libraryLoading ? (
+              <div className="text-sm text-gray-500">Loading sets...</div>
+            ) : availableSets.length === 0 ? (
+              <div className="text-sm text-orange-600">No question sets found. Please create one in the Question Bank.</div>
+            ) : (
+              <select
+                className="w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                value={selectedSetId || ''}
+                onChange={(e) => handleSelectSetForCreation(e.target.value)}
+              >
+                <option value="">-- Select a Question Set --</option>
+                {availableSets.map((set: any) => (
+                  <option key={set.id} value={set.id}>
+                    {set.title} ({set._count?.questions || 0} Qs) - {set.level}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        )}
+      </div>
+    </label>
+  </div>
 
   const handlePreviousStep = () => {
     if (currentStep === 'questions') {
@@ -258,7 +423,7 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
       let test;
       if (questionMode === 'ai') {
         test = await createTestWithAI();
-      } else if (questionMode === 'manual') {
+      } else if (questionMode === 'manual' || questionMode === 'set') {
         test = await createTestWithManualQuestions();
       }
 
@@ -444,6 +609,49 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
                       </div>
                     </div>
                   </label>
+
+                  <label className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="questionMode"
+                      value="set"
+                      checked={questionMode === 'set'}
+                      onChange={(e) => {
+                        setQuestionMode('set');
+                        if (availableSets.length === 0) fetchSets();
+                      }}
+                      className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="w-full">
+                      <div className="font-medium text-gray-900">📚 From Question Set</div>
+                      <div className="text-sm text-gray-500">
+                        Start with a pre-defined set of questions
+                      </div>
+
+                      {questionMode === 'set' && (
+                        <div className="mt-3">
+                          {libraryLoading ? (
+                            <div className="text-sm text-gray-500">Loading sets...</div>
+                          ) : availableSets.length === 0 ? (
+                            <div className="text-sm text-orange-600">No question sets found. Please create one in the Question Bank.</div>
+                          ) : (
+                            <select
+                              className="w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                              value={selectedSetId || ''}
+                              onChange={(e) => handleSelectSetForCreation(e.target.value)}
+                            >
+                              <option value="">-- Select a Question Set --</option>
+                              {availableSets.map((set: any) => (
+                                <option key={set.id} value={set.id}>
+                                  {set.title} ({set._count?.questions || 0} Qs) - {set.level}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </label>
                 </div>
               </div>
 
@@ -535,44 +743,97 @@ export default function EnhancedTestCreation({ candidateId, onCancel }: Enhanced
             </div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+
+              {/* Tabs */}
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-0">
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button
+                      onClick={() => setLibraryTab('questions')}
+                      className={`${libraryTab === 'questions' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                      Individual Questions
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLibraryTab('sets');
+                        if (availableSets.length === 0) fetchSets();
+                      }}
+                      className={`${libraryTab === 'sets' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    >
+                      Question Sets
+                    </button>
+                  </nav>
+                </div>
+              </div>
+
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Select Questions from Library</h3>
                 <div className="max-h-96 overflow-y-auto">
                   {libraryLoading ? (
                     <p className="text-center py-4">Loading...</p>
-                  ) : libraryQuestions.length === 0 ? (
-                    <p className="text-center py-4 text-gray-500">No questions in library.</p>
+                  ) : libraryTab === 'questions' ? (
+                    /* Questions List */
+                    libraryQuestions.length === 0 ? (
+                      <p className="text-center py-4 text-gray-500">No questions in library.</p>
+                    ) : (
+                      <ul className="divide-y divide-gray-200">
+                        {libraryQuestions.map((q: any) => (
+                          <li key={q.id} className="py-3 flex items-start">
+                            <input
+                              type="checkbox"
+                              checked={manualQuestions.some(mq => mq.text === q.text)}
+                              disabled={manualQuestions.some(mq => mq.text === q.text)}
+                              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  const newQ: Question = {
+                                    id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                    type: q.type,
+                                    text: q.text,
+                                    difficulty: q.difficulty,
+                                    order: manualQuestions.length + 1,
+                                    metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
+                                  };
+                                  setManualQuestions([...manualQuestions, newQ]);
+                                }
+                              }}
+                            />
+                            <div className="ml-3 text-sm">
+                              <p className="font-medium text-gray-900">{q.text}</p>
+                              <p className="text-gray-500">{q.type} • {q.difficulty}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )
                   ) : (
-                    <ul className="divide-y divide-gray-200">
-                      {libraryQuestions.map((q: any) => (
-                        <li key={q.id} className="py-3 flex items-start">
-                          <input
-                            type="checkbox"
-                            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                const newQ: Question = {
-                                  id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                                  type: q.type,
-                                  text: q.text,
-                                  difficulty: q.difficulty,
-                                  order: manualQuestions.length + 1,
-                                  metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
-                                };
-                                setManualQuestions([...manualQuestions, newQ]);
-                                setIsLibraryModalOpen(false); // Close on select (or keep open for multi? Single for now implies simple flow)
-                                // Actually, sticking to single-select close is annoying. Multi-select better?
-                                // Let's just simply append for now.
-                              }
-                            }}
-                          />
-                          <div className="ml-3 text-sm">
-                            <p className="font-medium text-gray-900">{q.text}</p>
-                            <p className="text-gray-500">{q.type} • {q.difficulty}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                    /* Sets List */
+                    availableSets.length === 0 ? (
+                      <p className="text-center py-4 text-gray-500">No question sets found.</p>
+                    ) : (
+                      <ul className="grid grid-cols-1 gap-4">
+                        {availableSets.map((set: any) => (
+                          <li key={set.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => handleImportSet(set.id)}>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium text-gray-900">{set.title}</h4>
+                                <p className="text-sm text-gray-500 line-clamp-1">{set.description}</p>
+                              </div>
+                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full whitespace-nowrap ml-2">{set._count?.questions || set.questions?.length || 0} Qs</span>
+                            </div>
+                            <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                              <span className={`px-2 py-0.5 rounded-full ${set.level === 'Easy' ? 'bg-green-100 text-green-800' :
+                                set.level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                {set.level}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )
                   )}
                 </div>
               </div>

@@ -11,6 +11,7 @@ export interface Question {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   order: number;
   category?: string;
+  isTechnical?: boolean;
   tags?: string[];
   metadata?: {
     options?: string[];
@@ -44,6 +45,7 @@ export default function ManualQuestionBuilder({
       type,
       text: '',
       difficulty: 'Medium',
+      isTechnical: true,
       order: questions.length + 1,
       metadata: type === 'multiple_choice'
         ? { options: ['', '', '', ''], correctAnswer: 0 }
@@ -231,6 +233,19 @@ export default function ManualQuestionBuilder({
                 <option value="Medium">Medium</option>
                 <option value="Hard">Hard</option>
               </select>
+            </div>
+
+            {/* Technical Toggle */}
+            <div className="mb-4">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={question.isTechnical ?? true}
+                  onChange={(e) => updateQuestion(question.id, { isTechnical: e.target.checked })}
+                  className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300"
+                />
+                <span className="text-sm font-medium text-gray-700">Technical Question</span>
+              </label>
             </div>
 
             {/* Category (Role) */}

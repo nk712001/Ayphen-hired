@@ -57,6 +57,7 @@ model User {
   tests         Test[]
   testAssignments TestAssignment[]
   testAttempts  TestAttempt[]
+  questionSets  QuestionSet[]
 
   @@map(name: "User")
 }
@@ -85,6 +86,8 @@ model Company {
   
   organizations     Organization[]
   users            User[]
+  questionSets     QuestionSet[]
+  questions        Question[]
   companySettings  CompanySettings?
 }
 
@@ -112,6 +115,7 @@ model Organization {
   company           Company?  @relation(fields: [companyId], references: [id])
   users             User[]
   tests             Test[]
+  questionSets      QuestionSet[]
 }
 
 model TestAIAnalysis {
@@ -152,18 +156,16 @@ model Test {
 
 model Question {
   id            String    @id @default(cuid())
-  testId        String
-  type          String    // "conversational" or "coding"
-  text          String
-  timeToStart   Int?      // Seconds to start answering, null for coding questions
-  difficulty    String?   // "Easy", "Intermediate", "Hard"
-  order         Int       // Question order in the test
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  test          Test      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  questionSetId String?
+  questionSet   QuestionSet? @relation(fields: [questionSetId], references: [id])
+  testId        String?
+  test          Test?     @relation(fields: [testId], references: [id], onDelete: Cascade)
   answers       Answer[]
   metadata      String?   // JSON string for question-specific data
   testAnswers   TestAnswer[]
+  isLibrary     Boolean   @default(false)
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id])
 }
 
 
@@ -277,4 +279,21 @@ model TestAssignment {
   @@index([testId])
   @@index([candidateId])
   @@index([status])
+}
+
+model QuestionSet {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?
+  level           String    // Easy, Medium, Hard
+  companyId       String
+  organizationId  String?
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  company         Company   @relation(fields: [companyId], references: [id])
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  user            User      @relation(fields: [createdBy], references: [id])
+  questions       Question[]
 }
