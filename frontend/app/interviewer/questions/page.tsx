@@ -24,15 +24,13 @@ export default function QuestionsPage() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'questions' | 'sets'>('questions');
     const [questions, setQuestions] = useState<LibraryQuestion[]>([]);
-    // ... existing state ...
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
     const [filterDifficulty, setFilterDifficulty] = useState('');
-    const [filterPlatform, setFilterPlatform] = useState('');
     const [filterRole, setFilterRole] = useState('');
     const [filterSkills, setFilterSkills] = useState('');
     const [filterTechnical, setFilterTechnical] = useState<'all' | 'technical' | 'non-technical'>('all');
     const [filterLanguage, setFilterLanguage] = useState('');
+    const [filterType, setFilterType] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
@@ -48,9 +46,8 @@ export default function QuestionsPage() {
         if (activeTab === 'questions') {
             fetchQuestions();
         }
-    }, [filterDifficulty, filterRole, filterSkills, filterTechnical, filterLanguage, page, activeTab]);
+    }, [filterDifficulty, filterRole, filterSkills, filterTechnical, filterLanguage, filterType, page, activeTab]);
 
-    // ... existing functions fetchQuestions, handleDelete, openAddModal, handleSaveToLibrary ...
     const fetchQuestions = async () => {
         setLoading(true);
         try {
@@ -59,6 +56,7 @@ export default function QuestionsPage() {
             params.append('page', page.toString());
             params.append('limit', '10');
 
+            if (filterType) params.append('type', filterType);
             if (filterDifficulty) params.append('difficulty', filterDifficulty);
             if (filterRole) params.append('category', filterRole);
             if (filterSkills) params.append('tags', filterSkills);
@@ -85,7 +83,12 @@ export default function QuestionsPage() {
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this question?')) return;
         try {
-            // ...
+            const res = await fetch(`/api/questions/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchQuestions();
+            } else {
+                alert('Failed to delete');
+            }
         } catch (e) {
             alert('Failed to delete');
         }
@@ -204,21 +207,7 @@ export default function QuestionsPage() {
                     {/* Filter Bar */}
                     <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
                         <div className="flex gap-4">
-                            {/* Text Search */}
-                            <div className="relative flex-1">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Search className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search by text..."
-                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && fetchQuestions()} // Search on Enter
-                                    onBlur={() => fetchQuestions()}
-                                />
-                            </div>
+
                             {/* Role Filter */}
                             <div className="w-1/4">
                                 <input
@@ -250,6 +239,20 @@ export default function QuestionsPage() {
                                     <option value="Easy">Intern / Junior</option>
                                     <option value="Medium">Mid-Level</option>
                                     <option value="Hard">Senior / Lead</option>
+                                </select>
+                            </div>
+                            {/* Question Type Filter */}
+                            <div className="w-1/6">
+                                <select
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    value={filterType}
+                                    onChange={(e) => setFilterType(e.target.value)}
+                                >
+                                    <option value="">Type (All)</option>
+                                    <option value="multiple_choice">Multiple Choice</option>
+                                    <option value="essay">Essay</option>
+                                    <option value="code">Code</option>
+                                    <option value="short_answer">Short Answer</option>
                                 </select>
                             </div>
                             <div className="w-1/6">

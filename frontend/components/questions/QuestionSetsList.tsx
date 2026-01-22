@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileText, Calendar, Layers, Hash, Plus, ArrowLeft, Search, CheckSquare, Square, Pencil, X, Save, Briefcase } from 'lucide-react';
+import { FileText, Calendar, Layers, Hash, Plus, ArrowLeft, Search, CheckSquare, Square, Pencil, X, Save, Briefcase, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ManualQuestionBuilder, { Question } from '../tests/ManualQuestionBuilder';
 import { toast } from 'sonner';
@@ -115,6 +115,116 @@ export default function QuestionSetsList() {
         } catch (error) {
             console.error('Error updating set:', error);
             toast.error('Error updating Question Set');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handleDeleteSet = async () => {
+        if (!selectedSet) return;
+        if (!confirm('Are you sure you want to delete this question set? This action cannot be undone.')) return;
+
+        try {
+            const res = await fetch(`/api/question-sets/${selectedSet.id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                toast.success('Question Set deleted successfully');
+                setSets(prev => prev.filter(s => s.id !== selectedSet.id));
+                setSelectedSet(null);
+            } else {
+                toast.error('Failed to delete Question Set');
+            }
+        } catch (error) {
+            console.error('Error deleting set:', error);
+            toast.error('Error deleting Question Set');
+        }
+    };
+
+    // Edit Question State
+    const [isEditingQuestion, setIsEditingQuestion] = useState(false);
+    const [questionToEdit, setQuestionToEdit] = useState<Question[]>([]);
+
+    const handleDeleteQuestion = async (e: React.MouseEvent, questionId: string) => {
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this question?')) return;
+
+        try {
+            const res = await fetch(`/api/questions/${questionId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                toast.success('Question deleted successfully');
+                // Update local state
+                if (selectedSet) {
+                    const updatedQuestions = selectedSet.questions.filter(q => q.id !== questionId);
+                    setSelectedSet({
+                        ...selectedSet,
+                        questions: updatedQuestions,
+                        _count: { questions: updatedQuestions.length }
+                    });
+                    // Also update the main sets list count
+                    setSets(prev => prev.map(s =>
+                        s.id === selectedSet.id
+                            ? { ...s, _count: { questions: updatedQuestions.length } }
+                            : s
+                    ));
+                }
+            } else {
+                toast.error('Failed to delete question');
+            }
+        } catch (error) {
+            console.error('Error deleting question:', error);
+            toast.error('Error deleting question');
+        }
+    };
+
+    const handleEditQuestion = (e: React.MouseEvent, question: any) => {
+        e.stopPropagation();
+        // Parse metadata and tags if they are strings
+        const processedQuestion = {
+            ...question,
+            metadata: typeof question.metadata === 'string' ? JSON.parse(question.metadata) : question.metadata,
+            tags: typeof question.tags === 'string' ? JSON.parse(question.tags) : question.tags || []
+        };
+        setQuestionToEdit([processedQuestion]);
+        setIsEditingQuestion(true);
+    };
+
+    const handleSaveEditedQuestion = async () => {
+        if (questionToEdit.length === 0) return;
+        const q = questionToEdit[0];
+
+        setIsUpdating(true);
+        try {
+            const payload = {
+                type: q.type,
+                text: q.text,
+                difficulty: q.difficulty,
+                // Pass metadata fields
+                ...q.metadata
+            };
+
+            const res = await fetch(`/api/questions/${q.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                toast.success('Question updated successfully');
+                setIsEditingQuestion(false);
+                setQuestionToEdit([]);
+                // Reload set
+                if (selectedSet) handleViewSet(selectedSet.id);
+            } else {
+                toast.error('Failed to update question');
+            }
+        } catch (error) {
+            console.error('Error updating question:', error);
+            toast.error('Error updating question');
         } finally {
             setIsUpdating(false);
         }
@@ -323,13 +433,22 @@ export default function QuestionSetsList() {
                                                 <div className="flex items-center gap-2">
                                                     <h3 className="text-lg leading-6 font-medium text-gray-900">{selectedSet.title}</h3>
                                                     {!isAddingQuestions && (
-                                                        <button
-                                                            onClick={() => setIsEditingSet(true)}
-                                                            className="text-gray-400 hover:text-gray-600"
-                                                            title="Edit Set Details"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </button>
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                onClick={() => setIsEditingSet(true)}
+                                                                className="text-gray-400 hover:text-gray-600 p-1"
+                                                                title="Edit Set Details"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={handleDeleteSet}
+                                                                className="text-red-400 hover:text-red-600 p-1"
+                                                                title="Delete Question Set"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <p className="text-sm text-gray-500">{selectedSet.description}</p>
@@ -379,6 +498,22 @@ export default function QuestionSetsList() {
                                                                     <span className="text-xs px-2 py-0.5 rounded bg-white border border-gray-200 text-gray-600 uppercase font-medium">{q.type?.replace('_', ' ') || 'Unknown'}</span>
                                                                     <span className={`text-xs px-2 py-0.5 rounded border ${q.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-100' : q.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' : 'bg-red-50 text-red-700 border-red-100'}`}>{q.difficulty}</span>
                                                                 </div>
+                                                            </div>
+                                                            <div className="flex items-start gap-1 ml-4">
+                                                                <button
+                                                                    onClick={(e) => handleEditQuestion(e, q)}
+                                                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                    title="Edit Question"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => handleDeleteQuestion(e, q.id)}
+                                                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                    title="Delete Question"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </li>
@@ -525,6 +660,45 @@ export default function QuestionSetsList() {
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isEditingQuestion && (
+                <div className="fixed inset-0 z-[60] overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={() => setIsEditingQuestion(false)}></div>
+                        </div>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Edit Question</h3>
+                                <div className="mt-2">
+                                    <ManualQuestionBuilder
+                                        questions={questionToEdit}
+                                        onQuestionsChange={setQuestionToEdit}
+                                        maxQuestions={1}
+                                    />
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+                                <button
+                                    type="button"
+                                    onClick={handleSaveEditedQuestion}
+                                    disabled={isUpdating}
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:ml-3 sm:w-auto sm:text-sm"
+                                >
+                                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingQuestion(false)}
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
