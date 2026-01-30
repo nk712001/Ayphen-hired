@@ -153,14 +153,14 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
 
   return (
     <Drawer open={true} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className="max-w-4xl mx-auto h-screen">
-        <DrawerHeader className="border-b border-gray-200">
+      <DrawerContent className="max-w-4xl mx-auto h-screen bg-background">
+        <DrawerHeader className="border-b border-border">
           <div className="flex items-center justify-between">
             <div>
-              <DrawerTitle className="text-xl font-semibold text-gray-900">
+              <DrawerTitle className="text-xl font-semibold text-foreground">
                 Manage Test Questions
               </DrawerTitle>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {questions.length} question{questions.length !== 1 ? 's' : ''}
                 {questions.length > 0 && (
                   <span className="ml-2">
@@ -169,8 +169,8 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
                 )}
               </p>
             </div>
-            <DrawerClose className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <X className="h-5 w-5 text-gray-500" />
+            <DrawerClose className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <X className="h-5 w-5 text-muted-foreground" />
             </DrawerClose>
           </div>
         </DrawerHeader>
@@ -183,13 +183,13 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
         )}
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-border bg-muted/30">
           <div className="flex space-x-3">
             <button
               type="button"
               onClick={handleGenerateAI}
               disabled={isSaving}
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-card text-foreground text-sm font-medium border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Sparkles className="h-4 w-4" />
               <span>Generate AI Questions</span>
@@ -198,7 +198,7 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
               type="button"
               onClick={handleClearAll}
               disabled={isSaving || questions.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-card text-foreground text-sm font-medium border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Trash2 className="h-4 w-4" />
               <span>Clear All</span>
@@ -211,8 +211,8 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading questions...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading questions...</p>
               </div>
             </div>
           ) : (
@@ -225,7 +225,7 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
         </div>
 
         {/* Footer */}
-        <DrawerFooter className="border-t border-gray-200 bg-gray-50">
+        <DrawerFooter className="border-t border-border bg-muted/30">
           <div className="flex justify-between items-center w-full">
             <div className="text-sm">
               {hasChanges && (
@@ -234,7 +234,7 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
                 </span>
               )}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Total: {questions.length}/20 questions
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+              className="flex-1 px-4 py-2.5 text-foreground bg-card border border-border rounded-lg hover:bg-muted font-medium transition-colors"
             >
               Cancel
             </button>
@@ -250,11 +250,11 @@ export default function TestQuestionManager({ testId, onClose }: TestQuestionMan
               type="button"
               onClick={handleSave}
               disabled={isSaving || !hasChanges}
-              className="flex-1 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+              className="flex-1 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
             >
               {isSaving ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground inline-block mr-2"></div>
                   Saving...
                 </>
               ) : (

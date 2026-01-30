@@ -6,11 +6,15 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { LogOut, Home, Users, FileText, Calendar, BookOpen } from 'lucide-react';
 import OrganizationSwitcher from '@/components/OrganizationSwitcher';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 interface InterviewerNavProps {
   company?: {
     name: string;
     logo?: string | null;
+    darkLogo?: string | null;
     primaryColor?: string | null;
   } | null;
 }
@@ -18,6 +22,12 @@ interface InterviewerNavProps {
 export default function InterviewerNav({ company }: InterviewerNavProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navigation = [
     { name: 'Dashboard', href: '/interviewer/dashboard', icon: Home },
@@ -26,36 +36,41 @@ export default function InterviewerNav({ company }: InterviewerNavProps) {
     { name: 'Question Bank', href: '/interviewer/questions', icon: BookOpen },
   ];
 
+  // Determine which logo to show
+  const displayLogo = mounted && resolvedTheme === 'dark' && company?.darkLogo
+    ? company.darkLogo
+    : company?.logo;
+
   return (
-    <nav className="bg-white border-r border-gray-200 fixed top-0 left-0 h-full w-64 z-50 flex flex-col">
+    <nav className="bg-card border-r border-border fixed top-0 left-0 h-full w-64 z-50 flex flex-col">
 
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-border">
           <Link href="/interviewer/dashboard" className="flex flex-col gap-3">
-            {company?.logo ? (
+            {displayLogo ? (
               <Image
-                src={company.logo}
-                alt={company.name}
+                src={displayLogo}
+                alt={company?.name || 'Company Logo'}
                 width={64}
                 height={64}
                 className="h-16 w-auto object-contain max-w-full"
               />
             ) : (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold">
+                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">
                   {company?.name?.[0] || 'A'}
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900 truncate max-w-[150px]">{company?.name || 'Ayphen'}</h1>
-                  <p className="text-xs text-gray-500">Recruiter Portal</p>
+                  <h1 className="text-lg font-bold text-foreground truncate max-w-[150px]">{company?.name || 'Ayphen'}</h1>
+                  <p className="text-xs text-muted-foreground">Recruiter Portal</p>
                 </div>
               </div>
             )}
-            {company?.logo && (
+            {displayLogo && (
               <div>
-                <h1 className="text-lg font-bold text-gray-900 truncate">{company.name}</h1>
-                <p className="text-xs text-gray-500">Recruiter Portal</p>
+                <h1 className="text-lg font-bold text-foreground truncate">{company?.name}</h1>
+                <p className="text-xs text-muted-foreground">Recruiter Portal</p>
               </div>
             )}
           </Link>
@@ -77,10 +92,10 @@ export default function InterviewerNav({ company }: InterviewerNavProps) {
                 href={item.href}
                 className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors ${isActive
                   ? 'bg-primary/10 text-primary'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
               >
-                <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-600'
+                <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                   }`} />
                 <span className="font-medium">{item.name}</span>
               </Link>
@@ -89,19 +104,22 @@ export default function InterviewerNav({ company }: InterviewerNavProps) {
         </div>
 
         {/* User Menu */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-border">
+          <div className="mb-2 px-4">
+            <ThemeToggle />
+          </div>
           <div className="flex items-center px-4 py-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground font-bold text-sm">
               {session?.user?.name?.[0] || 'R'}
             </div>
             <div className="ml-3 overflow-hidden">
-              <div className="text-sm font-medium text-gray-900 truncate">{session?.user?.name}</div>
-              <div className="text-xs text-gray-500 truncate">{session?.user?.email}</div>
+              <div className="text-sm font-medium text-foreground truncate">{session?.user?.name}</div>
+              <div className="text-xs text-muted-foreground truncate">{session?.user?.email}</div>
             </div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/auth/interviewer/login' })}
-            className="flex items-center w-full px-4 py-2 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="flex items-center w-full px-4 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
           >
             <LogOut className="h-4 w-4 mr-3" />
             Sign Out

@@ -129,30 +129,30 @@ export default function DashboardPage() {
 
     if (!currentOrg) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center max-w-md">
-                    <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Organization Selected</h3>
-                    <p className="text-yellow-700">Please select an organization from the top bar to view your dashboard.</p>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-8">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-8 text-center max-w-md">
+                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">No Organization Selected</h3>
+                    <p className="text-yellow-700 dark:text-yellow-300">Please select an organization from the top bar to view your dashboard.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-1">Dashboard</h1>
-                    <p className="text-gray-600">Overview of your recruitment activities</p>
+                    <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
+                    <p className="text-muted-foreground">Overview of your recruitment activities</p>
                 </div>
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-12">
-                        <div className="bg-white rounded-lg p-8 shadow-sm border border-gray-200">
+                        <div className="bg-card rounded-lg p-8 shadow-sm border border-border">
                             <div className="flex items-center space-x-3">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                                <span className="text-gray-700 font-medium">Loading dashboard...</span>
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground"></div>
+                                <span className="text-foreground font-medium">Loading dashboard...</span>
                             </div>
                         </div>
                     </div>
@@ -161,58 +161,58 @@ export default function DashboardPage() {
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             {/* Total Candidates */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="p-2 bg-gray-100 rounded-lg">
-                                        <Users className="h-6 w-6 text-gray-700" />
+                                    <div className="p-2 bg-muted rounded-lg">
+                                        <Users className="h-6 w-6 text-muted-foreground" />
                                     </div>
-                                    <span className="text-xs font-medium text-gray-500">Total</span>
+                                    <span className="text-xs font-medium text-muted-foreground">Total</span>
                                 </div>
                                 <div>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.totalCandidates}</p>
-                                    <p className="text-sm text-gray-600 mt-1">Candidates</p>
+                                    <p className="text-3xl font-bold">{stats.totalCandidates}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Candidates</p>
                                 </div>
                             </div>
 
                             {/* Total Tests */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="p-2 bg-gray-100 rounded-lg">
-                                        <TestTube className="h-6 w-6 text-gray-700" />
+                                    <div className="p-2 bg-muted rounded-lg">
+                                        <TestTube className="h-6 w-6 text-muted-foreground" />
                                     </div>
-                                    <span className="text-xs font-medium text-gray-500">Created</span>
+                                    <span className="text-xs font-medium text-muted-foreground">Created</span>
                                 </div>
                                 <div>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.totalTests}</p>
-                                    <p className="text-sm text-gray-600 mt-1">Tests</p>
+                                    <p className="text-3xl font-bold">{stats.totalTests}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Tests</p>
                                 </div>
                             </div>
 
                             {/* Active Assignments */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="p-2 bg-yellow-50 rounded-lg">
-                                        <Clock className="h-6 w-6 text-yellow-600" />
+                                    <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                                        <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                                     </div>
-                                    <span className="text-xs font-medium text-gray-500">In Progress</span>
+                                    <span className="text-xs font-medium text-muted-foreground">In Progress</span>
                                 </div>
                                 <div>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.activeAssignments}</p>
-                                    <p className="text-sm text-gray-600 mt-1">Active Tests</p>
+                                    <p className="text-3xl font-bold">{stats.activeAssignments}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Active Tests</p>
                                 </div>
                             </div>
 
                             {/* Completed Assignments */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="p-2 bg-green-50 rounded-lg">
-                                        <CheckCircle className="h-6 w-6 text-green-600" />
+                                    <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                                     </div>
-                                    <span className="text-xs font-medium text-gray-500">Finished</span>
+                                    <span className="text-xs font-medium text-muted-foreground">Finished</span>
                                 </div>
                                 <div>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.completedAssignments}</p>
-                                    <p className="text-sm text-gray-600 mt-1">Completed</p>
+                                    <p className="text-3xl font-bold">{stats.completedAssignments}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Completed</p>
                                 </div>
                             </div>
                         </div>
@@ -220,14 +220,14 @@ export default function DashboardPage() {
                         {/* Quick Actions */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                             {/* Quick Actions Card */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                                 <div className="flex items-center space-x-3 mb-6">
-                                    <div className="p-2 bg-gray-100 rounded-lg">
-                                        <Activity className="h-5 w-5 text-gray-700" />
+                                    <div className="p-2 bg-muted rounded-lg">
+                                        <Activity className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
-                                        <p className="text-sm text-gray-500">Common tasks</p>
+                                        <h2 className="text-lg font-semibold">Quick Actions</h2>
+                                        <p className="text-sm text-muted-foreground">Common tasks</p>
                                     </div>
                                 </div>
                                 <div className="space-y-3">
@@ -256,36 +256,36 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Overview Card */}
-                            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                            <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                                 <div className="flex items-center space-x-3 mb-6">
-                                    <div className="p-2 bg-gray-100 rounded-lg">
-                                        <TrendingUp className="h-5 w-5 text-gray-700" />
+                                    <div className="p-2 bg-muted rounded-lg">
+                                        <TrendingUp className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-semibold text-gray-900">Overview</h2>
-                                        <p className="text-sm text-gray-500">Recruitment summary</p>
+                                        <h2 className="text-lg font-semibold">Overview</h2>
+                                        <p className="text-sm text-muted-foreground">Recruitment summary</p>
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                                        <span className="text-sm text-gray-600">Completion Rate</span>
-                                        <span className="text-sm font-semibold text-gray-900">
+                                    <div className="flex items-center justify-between pb-3 border-b border-border">
+                                        <span className="text-sm text-muted-foreground">Completion Rate</span>
+                                        <span className="text-sm font-semibold">
                                             {(stats.activeAssignments + stats.completedAssignments) > 0
                                                 ? Math.round((stats.completedAssignments / (stats.activeAssignments + stats.completedAssignments)) * 100)
                                                 : 0}%
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                                        <span className="text-sm text-gray-600">Active Rate</span>
-                                        <span className="text-sm font-semibold text-gray-900">
+                                    <div className="flex items-center justify-between pb-3 border-b border-border">
+                                        <span className="text-sm text-muted-foreground">Active Rate</span>
+                                        <span className="text-sm font-semibold">
                                             {(stats.activeAssignments + stats.completedAssignments) > 0
                                                 ? Math.round((stats.activeAssignments / (stats.activeAssignments + stats.completedAssignments)) * 100)
                                                 : 0}%
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-600">Avg Tests per Candidate</span>
-                                        <span className="text-sm font-semibold text-gray-900">
+                                        <span className="text-sm text-muted-foreground">Avg Tests per Candidate</span>
+                                        <span className="text-sm font-semibold">
                                             {stats.totalCandidates > 0
                                                 ? ((stats.activeAssignments + stats.completedAssignments) / stats.totalCandidates).toFixed(1)
                                                 : '0.0'}
@@ -295,35 +295,35 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* Empty State for Recent Activity */}
-                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        {/* Recent Activity */}
+                        <div className="bg-card text-card-foreground rounded-lg p-6 shadow-sm border border-border">
                             <div className="flex items-center space-x-3 mb-6">
-                                <div className="p-2 bg-gray-100 rounded-lg">
-                                    <Calendar className="h-5 w-5 text-gray-700" />
+                                <div className="p-2 bg-muted rounded-lg">
+                                    <Calendar className="h-5 w-5 text-muted-foreground" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-                                    <p className="text-sm text-gray-500">Latest updates</p>
+                                    <h2 className="text-lg font-semibold">Recent Activity</h2>
+                                    <p className="text-sm text-muted-foreground">Latest updates</p>
                                 </div>
                             </div>
 
                             {stats.recentActivity.length > 0 ? (
                                 <div className="space-y-4">
                                     {stats.recentActivity.map((activity) => (
-                                        <div key={activity.id} className="flex items-start space-x-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
-                                            <div className={`mt-0.5 p-1.5 rounded-full flex-shrink-0 ${activity.type === 'test_completed' ? 'bg-green-100 text-green-600' :
-                                                activity.type === 'test_assigned' ? 'bg-blue-100 text-blue-600' :
-                                                    'bg-gray-100 text-gray-600'
+                                        <div key={activity.id} className="flex items-start space-x-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                                            <div className={`mt-0.5 p-1.5 rounded-full flex-shrink-0 ${activity.type === 'test_completed' ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400' :
+                                                    activity.type === 'test_assigned' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' :
+                                                        'bg-muted text-muted-foreground'
                                                 }`}>
                                                 {activity.type === 'test_completed' ? <CheckCircle className="h-3 w-3" /> :
                                                     activity.type === 'test_assigned' ? <Clock className="h-3 w-3" /> :
                                                         <Users className="h-3 w-3" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                <p className="text-sm font-medium truncate">
                                                     {activity.message}
                                                 </p>
-                                                <p className="text-xs text-gray-400 mt-0.5">
+                                                <p className="text-xs text-muted-foreground mt-0.5">
                                                     {new Date(activity.timestamp).toLocaleDateString()} {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </p>
                                             </div>
@@ -332,8 +332,8 @@ export default function DashboardPage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-8">
-                                    <Activity className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                                    <p className="text-sm text-gray-500">No recent activity to display</p>
+                                    <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                                    <p className="text-sm text-muted-foreground">No recent activity to display</p>
                                 </div>
                             )}
                         </div>

@@ -26,6 +26,14 @@ const nextConfig = {
   async redirects() {
     return [];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/ws-proxy/:path*',
+        destination: 'http://127.0.0.1:8000/:path*',
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     // Fixes npm packages that depend on `node:` protocol
     if (!isServer) {
@@ -38,12 +46,12 @@ const nextConfig = {
         child_process: false,
       };
     }
-    
+
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve(__dirname, './'),
     };
-    
+
     return config;
   },
 };

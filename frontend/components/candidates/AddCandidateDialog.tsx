@@ -112,7 +112,7 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
       <Drawer open={true} onOpenChange={(open) => !open && handleCloseSuccess()}>
         <DrawerContent>
           <DrawerHeader>
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
               <CheckCircle2 className="w-6 h-6" />
               <DrawerTitle>Candidate Added & Analyzed</DrawerTitle>
             </div>
@@ -120,38 +120,38 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
           </DrawerHeader>
 
           <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-800 font-medium">
+            <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <p className="text-green-800 dark:text-green-300 font-medium">
                 Resume parsed successfully! Here&apos;s what our AI found:
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Experience</h4>
-                <div className="bg-gray-50 p-3 rounded-md text-gray-900 border border-gray-100">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Experience</h4>
+                <div className="bg-muted/50 p-3 rounded-md text-foreground border border-border">
                   {analysis.experience || 'Not specified'}
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Skills</h4>
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Skills</h4>
                 <div className="flex flex-wrap gap-2">
                   {analysis.skills && analysis.skills.length > 0 ? (
                     analysis.skills.map((skill, i) => (
-                      <span key={i} className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                      <span key={i} className="px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-100 dark:border-blue-800">
                         {skill}
                       </span>
                     ))
                   ) : (
-                    <span className="text-gray-500 italic">No specific skills detected</span>
+                    <span className="text-muted-foreground italic">No specific skills detected</span>
                   )}
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Education</h4>
-                <div className="bg-gray-50 p-3 rounded-md text-gray-900 border border-gray-100">
+                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Education</h4>
+                <div className="bg-muted/50 p-3 rounded-md text-foreground border border-border">
                   {analysis.education || 'Not specified'}
                 </div>
               </div>
@@ -161,8 +161,7 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
           <DrawerFooter>
             <button
               onClick={handleCloseSuccess}
-              className="w-full px-4 py-2 bg-[#de065d] text-white rounded-md font-medium hover:bg-[#c00054] transition-colors"
-              style={{ backgroundColor: '#de065d' }}
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-secondary-dark transition-colors"
             >
               Confirm & Close
             </button>
@@ -184,15 +183,15 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
           <div className="flex-1 p-6 space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-gray-400" />
+                    <User className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <input
                     type="text"
                     required
-                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#de065d] focus:ring-[#de065d] sm:text-sm py-2 border"
+                    className="pl-10 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary sm:text-sm py-2 border placeholder:text-muted-foreground"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     placeholder="John Doe"
@@ -201,15 +200,15 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Email</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-gray-400" />
+                    <Mail className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <input
                     type="email"
                     required
-                    className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#de065d] focus:ring-[#de065d] sm:text-sm py-2 border"
+                    className="pl-10 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary sm:text-sm py-2 border placeholder:text-muted-foreground"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="john@example.com"
@@ -219,7 +218,7 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
             </div>
 
             <div className="pt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Resume (PDF)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Resume (PDF)</label>
 
               {!resumeFile ? (
                 <div
@@ -227,16 +226,16 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-dashed rounded-lg transition-all duration-200 ${isDragging
-                    ? 'border-2 border-[#de065d] bg-[#de065d]/5 scale-[1.02]'
-                    : 'border-2 border-gray-300 hover:border-[#de065d] bg-gray-50/50'
+                    ? 'border-2 border-primary bg-primary/5 scale-[1.02]'
+                    : 'border-2 border-border hover:border-primary bg-muted/30'
                     }`}
                 >
                   <div className="space-y-1 text-center pointer-events-none">
-                    <UploadCloud className={`mx-auto h-12 w-12 transition-colors ${isDragging ? 'text-[#de065d]' : 'text-gray-400'}`} />
-                    <div className="flex text-sm text-gray-600 justify-center">
+                    <UploadCloud className={`mx-auto h-12 w-12 transition-colors ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <div className="flex text-sm text-foreground justify-center">
                       <label
                         htmlFor="file-upload"
-                        className="relative cursor-pointer bg-white rounded-md font-medium text-[#de065d] hover:text-[#c00054] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[#de065d] pointer-events-auto px-1"
+                        className="relative cursor-pointer bg-background rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary pointer-events-auto px-1"
                       >
                         <span>Upload a file</span>
                         <input
@@ -254,24 +253,24 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
                       </label>
                       <p className="pl-1">or drag and drop</p>
                     </div>
-                    <p className="text-xs text-gray-500">PDF up to 10MB</p>
+                    <p className="text-xs text-muted-foreground">PDF up to 10MB</p>
                   </div>
                 </div>
               ) : (
-                <div className="mt-1 flex items-center justify-between px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+                <div className="mt-1 flex items-center justify-between px-4 py-3 border border-border rounded-lg bg-muted/50">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-red-100 rounded-lg">
-                      <FileText className="h-5 w-5 text-red-600" />
+                    <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                      <FileText className="h-5 w-5 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{resumeFile.name}</p>
-                      <p className="text-xs text-gray-500">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">{resumeFile.name}</p>
+                      <p className="text-xs text-muted-foreground">{(resumeFile.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setResumeFile(null)}
-                    className="text-gray-400 hover:text-red-500 text-sm font-medium"
+                    className="text-muted-foreground hover:text-destructive text-sm font-medium"
                   >
                     Remove
                   </button>
@@ -279,26 +278,25 @@ export default function AddCandidateDialog({ onClose, onSuccess }: { onClose: ()
               )}
             </div>
 
-            <div className="bg-blue-50 border border-blue-100 rounded-md p-3">
-              <p className="text-xs text-blue-700">
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-md p-3">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
                 <strong>Tip:</strong> Uploading a resume allows our AI to automatically extract skills, experience, and education for better test recommendations.
               </p>
             </div>
           </div>
 
-          <DrawerFooter className="border-t border-gray-100 bg-gray-50/50">
+          <DrawerFooter className="border-t border-border bg-muted/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#de065d]"
+              className="px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-background hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || (!name && !resumeFile)} // Name is required, logic could infer name from resume later but for now require it
-              style={{ backgroundColor: isLoading ? '#f3f4f6' : '#de065d', color: isLoading ? '#9ca3af' : 'white' }}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium flex items-center justify-center space-x-2 min-w-[140px]"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium flex items-center justify-center space-x-2 min-w-[140px] bg-primary text-primary-foreground hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <>

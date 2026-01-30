@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
+import { aiClient } from '@/lib/ai-client';
 
 export async function POST(
   request: Request,
@@ -32,8 +33,16 @@ export async function POST(
       select: {
         id: true,
         companyId: true,
-        organizationId: true
+        organizationId: true,
+        jobDescription: true,
+        title: true
       }
+    });
+
+    // Fetch Candidate Data for Match Scoring
+    const candidateData = await prisma.candidate.findUnique({
+      where: { id: candidateId },
+      select: { resumeData: true, skills: true }
     });
 
     if (!test) {
@@ -43,6 +52,34 @@ export async function POST(
     // Generate unique link
     const uniqueLink = randomBytes(16).toString('hex');
 
+    // Calculate Match Score if possible
+    let matchScore: number | null = null;
+    if (test.jobDescription && candidateData?.resumeData) {
+      try {
+        const matchResult = await aiClient.json<{ matchScore: number }>({
+          messages: [{
+            role: 'user',
+            content: `
+              Analyze the fit between this Candidate and the Job/Test requirements.
+              
+              Test Title: ${test.title}
+              Job Description: ${test.jobDescription}
+              
+              Candidate Data:
+              ${candidateData.resumeData}
+              
+              Calculate a match score from 0 to 100 based on skills, experience, and relevance.
+              Return JSON: { "matchScore": number }
+            `
+          }],
+          fallback: () => ({ matchScore: 0 })
+        });
+        matchScore = matchResult.matchScore;
+      } catch (error) {
+        console.warn('Failed to calculate match score:', error);
+      }
+    }
+
     // Create the assignment
     const assignment = await prisma.testAssignment.create({
       data: {
@@ -51,7 +88,8 @@ export async function POST(
         uniqueLink,
         status: 'pending',
         companyId: test.companyId,
-        organizationId: test.organizationId
+        organizationId: test.organizationId,
+        matchScore: matchScore
       },
       include: {
         test: { select: { title: true } },

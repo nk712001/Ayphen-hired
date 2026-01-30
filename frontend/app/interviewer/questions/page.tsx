@@ -133,19 +133,19 @@ export default function QuestionsPage() {
     };
 
     return (
-        <div className="p-6">
+        <div className="p-6 bg-background min-h-screen">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
-                    <p className="text-sm text-gray-500">Manage your reusable library of questions.</p>
+                    <h1 className="text-2xl font-bold text-foreground">Question Bank</h1>
+                    <p className="text-sm text-muted-foreground">Manage your reusable library of questions.</p>
                 </div>
                 {activeTab === 'questions' && (
                     <div className="flex items-center">
                         <button
                             onClick={() => setShowGenerator(true)}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary mr-3"
+                            className="inline-flex items-center px-4 py-2 border border-input rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary mr-3"
                         >
-                            <BookOpen className="-ml-1 mr-2 h-5 w-5 text-gray-500" />
+                            <BookOpen className="-ml-1 mr-2 h-5 w-5 text-muted-foreground" />
                             Generate Set
                         </button>
                         <button
@@ -153,7 +153,7 @@ export default function QuestionsPage() {
                                 setEditingQuestion(null);
                                 setShowBuilder(true);
                             }}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-opacity-90 transition-opacity"
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-opacity"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             Add Question
@@ -167,7 +167,7 @@ export default function QuestionsPage() {
                                 setActiveTab('questions');
                                 setShowGenerator(true);
                             }}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-opacity-90 transition-opacity"
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-opacity"
                         >
                             <Plus className="h-4 w-4 mr-2" />
                             New Question Set
@@ -177,13 +177,13 @@ export default function QuestionsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-gray-200 mb-6">
+            <div className="border-b border-border mb-6">
                 <nav className="-mb-px flex space-x-8">
                     <button
                         onClick={() => setActiveTab('questions')}
                         className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'questions'
                             ? 'border-primary text-primary'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                             }`}
                     >
                         All Questions
@@ -192,7 +192,7 @@ export default function QuestionsPage() {
                         onClick={() => setActiveTab('sets')}
                         className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'sets'
                             ? 'border-primary text-primary'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                             }`}
                     >
                         Question Sets
@@ -205,7 +205,7 @@ export default function QuestionsPage() {
             ) : (
                 <>
                     {/* Filter Bar */}
-                    <div className="bg-white p-4 rounded-lg shadow mb-6 space-y-4">
+                    <div className="bg-card p-4 rounded-lg shadow mb-6 space-y-4 border border-border">
                         <div className="flex gap-4">
 
                             {/* Role Filter */}
@@ -213,7 +213,7 @@ export default function QuestionsPage() {
                                 <input
                                     type="text"
                                     placeholder="Job Role / Category"
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    className="block w-full px-3 py-2 border border-input rounded-md leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                                     value={filterRole}
                                     onChange={(e) => setFilterRole(e.target.value)}
                                 />
@@ -223,7 +223,7 @@ export default function QuestionsPage() {
                                 <input
                                     type="text"
                                     placeholder="Skills / Tags"
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    className="block w-full px-3 py-2 border border-input rounded-md leading-5 bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                                     value={filterSkills}
                                     onChange={(e) => setFilterSkills(e.target.value)}
                                 />
@@ -231,7 +231,7 @@ export default function QuestionsPage() {
                             {/* Experience/Difficulty Filter */}
                             <div className="w-1/6">
                                 <select
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    className="block w-full px-3 py-2 border border-input rounded-md leading-5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                                     value={filterDifficulty}
                                     onChange={(e) => setFilterDifficulty(e.target.value)}
                                 >
@@ -244,7 +244,7 @@ export default function QuestionsPage() {
                             {/* Question Type Filter */}
                             <div className="w-1/6">
                                 <select
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    className="block w-full px-3 py-2 border border-input rounded-md leading-5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                                     value={filterType}
                                     onChange={(e) => setFilterType(e.target.value)}
                                 >
@@ -257,7 +257,7 @@ export default function QuestionsPage() {
                             </div>
                             <div className="w-1/6">
                                 <select
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                    className="block w-full px-3 py-2 border border-input rounded-md leading-5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                                     value={filterTechnical}
                                     onChange={(e) => setFilterTechnical(e.target.value as any)}
                                 >
@@ -270,7 +270,7 @@ export default function QuestionsPage() {
                             {filterTechnical === 'technical' && (
                                 <div className="w-1/6">
                                     <select
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+                                        className="block w-full px-3 py-2 border border-input rounded-md leading-5 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
                                         value={filterLanguage}
                                         onChange={(e) => setFilterLanguage(e.target.value)}
                                     >
@@ -292,31 +292,31 @@ export default function QuestionsPage() {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white shadow overflow-hidden sm:rounded-md mb-4">
-                        <ul className="divide-y divide-gray-200">
+                    <div className="bg-card shadow overflow-hidden sm:rounded-md mb-4 border border-border">
+                        <ul className="divide-y divide-border">
                             {loading ? (
-                                <li className="px-6 py-4 text-center text-gray-500">Loading library...</li>
+                                <li className="px-6 py-4 text-center text-muted-foreground">Loading library...</li>
                             ) : questions.length === 0 ? (
-                                <li className="px-6 py-4 text-center text-gray-500">No questions found.</li>
+                                <li className="px-6 py-4 text-center text-muted-foreground">No questions found.</li>
                             ) : (
                                 questions.map((q) => (
                                     <li key={q.id}>
-                                        <div className="px-4 py-4 sm:px-6">
+                                        <div className="px-4 py-4 sm:px-6 hover:bg-muted/50 transition-colors">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex-1 min-w-0 pr-4">
                                                     <div className="flex flex-wrap items-center gap-2 mb-2">
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${q.type === 'multiple_choice' ? 'bg-purple-100 text-purple-800' :
-                                                                q.type === 'code' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>
+                                ${q.type === 'multiple_choice' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300' :
+                                                                q.type === 'code' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300' : 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'}`}>
                                                             {q.type.replace('_', ' ').toUpperCase()}
                                                         </span>
                                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${q.difficulty === 'Easy' ? 'bg-gray-100 text-gray-800' :
-                                                                q.difficulty === 'Hard' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                ${q.difficulty === 'Easy' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' :
+                                                                q.difficulty === 'Hard' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'}`}>
                                                             {q.difficulty}
                                                         </span>
                                                         {q.category && (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
                                                                 {q.category}
                                                             </span>
                                                         )}
@@ -325,7 +325,7 @@ export default function QuestionsPage() {
                                                                 const tags = typeof q.tags === 'string' ? JSON.parse(q.tags) : q.tags;
                                                                 if (Array.isArray(tags)) {
                                                                     return tags.map((tag: string, i: number) => (
-                                                                        <span key={i} className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                                                        <span key={i} className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300">
                                                                             {tag}
                                                                         </span>
                                                                     ));
@@ -335,22 +335,22 @@ export default function QuestionsPage() {
                                                         })()}
 
                                                         {q.isTechnical === false && (
-                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800">
+                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300">
                                                                 Non-Technical
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="text-sm font-medium text-gray-900 break-words whitespace-pre-wrap">{q.text}</p>
+                                                    <p className="text-sm font-medium text-foreground break-words whitespace-pre-wrap">{q.text}</p>
 
                                                     {/* Render MCQ Options */}
                                                     {q.type === 'multiple_choice' && (() => {
                                                         try {
                                                             const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
                                                             return (
-                                                                <div className="mt-2 pl-4 border-l-2 border-gray-200">
+                                                                <div className="mt-2 pl-4 border-l-2 border-border">
                                                                     <ul className="list-disc list-inside space-y-1">
                                                                         {meta.options?.map((opt: string, i: number) => (
-                                                                            <li key={i} className={`text-sm ${meta.correctAnswer === i ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                                                            <li key={i} className={`text-sm ${meta.correctAnswer === i ? 'text-green-600 dark:text-green-400 font-medium' : 'text-muted-foreground'}`}>
                                                                                 {opt} {meta.correctAnswer === i && '✓'}
                                                                             </li>
                                                                         ))}
@@ -365,7 +365,7 @@ export default function QuestionsPage() {
                                                         try {
                                                             const meta = typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata;
                                                             return (
-                                                                <p className="mt-1 text-xs text-gray-500">
+                                                                <p className="mt-1 text-xs text-muted-foreground">
                                                                     Min Words: {meta.minWords || 50} | Max Words: {meta.maxWords || 200}
                                                                 </p>
                                                             );
@@ -373,7 +373,7 @@ export default function QuestionsPage() {
                                                     })()}
 
                                                     {q.type === 'code' && (
-                                                        <p className="mt-1 text-xs text-gray-500 font-mono">
+                                                        <p className="mt-1 text-xs text-muted-foreground font-mono">
                                                             Language: {(() => {
                                                                 try {
                                                                     return (typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata).language;
@@ -383,12 +383,6 @@ export default function QuestionsPage() {
                                                     )}
                                                 </div>
                                                 <div className="flex items-center">
-                                                    {/* 
-                         TODO: Implement Edit/Delete
-                         <button onClick={() => handleDelete(q.id)} className="text-red-600 hover:text-red-900 p-2">
-                            <Trash2 className="h-4 w-4" />
-                         </button>
-                        */}
                                                 </div>
                                             </div>
                                         </div>
@@ -404,15 +398,15 @@ export default function QuestionsPage() {
                             <button
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
+                                className="px-3 py-1 border border-border rounded disabled:opacity-50 bg-card text-foreground"
                             >
                                 Previous
                             </button>
-                            <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
+                            <span className="text-sm text-foreground">Page {page} of {totalPages}</span>
                             <button
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 disabled={page === totalPages}
-                                className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
+                                className="px-3 py-1 border border-border rounded disabled:opacity-50 bg-card text-foreground"
                             >
                                 Next
                             </button>
@@ -426,16 +420,16 @@ export default function QuestionsPage() {
                 <div className="fixed inset-0 z-50 overflow-y-auto">
                     <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                            <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={() => setIsModalOpen(false)}></div>
+                            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
                         </div>
 
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div className="inline-block align-bottom bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-border">
+                            <div className="bg-card px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                 <div className="sm:flex sm:items-start">
                                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                                        <h3 className="text-lg leading-6 font-medium text-foreground mb-4" id="modal-title">
                                             Add Question to Library
                                         </h3>
                                         <div className="mt-2">
@@ -456,19 +450,19 @@ export default function QuestionsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <div className="bg-muted px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                                 <button
                                     type="button"
                                     onClick={handleSaveToLibrary}
                                     disabled={builderQuestions.length === 0 || isSaving}
-                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                                 >
                                     {isSaving ? 'Saving...' : 'Save to Library'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-input shadow-sm px-4 py-2 bg-background text-base font-medium text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                                 >
                                     Cancel
                                 </button>

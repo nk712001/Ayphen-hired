@@ -89,24 +89,24 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-6">
             <button
               onClick={() => router.back()}
-              className="p-2 rounded-lg bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
+              className="p-2 rounded-lg bg-card border border-border shadow-sm hover:bg-muted transition-colors"
             >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ArrowLeft className="h-5 w-5 text-muted-foreground" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-foreground">
                 {test.title}
               </h1>
               <div className="flex items-center space-x-2 mt-1">
-                <Eye className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-500">Test Preview</span>
+                <Eye className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Test Preview</span>
               </div>
             </div>
           </div>
@@ -115,34 +115,34 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
         {/* Test Information Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
           {/* Duration Card */}
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
+          <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Clock className="h-5 w-5 text-gray-700" />
+              <div className="p-2 bg-muted rounded-lg">
+                <Clock className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Duration</h3>
-                <p className="text-xl font-semibold text-gray-900">{test.duration} min</p>
+                <h3 className="text-sm font-medium text-muted-foreground">Duration</h3>
+                <p className="text-xl font-semibold text-foreground">{test.duration} min</p>
               </div>
             </div>
           </div>
 
           {/* Proctoring Card */}
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
+          <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Eye className="h-5 w-5 text-gray-700" />
+              <div className="p-2 bg-muted rounded-lg">
+                <Eye className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Proctoring</h3>
-                <p className="text-sm font-medium text-gray-900">
+                <h3 className="text-sm font-medium text-muted-foreground">Proctoring</h3>
+                <p className="text-sm font-medium text-foreground">
                   {test.requiresSecondaryCamera ? (
-                    <span className="flex items-center text-gray-700">
-                      <CheckCircle className="h-4 w-4 mr-1" />
+                    <span className="flex items-center text-foreground">
+                      <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
                       Secondary Camera
                     </span>
                   ) : (
-                    <span className="flex items-center text-gray-500">
+                    <span className="flex items-center text-muted-foreground">
                       <XCircle className="h-4 w-4 mr-1" />
                       Standard
                     </span>
@@ -153,47 +153,47 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
           </div>
 
           {/* Questions Count Card */}
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
+          <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <HelpCircle className="h-5 w-5 text-gray-700" />
+              <div className="p-2 bg-muted rounded-lg">
+                <HelpCircle className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Questions</h3>
-                <p className="text-xl font-semibold text-gray-900">{questions.length}</p>
+                <h3 className="text-sm font-medium text-muted-foreground">Questions</h3>
+                <p className="text-xl font-semibold text-foreground">{questions.length}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Question Configuration Card */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
+        <div className="bg-card rounded-lg p-6 shadow-sm border border-border mb-6">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <BarChart3 className="h-5 w-5 text-gray-700" />
+            <div className="p-2 bg-muted rounded-lg">
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Question Distribution</h3>
-              <p className="text-sm text-gray-500">AI-generated question breakdown</p>
+              <h3 className="text-lg font-semibold text-foreground">Question Distribution</h3>
+              <p className="text-sm text-muted-foreground">AI-generated question breakdown</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">Multiple Choice</div>
-              <div className="text-2xl font-bold text-gray-900">{test.mcqQuestions || 0}</div>
+            <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="text-xs font-medium text-muted-foreground mb-1">Multiple Choice</div>
+              <div className="text-2xl font-bold text-foreground">{test.mcqQuestions || 0}</div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">Conversational</div>
-              <div className="text-2xl font-bold text-gray-900">{test.conversationalQuestions || 0}</div>
+            <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="text-xs font-medium text-muted-foreground mb-1">Conversational</div>
+              <div className="text-2xl font-bold text-foreground">{test.conversationalQuestions || 0}</div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">Coding</div>
-              <div className="text-2xl font-bold text-gray-900">{test.codingQuestions || 0}</div>
+            <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="text-xs font-medium text-muted-foreground mb-1">Coding</div>
+              <div className="text-2xl font-bold text-foreground">{test.codingQuestions || 0}</div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-              <div className="text-xs font-medium text-gray-500 mb-1">Total</div>
-              <div className="text-2xl font-bold text-gray-900">
+            <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <div className="text-xs font-medium text-muted-foreground mb-1">Total</div>
+              <div className="text-2xl font-bold text-foreground">
                 {(test.mcqQuestions || 0) + (test.conversationalQuestions || 0) + (test.codingQuestions || 0)}
               </div>
             </div>
@@ -202,43 +202,43 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
 
         {/* Job Description Card */}
         {test.jobDescription && (
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
+          <div className="bg-card rounded-lg p-6 shadow-sm border border-border mb-6">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <FileText className="h-5 w-5 text-gray-700" />
+              <div className="p-2 bg-muted rounded-lg">
+                <FileText className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Job Description</h3>
-                <p className="text-sm text-gray-500">Role requirements and context</p>
+                <h3 className="text-lg font-semibold text-foreground">Job Description</h3>
+                <p className="text-sm text-muted-foreground">Role requirements and context</p>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-              <p className="text-gray-700 leading-relaxed text-sm">{test.jobDescription}</p>
+            <div className="bg-muted/50 rounded-lg p-4 border border-border">
+              <p className="text-foreground leading-relaxed text-sm whitespace-pre-wrap">{test.jobDescription}</p>
             </div>
           </div>
         )}
 
         {/* Questions Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <HelpCircle className="h-5 w-5 text-gray-700" />
+              <div className="p-2 bg-muted rounded-lg">
+                <HelpCircle className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Questions ({questions.length})
                 </h2>
-                <p className="text-sm text-gray-500">Preview of test questions</p>
+                <p className="text-sm text-muted-foreground">Preview of test questions</p>
               </div>
             </div>
 
             {questions.length === 0 ? (
               <div className="text-center py-12">
-                <div className="bg-gray-50 rounded-lg p-8 border border-gray-100">
-                  <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">No Questions Yet</h3>
-                  <p className="text-sm text-gray-500">No questions have been added to this test yet.</p>
+                <div className="bg-muted/30 rounded-lg p-8 border border-border">
+                  <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <h3 className="text-base font-semibold text-foreground mb-1">No Questions Yet</h3>
+                  <p className="text-sm text-muted-foreground">No questions have been added to this test yet.</p>
                 </div>
               </div>
             ) : (
@@ -248,46 +248,46 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
                     switch (type.toLowerCase()) {
                       case 'mcq':
                       case 'multiple_choice':
-                        return <HelpCircle className="h-4 w-4 text-gray-600" />;
+                        return <HelpCircle className="h-4 w-4 text-muted-foreground" />;
                       case 'conversational':
                       case 'essay':
-                        return <MessageSquare className="h-4 w-4 text-gray-600" />;
+                        return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
                       case 'coding':
                       case 'code':
-                        return <Code className="h-4 w-4 text-gray-600" />;
+                        return <Code className="h-4 w-4 text-muted-foreground" />;
                       default:
-                        return <FileText className="h-4 w-4 text-gray-600" />;
+                        return <FileText className="h-4 w-4 text-muted-foreground" />;
                     }
                   };
 
                   const getTypeColor = (type: string) => {
-                    return 'bg-gray-100 text-gray-700 border-gray-200';
+                    return 'bg-muted text-muted-foreground border-border';
                   };
 
                   const getDifficultyColor = (difficulty: string) => {
                     switch (difficulty?.toLowerCase()) {
                       case 'easy':
-                        return 'bg-green-50 text-green-700 border-green-200';
+                        return 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20';
                       case 'medium':
-                        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                        return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20';
                       case 'hard':
-                        return 'bg-red-50 text-red-700 border-red-200';
+                        return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20';
                       default:
-                        return 'bg-gray-100 text-gray-700 border-gray-200';
+                        return 'bg-muted text-muted-foreground border-border';
                     }
                   };
 
                   return (
-                    <div key={question.id} className="bg-gray-50 rounded-lg p-5 border border-gray-100 hover:border-gray-200 transition-colors">
+                    <div key={question.id} className="bg-card/50 rounded-lg p-5 border border-border hover:border-primary/20 transition-colors">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <div className="flex-shrink-0">
-                            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
-                              <span className="text-white font-semibold text-sm">{index + 1}</span>
+                            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                              <span className="text-primary-foreground font-semibold text-sm">{index + 1}</span>
                             </div>
                           </div>
                           <div>
-                            <h3 className="text-sm font-semibold text-gray-900 flex items-center space-x-2">
+                            <h3 className="text-sm font-semibold text-foreground flex items-center space-x-2">
                               {getQuestionIcon(question.type)}
                               <span>Question {index + 1}</span>
                             </h3>
@@ -304,8 +304,8 @@ export default function TestPreviewPage({ params }: { params: { testId: string }
                           )}
                         </div>
                       </div>
-                      <div className="bg-white rounded-lg p-4 border border-gray-100">
-                        <p className="text-gray-700 leading-relaxed text-sm">{question.text}</p>
+                      <div className="bg-background rounded-lg p-4 border border-border">
+                        <p className="text-foreground leading-relaxed text-sm">{question.text}</p>
                       </div>
                     </div>
                   );

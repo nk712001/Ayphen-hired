@@ -52,6 +52,26 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
   const [extractedSkills, setExtractedSkills] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
+  // Pre-fill questions if valid static questions exist on the test
+  useEffect(() => {
+    if (test.questions && test.questions.length > 0 && !previewData) {
+      const mappedQuestions: Question[] = test.questions.map(q => ({
+        id: q.id,
+        type: q.type as any,
+        text: q.text,
+        difficulty: (q.difficulty as any) || 'Medium',
+        order: q.order,
+        metadata: q.metadata
+      }));
+
+      setPreviewData({
+        questions: mappedQuestions,
+        personalized: false,
+        message: 'Standard test questions'
+      });
+    }
+  }, [test]);
+
   // Fetch suggested questions when entering preview step
   useEffect(() => {
     console.log('Suggestions Effect Triggered:', { step, extractedSkills: extractedSkills.length, currentSuggestions: suggestedQuestions.length });
@@ -77,7 +97,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                 text: q.text,
                 difficulty: q.difficulty,
                 order: 0,
-                metadata: q.metadata
+                metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
               } as Question));
             } else {
               // Score questions based on matching tags and content
@@ -118,7 +138,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                   text: q.text,
                   difficulty: q.difficulty,
                   order: 0,
-                  metadata: q.metadata
+                  metadata: typeof q.metadata === 'string' ? JSON.parse(q.metadata) : q.metadata
                 } as Question));
             }
 
@@ -417,10 +437,10 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Search Candidates</label>
+              <label className="block text-sm font-medium text-foreground">Search Candidates</label>
               <input
                 type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                className="mt-1 block w-full rounded-md border-input bg-background text-foreground shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 placeholder="Search by name or email"
@@ -428,18 +448,18 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Candidate</label>
-              <div className="border border-gray-300 rounded-md max-h-60 overflow-y-auto">
+              <label className="block text-sm font-medium text-foreground mb-2">Select Candidate</label>
+              <div className="border border-border rounded-md max-h-60 overflow-y-auto bg-card">
                 {filteredCandidates.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500">
+                  <div className="p-4 text-center text-muted-foreground">
                     {searchTerm ? 'No candidates found' : 'Loading candidates...'}
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-border">
                     {filteredCandidates.map(candidate => (
                       <label
                         key={candidate.id}
-                        className={`p-3 cursor-pointer hover:bg-gray-50 flex items-center ${selectedCandidateId === candidate.id ? 'bg-blue-50 ring-2 ring-blue-500 ring-opacity-50' : ''}`}
+                        className={`p-3 cursor-pointer hover:bg-muted flex items-center ${selectedCandidateId === candidate.id ? 'bg-primary/10 ring-2 ring-primary ring-opacity-50' : ''}`}
                       >
                         <input
                           type="radio"
@@ -452,8 +472,8 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                         <div className="ml-3 flex-1">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{candidate.name}</p>
-                              <p className="text-sm text-gray-500">{candidate.email}</p>
+                              <p className="text-sm font-medium text-foreground">{candidate.name}</p>
+                              <p className="text-sm text-muted-foreground">{candidate.email}</p>
                             </div>
                             <div className="flex items-center">
                               {candidate.resumeUrl ? (
@@ -481,7 +501,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted"
               >
                 Cancel
               </button>
@@ -489,7 +509,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                 type="button"
                 onClick={() => setStep('upload')}
                 disabled={!selectedCandidateId}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-secondary-dark disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Next: Resume Upload
               </button>
@@ -501,21 +521,21 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
         return (
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Resume for {selectedCandidate?.name}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Upload the candidate&apos;s resume to generate personalized questions
               </p>
             </div>
 
             {selectedCandidate?.resumeUrl && !uploadedResume && (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
                 <div className="flex items-center">
-                  <FileText className="w-5 h-5 text-blue-600 mr-2" />
+                  <FileText className="w-5 h-5 text-primary mr-2" />
                   <div>
-                    <p className="text-sm font-medium text-blue-900">Existing Resume Found</p>
-                    <p className="text-xs text-blue-700">
+                    <p className="text-sm font-medium text-primary">Existing Resume Found</p>
+                    <p className="text-xs text-primary/70">
                       You can use the existing resume or upload a new one for this assignment.
                     </p>
                   </div>
@@ -523,15 +543,15 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
               </div>
             )}
 
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            <div className="border-2 border-dashed border-border rounded-lg p-6">
               <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                 <div className="mt-4">
                   <label htmlFor="resume-upload" className="cursor-pointer">
-                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                    <span className="mt-2 block text-sm font-medium text-foreground">
                       {uploadedResume ? uploadedResume.name : 'Upload Resume'}
                     </span>
-                    <span className="mt-1 block text-xs text-gray-500">
+                    <span className="mt-1 block text-xs text-muted-foreground">
                       PDF, DOC, or DOCX up to 10MB
                     </span>
                   </label>
@@ -555,7 +575,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
             {isUploadingResume && (
               <div className="text-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                <p className="text-sm text-gray-500 mt-2">Analyzing resume...</p>
+                <p className="text-sm text-muted-foreground mt-2">Analyzing resume...</p>
               </div>
             )}
 
@@ -563,7 +583,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
               <button
                 type="button"
                 onClick={() => setStep('select')}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted"
               >
                 Back
               </button>
@@ -571,7 +591,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                 type="button"
                 onClick={() => setStep('preview')}
                 disabled={!uploadedResume && !selectedCandidate?.resumeUrl}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-secondary-dark disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Next: Preview Questions
               </button>
@@ -583,18 +603,18 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
         return (
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Question Selection
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Select questions from the bank or generate new ones using AI
               </p>
             </div>
 
             {/* Suggestions Section */}
             {step === 'preview' && (
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center justify-between">
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-semibold text-primary mb-3 flex items-center justify-between">
                   <div className="flex items-center">
                     <Sparkles className="w-4 h-4 mr-2" />
                     {extractedSkills.length > 0
@@ -606,18 +626,18 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                 </h4>
 
                 {suggestedQuestions.length === 0 && !isLoadingSuggestions ? (
-                  <p className="text-sm text-gray-500 italic">No matching questions found in the bank.</p>
+                  <p className="text-sm text-muted-foreground italic">No matching questions found in the bank.</p>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {suggestedQuestions.map(q => {
                       const isAdded = previewData?.questions.some(pq => pq.id === q.id);
                       return (
-                        <div key={q.id} className="bg-white p-3 rounded border border-blue-200 flex justify-between items-start">
+                        <div key={q.id} className="bg-card p-3 rounded border border-primary/20 flex justify-between items-start">
                           <div className="flex-1 mr-2">
-                            <p className="text-sm font-medium text-gray-900 line-clamp-2">{q.text}</p>
+                            <p className="text-sm font-medium text-foreground line-clamp-2">{q.text}</p>
                             <div className="flex gap-2 mt-1">
-                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{q.type}</span>
-                              <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{q.difficulty}</span>
+                              <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{q.type}</span>
+                              <span className="text-xs bg-muted px-2 py-0.5 rounded text-muted-foreground">{q.difficulty}</span>
                             </div>
                           </div>
                           <button
@@ -633,8 +653,8 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                               });
                             }}
                             className={`px-3 py-1 text-xs font-medium rounded border ${isAdded
-                              ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
-                              : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
+                              ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900'
+                              : 'bg-card text-primary border-primary/20 hover:bg-muted'
                               }`}
                           >
                             {isAdded ? 'Added ✓' : 'Add'}
@@ -648,7 +668,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
             )}
 
             {/* Actions Bar */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center py-4 border-b border-gray-100">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center py-4 border-b border-border">
               <button
                 onClick={generateQuestionPreview}
                 disabled={isGeneratingPreview}
@@ -679,7 +699,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                     message: previewData?.message || 'Manual creation'
                   });
                 }}
-                className="flex-1 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium flex items-center justify-center"
+                className="flex-1 px-4 py-2 bg-card text-foreground border border-border rounded-md hover:bg-muted text-sm font-medium flex items-center justify-center"
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Add Custom Question
@@ -689,7 +709,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
             {/* Questions Builder / List */}
             {previewData && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm text-gray-600">
+                <div className="flex items-center justify-between p-2 bg-muted/50 rounded text-sm text-muted-foreground">
                   <span>Selected Questions: {previewData.questions.length}</span>
                   {previewData.questions.length === 0 && <span className="text-amber-600">Select or generate questions to proceed</span>}
                 </div>
@@ -711,9 +731,9 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                     id="saveToBank"
                     checked={saveToBank}
                     onChange={(e) => setSaveToBank(e.target.checked)}
-                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    className="h-4 w-4 text-primary focus:ring-primary border-input rounded"
                   />
-                  <label htmlFor="saveToBank" className="ml-2 block text-sm text-gray-900">
+                  <label htmlFor="saveToBank" className="ml-2 block text-sm text-foreground">
                     Save newly created questions to the Question Bank
                   </label>
                 </div>
@@ -724,7 +744,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
               <button
                 type="button"
                 onClick={() => setStep('upload')}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted"
               >
                 Back
               </button>
@@ -732,7 +752,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                 <button
                   type="button"
                   onClick={() => setStep('confirm')}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-secondary-dark"
                 >
                   Next: Confirm
                 </button>
@@ -745,34 +765,34 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
         return (
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Confirm Test Assignment
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Review the assignment details before finalizing
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-border">
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Test:</span>
-                <span className="text-sm text-gray-900">{test.title}</span>
+                <span className="text-sm font-medium text-muted-foreground">Test:</span>
+                <span className="text-sm text-foreground">{test.title}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Candidate:</span>
-                <span className="text-sm text-gray-900">{selectedCandidate?.name}</span>
+                <span className="text-sm font-medium text-muted-foreground">Candidate:</span>
+                <span className="text-sm text-foreground">{selectedCandidate?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Duration:</span>
-                <span className="text-sm text-gray-900">{test.duration} minutes</span>
+                <span className="text-sm font-medium text-muted-foreground">Duration:</span>
+                <span className="text-sm text-foreground">{test.duration} minutes</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Questions:</span>
-                <span className="text-sm text-gray-900">{previewData?.questions.length || 0} personalized</span>
+                <span className="text-sm font-medium text-muted-foreground">Questions:</span>
+                <span className="text-sm text-foreground">{previewData?.questions.length || 0} personalized</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-gray-700">Resume:</span>
-                <span className="text-sm text-gray-900">
+                <span className="text-sm font-medium text-muted-foreground">Resume:</span>
+                <span className="text-sm text-foreground">
                   {uploadedResume ? 'Newly uploaded' : 'Existing resume used'}
                 </span>
               </div>
@@ -782,7 +802,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
               <button
                 type="button"
                 onClick={() => setStep('preview')}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md shadow-sm text-sm font-medium text-foreground bg-card hover:bg-muted"
               >
                 Back to Preview
               </button>
@@ -804,12 +824,12 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
         <div className="p-6">
           {/* Header with steps */}
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Assign Test with Personalized Questions</h2>
+            <h2 className="text-xl font-semibold mb-4 text-foreground">Assign Test with Personalized Questions</h2>
             <div className="flex items-center space-x-4">
               {['select', 'upload', 'preview', 'confirm'].map((stepName, index) => (
                 <div key={stepName} className="flex items-center">
@@ -818,7 +838,7 @@ export default function EnhancedAssignTestDialog({ test, onClose, onSuccess }: P
                     }`}>
                     {index + 1}
                   </div>
-                  {index < 3 && <div className="w-8 h-0.5 bg-gray-200 mx-2" />}
+                  {index < 3 && <div className="w-8 h-0.5 bg-border mx-2" />}
                 </div>
               ))}
             </div>

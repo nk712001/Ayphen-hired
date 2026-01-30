@@ -13,6 +13,16 @@ export interface Test {
   createdBy: string;
   organizationId?: string | null;
   assignments: TestAssignment[];
+  questions?: Question[];
+}
+
+export interface Question {
+  id: string;
+  type: string;
+  text: string;
+  difficulty?: string;
+  order: number;
+  metadata?: any;
 }
 
 export interface Candidate {
@@ -40,4 +50,5 @@ export interface TestAssignment {
   completedAt?: Date;
   test: Test;
   candidate: Candidate;
+  matchScore?: number;
 }

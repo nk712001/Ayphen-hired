@@ -58,7 +58,7 @@ const Drawer = ({ open, onOpenChange, children }: DrawerProps) => {
   return (
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 transition-opacity"
         onClick={() => onOpenChange(false)}
       />
@@ -73,7 +73,7 @@ const DrawerContent = React.forwardRef<HTMLDivElement, DrawerContentProps>(
       <div
         ref={ref}
         className={cn(
-          "fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-lg transform transition-transform duration-300 ease-in-out",
+          "fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-lg transform transition-transform duration-300 ease-in-out",
           "flex flex-col",
           className
         )}
@@ -110,7 +110,7 @@ const DrawerTitle = React.forwardRef<HTMLHeadingElement, DrawerTitleProps>(
       <h2
         ref={ref}
         className={cn(
-          "text-lg font-semibold text-gray-900",
+          "text-lg font-semibold text-foreground",
           className
         )}
         {...props}
@@ -128,7 +128,7 @@ const DrawerDescription = React.forwardRef<HTMLParagraphElement, DrawerDescripti
       <p
         ref={ref}
         className={cn(
-          "text-sm text-gray-500",
+          "text-sm text-muted-foreground",
           className
         )}
         {...props}
@@ -146,7 +146,7 @@ const DrawerClose = React.forwardRef<HTMLButtonElement, DrawerCloseProps>(
       <button
         ref={ref}
         className={cn(
-          "rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:pointer-events-none",
+          "rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none",
           className
         )}
         {...props}

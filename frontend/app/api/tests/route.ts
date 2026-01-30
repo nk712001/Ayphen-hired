@@ -8,6 +8,8 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
+    const search = searchParams.get('search');
+    const sort = searchParams.get('sort'); // 'newest', 'oldest', 'a-z', 'z-a'
 
     if (!session?.user?.id || !session.user.companyId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -54,6 +56,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ tests: [] });
     }
 
+    // Apply Search Filter
+    if (search) {
+      whereClause.title = {
+        contains: search,
+        mode: 'insensitive',
+      };
+    }
+
+    // Determine Sort Order
+    let orderBy: any = { createdAt: 'desc' }; // Default: Newest
+    if (sort === 'oldest') {
+      orderBy = { createdAt: 'asc' };
+    } else if (sort === 'a-z') {
+      orderBy = { title: 'asc' };
+    } else if (sort === 'z-a') {
+      orderBy = { title: 'desc' };
+    }
+
     const tests = await prisma.test.findMany({
       where: whereClause,
       include: {
@@ -65,7 +85,7 @@ export async function GET(request: Request) {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: orderBy
     });
 
     return NextResponse.json({ tests });

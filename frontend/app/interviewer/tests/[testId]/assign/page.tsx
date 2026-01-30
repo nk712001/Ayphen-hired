@@ -33,8 +33,8 @@ export default function AssignTestPage({ params }: { params: { testId: string } 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Loading test...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading test...</div>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function AssignTestPage({ params }: { params: { testId: string } 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <EnhancedAssignTestDialog
         test={test}
         onClose={() => router.back()}

@@ -7,6 +7,7 @@ import { Camera, Mic, Monitor, CheckCircle, AlertCircle, QrCode, Calendar, Clock
 import QRCode from 'qrcode';
 import { MicrophoneTest } from '@/components/setup/MicrophoneTest';
 import TestSession from '@/components/tests/TestSession';
+import { useProctoring } from '@/lib/proctoring/proctoring-context';
 import { Loader2 } from 'lucide-react';
 
 interface AssessFlowProps {
@@ -36,9 +37,17 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
     // State: 'SETUP' | 'TEST'
     const [phase, setPhase] = useState<'SETUP' | 'TEST'>('SETUP');
 
-    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-    const [micStream, setMicStream] = useState<MediaStream | null>(null);
-    const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
+    // Use Proctoring Context
+    const {
+        startProctoring,
+        stream,
+        videoRef,
+        isCameraActive,
+        isScreenShared,
+        toggleScreenShare,
+        isMicrophoneActive
+    } = useProctoring();
+
     const [secondaryCameraQrUrl, setSecondaryCameraQrUrl] = useState<string>('');
     const [showSecondaryCameraQr, setShowSecondaryCameraQr] = useState(false);
     const [mobileConnected, setMobileConnected] = useState(false);
@@ -51,57 +60,26 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
 
     // Auto-setup camera on mount
     useEffect(() => {
-        setupCamera();
+        const init = async () => {
+            await startProctoring({ videoRequired: true });
+        };
+        init();
+
         if (test.requiresSecondaryCamera) {
             generateSecondaryCameraQr(test.id);
         }
     }, []);
 
     const setupCamera = async () => {
-        try {
-            const constraints = {
-                video: {
-                    width: { ideal: 640, max: 1280 },
-                    height: { ideal: 480, max: 720 },
-                    facingMode: 'user'
-                },
-                audio: true
-            };
-
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            setCameraStream(stream);
-            setMicStream(stream);
-            return true;
-        } catch (error) {
-            console.error('Camera setup failed:', error);
-            // Try with basic constraints
-            try {
-                const basicStream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
-                });
-                setCameraStream(basicStream);
-                setMicStream(basicStream);
-                return true;
-            } catch (basicError) {
-                console.error('Basic camera setup also failed:', basicError);
-                return false;
-            }
+        // Now handled by startProctoring effect
+        if (!isCameraActive) {
+            await startProctoring({ videoRequired: true });
         }
+        return true;
     };
 
     const setupScreenShare = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getDisplayMedia({
-                video: true,
-                audio: true
-            });
-            setScreenShareStream(stream);
-            return true;
-        } catch (error) {
-            console.error('Screen sharing setup failed:', error);
-            return false;
-        }
+        await toggleScreenShare();
     };
 
     const [networkIp, setNetworkIp] = useState<string>('');
@@ -179,9 +157,9 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
     };
 
     const handleStartTest = async () => {
-        // Final verification
-        const cameraOk = !!cameraStream;
-        const screenShareOk = !!screenShareStream;
+        // Final verification using Proctoring Context values
+        const cameraOk = !!stream && isCameraActive;
+        const screenShareOk = isScreenShared;
         const secondaryCameraOk = !test.requiresSecondaryCamera || mobileConnected;
         const micTestRequired = (test.conversationalQuestions || 0) > 0;
         const micTestOk = !micTestRequired || micTestComplete;
@@ -261,54 +239,54 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
 
     // RENDER: SETUP PHASE
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl mx-auto">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">{test.title}</h1>
-                    <p className="text-xl text-gray-500 max-w-2xl mx-auto">Please review the instructions and set up your environment.</p>
+                    <h1 className="text-4xl font-extrabold text-foreground mb-3 tracking-tight">{test.title}</h1>
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Please review the instructions and set up your environment.</p>
                 </div>
 
-                <div className="bg-white shadow-xl rounded-2xl overflow-hidden border-t-4 border-primary">
-                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                <div className="bg-card shadow-xl rounded-2xl overflow-hidden border-t-4 border-primary">
+                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
                         {/* Left Column: Info */}
                         <div className="p-8 lg:p-10 space-y-8">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                                <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
                                     <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">1</span>
                                     Overview
                                 </h2>
-                                <div className="bg-gray-50 rounded-xl p-6 space-y-4">
-                                    <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                                        <span className="text-gray-600 font-medium">Duration</span>
-                                        <span className="font-bold text-gray-900 flex items-center">
+                                <div className="bg-muted/50 rounded-xl p-6 space-y-4">
+                                    <div className="flex justify-between items-center pb-4 border-b border-border">
+                                        <span className="text-muted-foreground font-medium">Duration</span>
+                                        <span className="font-bold text-foreground flex items-center">
                                             <Clock className="w-4 h-4 mr-2 text-primary" />
                                             {test.duration} minutes
                                         </span>
                                     </div>
-                                    <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                                        <span className="text-gray-600 font-medium">Questions</span>
-                                        <span className="font-bold text-gray-900">
+                                    <div className="flex justify-between items-center pb-4 border-b border-border">
+                                        <span className="text-muted-foreground font-medium">Questions</span>
+                                        <span className="font-bold text-foreground">
                                             {test.questions.length} Total
                                         </span>
                                     </div>
                                     <div className="pt-2">
                                         <div className="grid grid-cols-3 gap-3">
                                             {test.mcqQuestions > 0 && (
-                                                <div className="text-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
+                                                <div className="text-center p-3 bg-card border border-border rounded-lg shadow-sm">
                                                     <div className="font-bold text-2xl text-primary">{test.mcqQuestions}</div>
-                                                    <div className="text-xs text-gray-500 font-medium mt-1">MCQ</div>
+                                                    <div className="text-xs text-muted-foreground font-medium mt-1">MCQ</div>
                                                 </div>
                                             )}
                                             {test.conversationalQuestions > 0 && (
-                                                <div className="text-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
+                                                <div className="text-center p-3 bg-card border border-border rounded-lg shadow-sm">
                                                     <div className="font-bold text-2xl text-primary">{test.conversationalQuestions}</div>
-                                                    <div className="text-xs text-gray-500 font-medium mt-1">Speaking</div>
+                                                    <div className="text-xs text-muted-foreground font-medium mt-1">Speaking</div>
                                                 </div>
                                             )}
                                             {test.codingQuestions > 0 && (
-                                                <div className="text-center p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
+                                                <div className="text-center p-3 bg-card border border-border rounded-lg shadow-sm">
                                                     <div className="font-bold text-2xl text-primary">{test.codingQuestions}</div>
-                                                    <div className="text-xs text-gray-500 font-medium mt-1">Coding</div>
+                                                    <div className="text-xs text-muted-foreground font-medium mt-1">Coding</div>
                                                 </div>
                                             )}
                                         </div>
@@ -318,32 +296,32 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
                         </div>
 
                         {/* Right Column: System Check */}
-                        <div className="p-8 lg:p-10 flex flex-col justify-between bg-gray-50/50">
+                        <div className="p-8 lg:p-10 flex flex-col justify-between bg-muted/30">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                                <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
                                     <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">2</span>
                                     System Check
                                 </h2>
 
                                 <div className="space-y-4">
                                     {/* Camera Check */}
-                                    <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${cameraStream ? 'bg-green-50 border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
+                                    <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${stream && isCameraActive ? 'bg-green-500/10 border-green-500/20 shadow-sm' : 'bg-card border-border'}`}>
                                         <div className="flex items-center space-x-4">
-                                            <div className={`p-2 rounded-full ${cameraStream ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                            <div className={`p-2 rounded-full ${stream && isCameraActive ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}>
                                                 <Camera className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <div className="font-medium text-gray-900">Webcam</div>
-                                                <div className="text-xs text-gray-500">{cameraStream ? 'Connected' : 'Access Required'}</div>
+                                                <div className="font-medium text-foreground">Webcam</div>
+                                                <div className="text-xs text-muted-foreground">{stream && isCameraActive ? 'Connected' : 'Access Required'}</div>
                                             </div>
                                         </div>
-                                        {cameraStream ? <CheckCircle className="w-6 h-6 text-green-500" /> : <div className="w-6 h-6 rounded-full border-2 border-gray-200"></div>}
+                                        {stream && isCameraActive ? <CheckCircle className="w-6 h-6 text-green-500" /> : <div className="w-6 h-6 rounded-full border-2 border-gray-200"></div>}
                                     </div>
 
                                     {/* Mic Check */}
-                                    <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${micStream && micTestComplete ? 'bg-green-50 border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
+                                    <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isMicrophoneActive && micTestComplete ? 'bg-green-50 border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
                                         <div className="flex items-center space-x-4">
-                                            <div className={`p-2 rounded-full ${micStream && micTestComplete ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                            <div className={`p-2 rounded-full ${isMicrophoneActive && micTestComplete ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                                                 <Mic className="w-5 h-5" />
                                             </div>
                                             <div>
@@ -356,22 +334,22 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
                                         {(test.conversationalQuestions || 0) > 0 && !micTestComplete ? (
                                             <button onClick={() => setShowMicTest(true)} className="px-3 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">Test</button>
                                         ) : (
-                                            micStream && micTestComplete && <CheckCircle className="w-6 h-6 text-green-500" />
+                                            isMicrophoneActive && micTestComplete && <CheckCircle className="w-6 h-6 text-green-500" />
                                         )}
                                     </div>
 
                                     {/* Screen Share Check */}
-                                    <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${screenShareStream ? 'bg-green-50 border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
+                                    <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isScreenShared ? 'bg-green-50 border-green-200 shadow-sm' : 'bg-white border-gray-200'}`}>
                                         <div className="flex items-center space-x-4">
-                                            <div className={`p-2 rounded-full ${screenShareStream ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                            <div className={`p-2 rounded-full ${isScreenShared ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                                                 <Monitor className="w-5 h-5" />
                                             </div>
                                             <div>
                                                 <div className="font-medium text-gray-900">Screen Share</div>
-                                                <div className="text-xs text-gray-500">{screenShareStream ? 'Active' : 'Required'}</div>
+                                                <div className="text-xs text-gray-500">{isScreenShared ? 'Active' : 'Required'}</div>
                                             </div>
                                         </div>
-                                        {!screenShareStream ? (
+                                        {!isScreenShared ? (
                                             <button onClick={setupScreenShare} className="px-3 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">Enable</button>
                                         ) : (
                                             <CheckCircle className="w-6 h-6 text-green-500" />
@@ -412,15 +390,13 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
                                 </div>
 
                                 {/* Camera Preview */}
-                                {cameraStream && (
+                                {stream && isCameraActive && (
                                     <div className="mt-6">
                                         <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden relative shadow-inner">
                                             <video
                                                 autoPlay
                                                 muted
-                                                ref={(video) => {
-                                                    if (video && cameraStream) video.srcObject = cameraStream;
-                                                }}
+                                                ref={videoRef}
                                                 className="w-full h-full object-cover transform scale-x-[-1]"
                                             />
                                             <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded backdrop-blur-sm">
@@ -449,8 +425,8 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
             </div>
 
             {showMicTest && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 shadow-2xl">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+                    <div className="bg-card text-card-foreground border border-border rounded-2xl p-6 max-w-2xl w-full shadow-2xl">
                         <MicrophoneTest
                             onComplete={() => {
                                 setMicTestComplete(true);
@@ -459,7 +435,7 @@ export default function AssessFlow({ test, assignment, token }: AssessFlowProps)
                         />
                         <button
                             onClick={() => setShowMicTest(false)}
-                            className="mt-4 px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                            className="mt-6 px-4 py-2 text-muted-foreground hover:text-foreground text-sm font-medium w-full sm:w-auto transition-colors"
                         >
                             Cancel
                         </button>

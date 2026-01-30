@@ -316,15 +316,15 @@ export default function QuestionSetsList() {
     };
 
     if (loading) {
-        return <div className="p-8 text-center text-gray-500">Loading question sets...</div>;
+        return <div className="p-8 text-center text-muted-foreground">Loading question sets...</div>;
     }
 
     if (sets.length === 0) {
         return (
-            <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <Layers className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900">No Question Sets Yet</h3>
-                <p className="text-gray-500 mt-2">Generate a questionnaire to create your first set.</p>
+            <div className="text-center py-12 bg-muted/50 rounded-lg border border-dashed border-border">
+                <Layers className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium text-foreground">No Question Sets Yet</h3>
+                <p className="text-muted-foreground mt-2">Generate a questionnaire to create your first set.</p>
             </div>
         );
     }
@@ -336,29 +336,29 @@ export default function QuestionSetsList() {
                     <div
                         key={set.id}
                         onClick={() => handleViewSet(set.id)}
-                        className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-6 cursor-pointer relative"
+                        className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow p-6 cursor-pointer relative"
                     >
                         {viewingSetId === set.id && (
-                            <div className="absolute inset-0 bg-white/50 flex items-center justify-center rounded-xl z-10">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-xl z-10">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                             </div>
                         )}
                         <div className="flex items-start justify-between mb-4">
-                            <div className="p-2 bg-blue-50 rounded-lg">
-                                <Layers className="h-6 w-6 text-blue-600" />
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <Layers className="h-6 w-6 text-primary" />
                             </div>
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${set.level === 'Easy' ? 'bg-green-100 text-green-800' :
-                                set.level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${set.level === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                                set.level === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                    'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                                 }`}>
                                 {set.level}
                             </span>
                         </div>
 
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{set.title}</h3>
-                        <p className="text-sm text-gray-500 mb-4 line-clamp-2">{set.description}</p>
+                        <h3 className="text-lg font-semibold text-card-foreground mb-2">{set.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{set.description}</p>
 
-                        <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
+                        <div className="flex items-center justify-between text-sm text-muted-foreground pt-4 border-t border-border">
                             <div className="flex items-center">
                                 <Hash className="h-4 w-4 mr-1" />
                                 <span>{set._count.questions} Questions</span>
@@ -376,14 +376,14 @@ export default function QuestionSetsList() {
                 <div className="fixed inset-0 z-50 overflow-y-auto">
                     <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                            <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={() => setSelectedSet(null)}></div>
+                            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedSet(null)}></div>
                         </div>
 
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <div className="flex justify-between items-center mb-4 border-b pb-3">
+                        <div className="inline-block align-bottom bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-border">
+                            <div className="bg-card px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="flex justify-between items-center mb-4 border-b border-border pb-3">
                                     <div className="flex-1 mr-4">
                                         {isEditingSet ? (
                                             <div className="space-y-3">
@@ -391,20 +391,20 @@ export default function QuestionSetsList() {
                                                     type="text"
                                                     value={editForm.title}
                                                     onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                                                    className="block w-full text-lg font-medium text-gray-900 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="block w-full text-lg font-medium bg-background text-foreground border-input rounded-md focus:ring-primary focus:border-primary"
                                                     placeholder="Set Title"
                                                 />
                                                 <textarea
                                                     value={editForm.description}
                                                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                                                    className="block w-full text-sm text-gray-500 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="block w-full text-sm bg-background text-foreground border-input rounded-md focus:ring-primary focus:border-primary"
                                                     rows={2}
                                                     placeholder="Description (optional)"
                                                 />
                                                 <select
                                                     value={editForm.level}
                                                     onChange={(e) => setEditForm({ ...editForm, level: e.target.value })}
-                                                    className="block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                                    className="block w-full text-sm bg-background text-foreground border-input rounded-md focus:ring-primary focus:border-primary"
                                                 >
                                                     <option value="Easy">Easy</option>
                                                     <option value="Medium">Medium</option>
@@ -414,14 +414,14 @@ export default function QuestionSetsList() {
                                                     <button
                                                         onClick={handleUpdateSet}
                                                         disabled={isUpdating}
-                                                        className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+                                                        className="inline-flex items-center px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-md hover:bg-primary/90 disabled:opacity-50"
                                                     >
                                                         <Save className="h-3 w-3 mr-1" />
                                                         Save
                                                     </button>
                                                     <button
                                                         onClick={() => setIsEditingSet(false)}
-                                                        className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-200"
+                                                        className="inline-flex items-center px-3 py-1.5 bg-muted text-muted-foreground text-xs font-medium rounded-md hover:bg-muted/80"
                                                     >
                                                         <X className="h-3 w-3 mr-1" />
                                                         Cancel
@@ -431,19 +431,19 @@ export default function QuestionSetsList() {
                                         ) : (
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="text-lg leading-6 font-medium text-gray-900">{selectedSet.title}</h3>
+                                                    <h3 className="text-lg leading-6 font-medium text-foreground">{selectedSet.title}</h3>
                                                     {!isAddingQuestions && (
                                                         <div className="flex gap-1">
                                                             <button
                                                                 onClick={() => setIsEditingSet(true)}
-                                                                className="text-gray-400 hover:text-gray-600 p-1"
+                                                                className="text-muted-foreground hover:text-foreground p-1"
                                                                 title="Edit Set Details"
                                                             >
                                                                 <Pencil className="h-4 w-4" />
                                                             </button>
                                                             <button
                                                                 onClick={handleDeleteSet}
-                                                                className="text-red-400 hover:text-red-600 p-1"
+                                                                className="text-muted-foreground hover:text-destructive p-1"
                                                                 title="Delete Question Set"
                                                             >
                                                                 <Trash2 className="h-4 w-4" />
@@ -451,7 +451,7 @@ export default function QuestionSetsList() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-500">{selectedSet.description}</p>
+                                                <p className="text-sm text-muted-foreground">{selectedSet.description}</p>
                                             </div>
                                         )}
                                     </div>
@@ -459,13 +459,13 @@ export default function QuestionSetsList() {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => setSelectedSet(null)}
-                                                className="px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                                className="px-3 py-1.5 border border-input text-xs font-medium rounded-md text-foreground bg-background hover:bg-accent"
                                             >
                                                 Close
                                             </button>
                                             <button
                                                 onClick={() => setIsAddingQuestions(true)}
-                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90"
                                             >
                                                 <Plus className="h-4 w-4 mr-1" />
                                                 Add Questions
@@ -474,7 +474,7 @@ export default function QuestionSetsList() {
                                     ) : !isEditingSet && (
                                         <button
                                             onClick={() => setIsAddingQuestions(false)}
-                                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                            className="inline-flex items-center px-3 py-1.5 border border-input text-xs font-medium rounded-md text-foreground bg-background hover:bg-accent"
                                         >
                                             <ArrowLeft className="h-4 w-4 mr-1" />
                                             Back to View
@@ -486,30 +486,30 @@ export default function QuestionSetsList() {
                                     {!isAddingQuestions ? (
                                         <ul className="space-y-4">
                                             {selectedSet.questions.length === 0 ? (
-                                                <p className="text-center text-gray-500 py-8">No questions in this set yet.</p>
+                                                <p className="text-center text-muted-foreground py-8">No questions in this set yet.</p>
                                             ) : (
                                                 selectedSet.questions.map((q, idx) => (
-                                                    <li key={q.id} className="bg-gray-50 p-3 rounded-md border border-gray-100">
+                                                    <li key={q.id} className="bg-muted/30 p-3 rounded-md border border-border">
                                                         <div className="flex justify-between items-start">
-                                                            <span className="text-xs font-mono text-gray-400 mr-2">#{idx + 1}</span>
+                                                            <span className="text-xs font-mono text-muted-foreground mr-2">#{idx + 1}</span>
                                                             <div className="flex-1">
-                                                                <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap">{q.text}</p>
+                                                                <p className="text-sm font-medium text-foreground whitespace-pre-wrap">{q.text}</p>
                                                                 <div className="mt-2 flex gap-2">
-                                                                    <span className="text-xs px-2 py-0.5 rounded bg-white border border-gray-200 text-gray-600 uppercase font-medium">{q.type?.replace('_', ' ') || 'Unknown'}</span>
-                                                                    <span className={`text-xs px-2 py-0.5 rounded border ${q.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-100' : q.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' : 'bg-red-50 text-red-700 border-red-100'}`}>{q.difficulty}</span>
+                                                                    <span className="text-xs px-2 py-0.5 rounded bg-background border border-border text-muted-foreground uppercase font-medium">{q.type?.replace('_', ' ') || 'Unknown'}</span>
+                                                                    <span className={`text-xs px-2 py-0.5 rounded border ${q.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900/30' : q.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-900/30' : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/30'}`}>{q.difficulty}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-start gap-1 ml-4">
                                                                 <button
                                                                     onClick={(e) => handleEditQuestion(e, q)}
-                                                                    className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                    className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
                                                                     title="Edit Question"
                                                                 >
                                                                     <Pencil className="h-3.5 w-3.5" />
                                                                 </button>
                                                                 <button
                                                                     onClick={(e) => handleDeleteQuestion(e, q.id)}
-                                                                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
                                                                     title="Delete Question"
                                                                 >
                                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -523,16 +523,16 @@ export default function QuestionSetsList() {
                                     ) : (
                                         <div className="space-y-4">
                                             {/* Mode Tabs */}
-                                            <div className="flex border-b border-gray-200 mb-4">
+                                            <div className="flex border-b border-border mb-4">
                                                 <button
                                                     onClick={() => setAddMode('library')}
-                                                    className={`py-2 px-4 text-sm font-medium border-b-2 ${addMode === 'library' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                                    className={`py-2 px-4 text-sm font-medium border-b-2 ${addMode === 'library' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                                                 >
                                                     From Question Bank
                                                 </button>
                                                 <button
                                                     onClick={() => setAddMode('manual')}
-                                                    className={`py-2 px-4 text-sm font-medium border-b-2 ${addMode === 'manual' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                                                    className={`py-2 px-4 text-sm font-medium border-b-2 ${addMode === 'manual' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                                                 >
                                                     Create New
                                                 </button>
@@ -541,14 +541,14 @@ export default function QuestionSetsList() {
                                             {addMode === 'library' ? (
                                                 <div className="space-y-4">
                                                     {/* Filters */}
-                                                    <div className="flex gap-3 flex-wrap bg-gray-50 p-3 rounded-lg">
+                                                    <div className="flex gap-3 flex-wrap bg-muted/50 p-3 rounded-lg border border-border">
                                                         <div className="flex-1 min-w-[200px]">
                                                             <div className="relative">
-                                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                                                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Search questions..."
-                                                                    className="pl-9 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                                    className="pl-9 w-full rounded-md bg-background border-input shadow-sm focus:border-primary focus:ring-primary text-sm text-foreground"
                                                                     value={filters.search}
                                                                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                                                                 />
@@ -557,18 +557,18 @@ export default function QuestionSetsList() {
                                                         {/* Job Role Filter */}
                                                         <div className="flex-1 min-w-[200px]">
                                                             <div className="relative">
-                                                                <Briefcase className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                                                                <Briefcase className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Job Role / Category..."
-                                                                    className="pl-9 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                                    className="pl-9 w-full rounded-md bg-background border-input shadow-sm focus:border-primary focus:ring-primary text-sm text-foreground"
                                                                     value={filters.category}
                                                                     onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                                                                 />
                                                             </div>
                                                         </div>
                                                         <select
-                                                            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                            className="rounded-md bg-background border-input shadow-sm focus:border-primary focus:ring-primary text-sm text-foreground"
                                                             value={filters.difficulty}
                                                             onChange={(e) => setFilters({ ...filters, difficulty: e.target.value })}
                                                         >
@@ -578,7 +578,7 @@ export default function QuestionSetsList() {
                                                             <option value="Hard">Hard</option>
                                                         </select>
                                                         <select
-                                                            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                                            className="rounded-md bg-background border-input shadow-sm focus:border-primary focus:ring-primary text-sm text-foreground"
                                                             value={filters.type}
                                                             onChange={(e) => setFilters({ ...filters, type: e.target.value })}
                                                         >
@@ -590,34 +590,34 @@ export default function QuestionSetsList() {
                                                     </div>
 
                                                     {/* Library List */}
-                                                    <div className="border rounded-md divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
+                                                    <div className="border border-border rounded-md divide-y divide-border max-h-[400px] overflow-y-auto bg-card">
                                                         {libraryLoading ? (
-                                                            <div className="p-8 text-center text-gray-500">Loading questions...</div>
+                                                            <div className="p-8 text-center text-muted-foreground">Loading questions...</div>
                                                         ) : libraryQuestions.length === 0 ? (
-                                                            <div className="p-8 text-center text-gray-500">No questions found matching criteria.</div>
+                                                            <div className="p-8 text-center text-muted-foreground">No questions found matching criteria.</div>
                                                         ) : (
                                                             libraryQuestions.map((q) => {
                                                                 const isSelected = selectedLibraryIds.has(q.id);
                                                                 return (
                                                                     <div
                                                                         key={q.id}
-                                                                        className={`p-3 flex items-start gap-3 hover:bg-gray-50 cursor-pointer ${isSelected ? 'bg-blue-50' : ''}`}
+                                                                        className={`p-3 flex items-start gap-3 hover:bg-muted/50 cursor-pointer ${isSelected ? 'bg-primary/10' : ''}`}
                                                                         onClick={() => toggleLibrarySelection(q.id)}
                                                                     >
                                                                         <div className="pt-0.5">
                                                                             {isSelected ? (
-                                                                                <CheckSquare className="h-5 w-5 text-blue-600" />
+                                                                                <CheckSquare className="h-5 w-5 text-primary" />
                                                                             ) : (
-                                                                                <Square className="h-5 w-5 text-gray-300" />
+                                                                                <Square className="h-5 w-5 text-muted-foreground" />
                                                                             )}
                                                                         </div>
                                                                         <div className="flex-1">
-                                                                            <p className="text-sm font-medium text-gray-900">{q.text}</p>
+                                                                            <p className="text-sm font-medium text-foreground">{q.text}</p>
                                                                             <div className="flex gap-2 mt-1">
-                                                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{q.type}</span>
-                                                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{q.difficulty}</span>
-                                                                                {q.category && <span className="text-xs text-gray-400">Role: {q.category}</span>}
-                                                                                {q.tags && <span className="text-xs text-gray-400">Tags: {q.tags}</span>}
+                                                                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">{q.type}</span>
+                                                                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">{q.difficulty}</span>
+                                                                                {q.category && <span className="text-xs text-muted-foreground">Role: {q.category}</span>}
+                                                                                {q.tags && <span className="text-xs text-muted-foreground">Tags: {q.tags}</span>}
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -625,7 +625,7 @@ export default function QuestionSetsList() {
                                                             })
                                                         )}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 text-right">
+                                                    <div className="text-xs text-muted-foreground text-right">
                                                         Selected: {selectedLibraryIds.size} questions
                                                     </div>
                                                 </div>
@@ -642,19 +642,19 @@ export default function QuestionSetsList() {
                             </div>
 
                             {isAddingQuestions && (
-                                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+                                <div className="bg-muted/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-border">
                                     <button
                                         type="button"
                                         onClick={handleSaveNewQuestions}
                                         disabled={isSaving || (addMode === 'manual' ? newQuestions.length === 0 : selectedLibraryIds.size === 0)}
-                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm"
+                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm"
                                     >
                                         {isSaving ? 'Saving...' : `Save ${addMode === 'manual' ? newQuestions.length : selectedLibraryIds.size} Questions`}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setIsAddingQuestions(false)}
-                                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                        className="mt-3 w-full inline-flex justify-center rounded-md border border-input shadow-sm px-4 py-2 bg-background text-base font-medium text-foreground hover:bg-accent sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                                     >
                                         Cancel
                                     </button>
@@ -668,12 +668,12 @@ export default function QuestionSetsList() {
                 <div className="fixed inset-0 z-[60] overflow-y-auto">
                     <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-                            <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={() => setIsEditingQuestion(false)}></div>
+                            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsEditingQuestion(false)}></div>
                         </div>
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Edit Question</h3>
+                        <div className="inline-block align-bottom bg-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full border border-border">
+                            <div className="bg-card px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <h3 className="text-lg leading-6 font-medium text-foreground mb-4">Edit Question</h3>
                                 <div className="mt-2">
                                     <ManualQuestionBuilder
                                         questions={questionToEdit}
@@ -682,19 +682,19 @@ export default function QuestionSetsList() {
                                     />
                                 </div>
                             </div>
-                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+                            <div className="bg-muted/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-border">
                                 <button
                                     type="button"
                                     onClick={handleSaveEditedQuestion}
                                     disabled={isUpdating}
-                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 disabled:opacity-50 sm:ml-3 sm:w-auto sm:text-sm"
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:ml-3 sm:w-auto sm:text-sm"
                                 >
                                     {isUpdating ? 'Saving...' : 'Save Changes'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setIsEditingQuestion(false)}
-                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-input shadow-sm px-4 py-2 bg-background text-base font-medium text-foreground hover:bg-accent sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                                 >
                                     Cancel
                                 </button>

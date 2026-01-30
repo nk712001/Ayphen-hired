@@ -94,11 +94,11 @@ export default function GenerateQuestionnaireModal({ isOpen, onClose }: Generate
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md shadow-lg">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">Generate Questionnaire</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                    <h2 className="text-xl font-bold text-foreground">Generate Questionnaire</h2>
+                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <X size={24} />
                     </button>
                 </div>
@@ -111,12 +111,12 @@ export default function GenerateQuestionnaireModal({ isOpen, onClose }: Generate
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             Questionnaire Title
                         </label>
                         <input
                             type="text"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                             placeholder="e.g. Junior Frontend Test"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
@@ -124,11 +124,11 @@ export default function GenerateQuestionnaireModal({ isOpen, onClose }: Generate
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             Target Level
                         </label>
                         <select
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                             value={level}
                             onChange={(e) => setLevel(e.target.value)}
                         >
@@ -139,25 +139,25 @@ export default function GenerateQuestionnaireModal({ isOpen, onClose }: Generate
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             Number of Questions
                         </label>
                         <input
                             type="number"
                             min="1"
                             max="50"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                             value={count}
                             onChange={(e) => setCount(Number(e.target.value))}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-foreground mb-1">
                             Organization
                         </label>
                         <select
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                             value={orgId}
                             onChange={(e) => setOrgId(e.target.value)}
                         >
@@ -173,7 +173,7 @@ export default function GenerateQuestionnaireModal({ isOpen, onClose }: Generate
                     <button
                         onClick={handleGenerate}
                         disabled={loading}
-                        className="w-full mt-4 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                        className="w-full mt-4 bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-secondary-dark disabled:opacity-50 flex items-center justify-center transition-colors"
                     >
                         {loading ? (
                             <>

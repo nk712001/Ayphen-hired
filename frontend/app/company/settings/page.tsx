@@ -15,6 +15,7 @@ interface CompanySettings {
   domain: string | null;
   primaryColor: string | null;
   logo: string | null;
+  darkLogo: string | null;
   subscriptionTier: string;
   subscriptionStatus: string;
   settings: {
@@ -35,10 +36,11 @@ export default function CompanySettingsPage() {
     emailDomain: '',
     primaryColor: '#de065d',
     logo: '',
+    darkLogo: '',
     customBranding: true
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'darkLogo') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -56,7 +58,7 @@ export default function CompanySettingsPage() {
 
     const loadingToast = toast({
       title: "Uploading...",
-      description: "Please wait while we upload your logo.",
+      description: `Please wait while we upload your ${field === 'darkLogo' ? 'dark mode ' : ''}logo.`,
     });
 
     try {
@@ -68,7 +70,7 @@ export default function CompanySettingsPage() {
       if (!res.ok) throw new Error('Upload failed');
 
       const data = await res.json();
-      setFormData(prev => ({ ...prev, logo: data.url }));
+      setFormData(prev => ({ ...prev, [field]: data.url }));
 
       toast({
         title: "Success",
@@ -99,6 +101,7 @@ export default function CompanySettingsPage() {
         emailDomain: data.settings?.emailDomain || '',
         primaryColor: data.primaryColor || '#de065d',
         logo: data.logo || '',
+        darkLogo: data.darkLogo || '',
         customBranding: data.settings?.customBranding ?? true
       });
     } catch (error) {
@@ -216,40 +219,81 @@ export default function CompanySettingsPage() {
                   <div className="p-6 bg-gray-50 rounded-xl border border-dashed border-gray-200 space-y-6">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
                       {/* Logo Upload */}
-                      <div className="space-y-3 flex-1">
-                        <Label className="text-sm text-gray-500 uppercase tracking-wider font-semibold">Logo</Label>
-                        <div className="flex items-center gap-4">
-                          <div className="relative w-24 h-24 rounded-xl border-2 border-white shadow-sm overflow-hidden bg-white flex items-center justify-center group">
-                            {formData.logo ? (
-                              <img
-                                src={formData.logo}
-                                alt="Logo"
-                                className="w-full h-full object-contain p-2"
-                              />
-                            ) : (
-                              <div className="text-gray-300">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
-                              </div>
-                            )}
+                      {/* Logo Upload */}
+                      <div className="space-y-6 flex-1">
+                        <div>
+                          <Label className="text-sm text-gray-500 uppercase tracking-wider font-semibold">Light Mode Logo</Label>
+                          <div className="flex items-center gap-4 mt-2">
+                            <div className="relative w-24 h-24 rounded-xl border-2 border-white shadow-sm overflow-hidden bg-white flex items-center justify-center group">
+                              {formData.logo ? (
+                                <img
+                                  src={formData.logo}
+                                  alt="Logo"
+                                  className="w-full h-full object-contain p-2"
+                                />
+                              ) : (
+                                <div className="text-gray-300">
+                                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <label className="block">
+                                <span className="sr-only">Choose logo</span>
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleFileChange(e, 'logo')}
+                                  className="block w-full text-sm text-gray-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-primary/10 file:text-primary
+                                        hover:file:bg-primary/20
+                                        cursor-pointer
+                                      "
+                                />
+                              </label>
+                              <p className="text-xs text-gray-400 mt-2">JPG, PNG or SVG. Max 5MB.</p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <label className="block">
-                              <span className="sr-only">Choose logo</span>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="block w-full text-sm text-gray-500
-                                      file:mr-4 file:py-2 file:px-4
-                                      file:rounded-full file:border-0
-                                      file:text-sm file:font-semibold
-                                      file:bg-primary/10 file:text-primary
-                                      hover:file:bg-primary/20
-                                      cursor-pointer
-                                    "
-                              />
-                            </label>
-                            <p className="text-xs text-gray-400 mt-2">JPG, PNG or SVG. Max 5MB.</p>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm text-gray-500 uppercase tracking-wider font-semibold">Dark Mode Logo</Label>
+                          <div className="flex items-center gap-4 mt-2">
+                            <div className="relative w-24 h-24 rounded-xl border-2 border-white shadow-sm overflow-hidden bg-gray-900 flex items-center justify-center group">
+                              {formData.darkLogo ? (
+                                <img
+                                  src={formData.darkLogo}
+                                  alt="Dark Mode Logo"
+                                  className="w-full h-full object-contain p-2"
+                                />
+                              ) : (
+                                <div className="text-gray-600">
+                                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <label className="block">
+                                <span className="sr-only">Choose dark logo</span>
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleFileChange(e, 'darkLogo')}
+                                  className="block w-full text-sm text-gray-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-primary/10 file:text-primary
+                                        hover:file:bg-primary/20
+                                        cursor-pointer
+                                      "
+                                />
+                              </label>
+                              <p className="text-xs text-gray-400 mt-2">For dark theme. JPG, PNG or SVG.</p>
+                            </div>
                           </div>
                         </div>
                       </div>

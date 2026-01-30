@@ -12,6 +12,7 @@ import {
     LogOut
 } from 'lucide-react';
 import SignOutButton from '@/components/SignOutButton';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default async function SuperAdminLayout({
     children,
@@ -63,6 +64,9 @@ export default async function SuperAdminLayout({
                 </nav>
 
                 <div className="p-4 border-t border-gray-100">
+                    <div className="mb-2 px-4">
+                        <ThemeToggle />
+                    </div>
                     <div className="flex items-center px-4 py-3 mb-2">
                         <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
                             {(session.user.name?.[0] || 'A').toUpperCase()}

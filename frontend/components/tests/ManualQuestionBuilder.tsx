@@ -163,15 +163,15 @@ export default function ManualQuestionBuilder({
       {/* Questions List */}
       <div className="space-y-4">
         {questions.map((question, index) => (
-          <div key={question.id} className="bg-white border border-gray-200 rounded-lg p-4">
+          <div key={question.id} className="bg-card border border-border rounded-lg p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-500">
+                <span className="text-sm font-medium text-muted-foreground">
                   Question {index + 1}
                 </span>
-                <span className={`px-2 py-1 text-xs rounded ${question.type === 'multiple_choice' ? 'bg-purple-100 text-purple-800' :
-                  question.type === 'essay' || question.type === 'short_answer' ? 'bg-green-100 text-green-800' :
-                    'bg-orange-100 text-orange-800'
+                <span className={`px-2 py-1 text-xs rounded ${question.type === 'multiple_choice' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                  question.type === 'essay' || question.type === 'short_answer' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                    'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
                   }`}>
                   {question.type.replace('_', ' ').toUpperCase()}
                 </span>
@@ -182,14 +182,14 @@ export default function ManualQuestionBuilder({
                 <button
                   onClick={() => moveQuestion(question.id, 'up')}
                   disabled={index === 0}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   <span>↑</span>
                 </button>
                 <button
                   onClick={() => moveQuestion(question.id, 'down')}
                   disabled={index === questions.length - 1}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   <span>↓</span>
                 </button>
@@ -197,7 +197,7 @@ export default function ManualQuestionBuilder({
                 {/* Delete button */}
                 <button
                   onClick={() => deleteQuestion(question.id)}
-                  className="p-1 text-red-400 hover:text-red-600"
+                  className="p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300"
                 >
                   <span>🗑️</span>
                 </button>
@@ -206,7 +206,7 @@ export default function ManualQuestionBuilder({
 
             {/* Question Text */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Question Text *
               </label>
               <textarea
@@ -214,20 +214,20 @@ export default function ManualQuestionBuilder({
                 onChange={(e) => updateQuestion(question.id, { text: e.target.value })}
                 placeholder="Enter your question here..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
 
             {/* Difficulty */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Difficulty
               </label>
               <select
                 value={question.difficulty}
                 onChange={(e) => updateQuestion(question.id, { difficulty: e.target.value as Question['difficulty'] })}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               >
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
@@ -242,15 +242,15 @@ export default function ManualQuestionBuilder({
                   type="checkbox"
                   checked={question.isTechnical ?? true}
                   onChange={(e) => updateQuestion(question.id, { isTechnical: e.target.checked })}
-                  className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300"
+                  className="rounded text-primary focus:ring-primary h-4 w-4 border-input bg-background"
                 />
-                <span className="text-sm font-medium text-gray-700">Technical Question</span>
+                <span className="text-sm font-medium text-foreground">Technical Question</span>
               </label>
             </div>
 
             {/* Category (Role) */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Category / Role
               </label>
               <input
@@ -258,18 +258,18 @@ export default function ManualQuestionBuilder({
                 value={question.category || ''}
                 onChange={(e) => updateQuestion(question.id, { category: e.target.value })}
                 placeholder="e.g. Frontend, Backend, DevOps"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             {/* Tags (Skills) */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Tags / Skills
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {(question.tags || []).map((tag, i) => (
-                  <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span key={i} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                     {tag}
                     <button
                       type="button"
@@ -277,7 +277,7 @@ export default function ManualQuestionBuilder({
                         const newTags = (question.tags || []).filter((_, index) => index !== i);
                         updateQuestion(question.id, { tags: newTags });
                       }}
-                      className="ml-1 text-blue-600 hover:text-blue-800"
+                      className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                     >
                       ×
                     </button>
@@ -298,11 +298,11 @@ export default function ManualQuestionBuilder({
                       }
                     }
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                 />
               </div>
               {/* Common Tags Suggestions */}
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-2 text-xs text-muted-foreground">
                 <span className="mr-2">Suggestions:</span>
                 {(suggestedTags.length > 0 ? suggestedTags : ['JavaScript', 'React', 'Node.js', 'Python', 'SQL', 'Git', 'Agile']).map(tag => (
                   <button
@@ -313,7 +313,7 @@ export default function ManualQuestionBuilder({
                         updateQuestion(question.id, { tags: [...(question.tags || []), tag] });
                       }
                     }}
-                    className="mr-2 hover:text-blue-600 underline"
+                    className="mr-2 hover:text-primary underline"
                   >
                     {tag}
                   </button>
@@ -325,13 +325,13 @@ export default function ManualQuestionBuilder({
             {question.type === 'multiple_choice' && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-foreground">
                     Answer Options *
                   </label>
                   <button
                     onClick={() => addMCQOption(question.id)}
                     disabled={(question.metadata?.options?.length || 0) >= 6}
-                    className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    className="text-sm text-primary hover:text-primary/80 disabled:opacity-50"
                   >
                     Add Option
                   </button>
@@ -346,20 +346,20 @@ export default function ManualQuestionBuilder({
                       onChange={() => updateQuestion(question.id, {
                         metadata: { ...question.metadata, correctAnswer: optionIndex }
                       })}
-                      className="text-blue-600"
+                      className="text-primary focus:ring-primary bg-background border-input"
                     />
                     <input
                       type="text"
                       value={option}
                       onChange={(e) => updateMCQOption(question.id, optionIndex, e.target.value)}
                       placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                       required
                     />
                     {question.metadata?.options && (question.metadata.options.length || 0) > 2 && (
                       <button
                         onClick={() => removeMCQOption(question.id, optionIndex)}
-                        className="p-1 text-red-400 hover:text-red-600"
+                        className="p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300"
                       >
                         <span>🗑️</span>
                       </button>
@@ -372,7 +372,7 @@ export default function ManualQuestionBuilder({
             {(question.type === 'essay' || question.type === 'short_answer') && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Minimum Words
                   </label>
                   <input
@@ -382,11 +382,11 @@ export default function ManualQuestionBuilder({
                       metadata: { ...question.metadata, minWords: parseInt(e.target.value) }
                     })}
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Maximum Words
                   </label>
                   <input
@@ -396,7 +396,7 @@ export default function ManualQuestionBuilder({
                       metadata: { ...question.metadata, maxWords: parseInt(e.target.value) }
                     })}
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   />
                 </div>
               </div>
@@ -405,7 +405,7 @@ export default function ManualQuestionBuilder({
             {question.type === 'code' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Programming Language
                   </label>
                   <select
@@ -413,7 +413,7 @@ export default function ManualQuestionBuilder({
                     onChange={(e) => updateQuestion(question.id, {
                       metadata: { ...question.metadata, language: e.target.value }
                     })}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                   >
                     <option value="javascript">JavaScript</option>
                     <option value="python">Python</option>
@@ -424,7 +424,7 @@ export default function ManualQuestionBuilder({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Starter Code (Optional)
                   </label>
                   <textarea
@@ -434,7 +434,7 @@ export default function ManualQuestionBuilder({
                     })}
                     placeholder="// Starter code for the candidate..."
                     rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
               </div>
@@ -444,14 +444,14 @@ export default function ManualQuestionBuilder({
       </div>
 
       {questions.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           <p className="mb-4">No questions added yet.</p>
           <p className="text-sm">Click one of the buttons above to add your first question.</p>
         </div>
       )}
 
       {questions.length >= maxQuestions && (
-        <div className="text-center py-4 text-orange-600 bg-orange-50 rounded-lg">
+        <div className="text-center py-4 text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-300 rounded-lg">
           <p>Maximum of {maxQuestions} questions reached.</p>
         </div>
       )}

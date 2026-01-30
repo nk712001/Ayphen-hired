@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await response.json();
+        console.log('📦 AI Service Response Payload:', JSON.stringify(result, null, 2));
         return NextResponse.json(result);
 
     } catch (error: any) {

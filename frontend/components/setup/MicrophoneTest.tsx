@@ -427,21 +427,21 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 p-4">
-      <h2 className="text-2xl font-semibold">Microphone Test</h2>
+    <div className="flex flex-col items-center gap-6 p-4 w-full">
+      <h2 className="text-2xl font-semibold text-foreground">Microphone Test</h2>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg w-full text-center">
           {error}
         </div>
       )}
 
       {step === 'intro' && (
         <div className="text-center">
-          <p className="mb-4">Let&apos;s test your microphone to ensure it&apos;s working properly.</p>
+          <p className="mb-4 text-muted-foreground">Let&apos;s test your microphone to ensure it&apos;s working properly.</p>
           <button
             onClick={() => setStep('permission')}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-medium transition-colors"
           >
             Start Test
           </button>
@@ -450,11 +450,11 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
 
       {step === 'permission' && (
         <div className="text-center">
-          <h3 className="text-xl mb-4">Microphone Access</h3>
-          <p className="mb-4">Click &quot;Start Test&quot; to begin the microphone test.</p>
+          <h3 className="text-xl mb-4 font-medium text-foreground">Microphone Access</h3>
+          <p className="mb-4 text-muted-foreground">Click &quot;Start Test&quot; to begin the microphone test.</p>
           <button
             onClick={() => setStep('quality')}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-medium transition-colors"
           >
             Start Microphone Test
           </button>
@@ -462,17 +462,17 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
       )}
 
       {(step === 'quality' || step === 'recognition') && (
-        <div className="text-center max-w-2xl">
+        <div className="text-center max-w-2xl w-full">
           {testSentence && (
-            <div className="mb-6">
-              <p className="text-gray-600 mb-2">📢 Please read this slogan aloud:</p>
-              <p className="text-lg font-medium">{testSentence}</p>
+            <div className="mb-6 bg-muted/30 p-6 rounded-xl border border-border">
+              <p className="text-muted-foreground mb-2 text-sm uppercase tracking-wide font-medium">📢 Please read this slogan aloud:</p>
+              <p className="text-2xl font-bold text-foreground">{testSentence}</p>
             </div>
           )}
 
           <div className="mb-4">
             {isRecording && (
-              <div className="text-red-500 mb-2">
+              <div className="text-destructive mb-3 font-medium animate-pulse">
                 ⏺ Recording... {recordingDuration.toFixed(1)}s
               </div>
             )}
@@ -480,12 +480,12 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
             <button
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isProcessing || !testSentence || !sessionReady}
-              className={`px-6 py-2 rounded ${isRecording
-                  ? 'bg-red-500 hover:bg-red-600'
-                  : isProcessing || !sessionReady
-                    ? 'bg-gray-400'
-                    : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
+              className={`px-8 py-3 rounded-full font-bold shadow-sm transition-all text-white ${isRecording
+                ? 'bg-destructive hover:bg-destructive/90'
+                : isProcessing || !sessionReady
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary/90'
+                }`}
             >
               {isProcessing ? (
                 'Processing...'
@@ -498,79 +498,83 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
           </div>
 
           {showResults && recognitionAccuracy > 0 && (
-            <div className="mt-6">
-              <h4 className="text-lg font-medium mb-2">Results</h4>
+            <div className="mt-8 space-y-6 animate-in fade-in duration-500">
+              <h4 className="text-lg font-semibold text-foreground border-b border-border pb-2">Analysis Results</h4>
 
               <div className="mb-4">
-                <p className="text-gray-600">Audio Quality</p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="flex justify-between mb-2">
+                  <p className="text-sm font-medium text-muted-foreground">Audio Quality</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {audioQuality >= 0.8
+                      ? 'Excellent'
+                      : audioQuality >= 0.6
+                        ? 'Fair'
+                        : 'Poor'}
+                  </p>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-3">
                   <div
-                    className={`h-2.5 rounded-full ${audioQuality >= 0.8
-                        ? 'bg-green-500'
-                        : audioQuality >= 0.6
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
+                    className={`h-3 rounded-full transition-all duration-1000 ${audioQuality >= 0.8
+                      ? 'bg-green-500'
+                      : audioQuality >= 0.6
+                        ? 'bg-yellow-500'
+                        : 'bg-destructive'
                       }`}
                     style={{ width: `${audioQuality * 100}%` }}
                   />
                 </div>
-                <p className="text-sm mt-1">
-                  {audioQuality >= 0.8
-                    ? '✓ Excellent'
-                    : audioQuality >= 0.6
-                      ? '⚠️ Fair'
-                      : '❌ Poor'}
-                </p>
               </div>
 
               <div className="mb-4">
-                <p className="text-gray-600">Recognition Accuracy</p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="flex justify-between mb-2">
+                  <p className="text-sm font-medium text-muted-foreground">Recognition Accuracy</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {(recognitionAccuracy * 100).toFixed(0)}%
+                  </p>
+                </div>
+                <div className="w-full bg-secondary rounded-full h-3">
                   <div
-                    className={`h-2.5 rounded-full ${recognitionAccuracy >= 0.8
-                        ? 'bg-green-500'
-                        : recognitionAccuracy >= 0.6
-                          ? 'bg-yellow-500'
-                          : 'bg-red-500'
+                    className={`h-3 rounded-full transition-all duration-1000 ${recognitionAccuracy >= 0.8
+                      ? 'bg-green-500'
+                      : recognitionAccuracy >= 0.6
+                        ? 'bg-yellow-500'
+                        : 'bg-destructive'
                       }`}
                     style={{ width: `${recognitionAccuracy * 100}%` }}
                   />
                 </div>
-                <p className="text-sm mt-1">
-                  {recognitionAccuracy >= 0.8
-                    ? '✓ Excellent'
-                    : recognitionAccuracy >= 0.6
-                      ? '⚠️ Fair'
-                      : '❌ Poor'}
-                </p>
               </div>
 
               {showResults && recognitionAccuracy > 0 && (
-                <div className="mt-4 text-left">
-                  <p className="text-gray-600 mb-2">📝 Reference Text:</p>
-                  <p className="mb-4 font-medium">{testSentence}</p>
+                <div className="mt-6 text-left bg-card border border-border rounded-xl p-5 shadow-sm">
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Original Text</p>
+                    <p className="font-medium text-foreground">{testSentence}</p>
+                  </div>
 
-                  <p className="text-gray-600 mb-2">🎤 AI Heard:</p>
-                  <p className="mb-4">{transcribedText}</p>
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI Heard</p>
+                    <p className="font-mono text-sm bg-muted p-2 rounded text-foreground">{transcribedText}</p>
+                  </div>
 
-                  <div className="mt-4">
+                  <div className="mt-4 pt-4 border-t border-border">
                     {recognitionAccuracy >= 0.95 && (
-                      <p className="text-green-600">✨ Perfect! Your speech was crystal clear.</p>
+                      <p className="text-green-500 font-medium flex items-center">✨ Perfect! Your speech was crystal clear.</p>
                     )}
                     {recognitionAccuracy >= 0.8 && recognitionAccuracy < 0.95 && (
-                      <p className="text-green-600">✓ Great job! Your speech was clear and accurate.</p>
+                      <p className="text-green-500 font-medium flex items-center">✓ Great job! Your speech was clear and accurate.</p>
                     )}
                     {recognitionAccuracy >= 0.6 && recognitionAccuracy < 0.8 && (
-                      <p className="text-yellow-600">⚠️ Fair. Try speaking more clearly and slowly.</p>
+                      <p className="text-yellow-500 font-medium flex items-center">⚠️ Fair. Try speaking more clearly and slowly.</p>
                     )}
                     {recognitionAccuracy < 0.6 && (
-                      <p className="text-red-600">❌ Please try again, speaking clearly and at a normal pace.</p>
+                      <p className="text-destructive font-medium flex items-center">❌ Please try again, speaking clearly and at a normal pace.</p>
                     )}
                   </div>
 
                   {feedback && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-gray-600">{feedback}</p>
+                    <div className="mt-4 p-3 bg-muted rounded-lg text-sm italic text-muted-foreground">
+                      {feedback}
                     </div>
                   )}
                 </div>
@@ -582,19 +586,22 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
 
       {step === 'complete' && (
         <div className="text-center">
-          <h3 className="text-xl mb-4">Test Complete</h3>
-          <p className="text-green-600 mb-4">✓ Your microphone is working properly!</p>
+          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">✓</span>
+          </div>
+          <h3 className="text-xl font-bold mb-2 text-foreground">Test Complete</h3>
+          <p className="text-muted-foreground mb-6">Your microphone is working properly!</p>
           <button
             onClick={onComplete}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-medium transition-colors w-full sm:w-auto"
           >
-            Continue
+            Continue to Assessment
           </button>
         </div>
       )}
 
       {step !== 'intro' && step !== 'complete' && (
-        <div className="mt-4">
+        <div className="mt-8 border-t border-border w-full pt-4">
           <button
             onClick={() => {
               setShowResults(false);
@@ -605,7 +612,7 @@ export const MicrophoneTest: React.FC<MicrophoneTestProps> = ({ onComplete }): J
               setError(null);
               setStep('intro');
             }}
-            className="text-gray-600 hover:text-gray-800"
+            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors flex items-center justify-center w-full"
           >
             ← Start Over
           </button>

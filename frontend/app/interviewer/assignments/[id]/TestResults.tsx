@@ -150,10 +150,10 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-card shadow rounded-lg border border-border">
         <div className="px-4 py-5 sm:p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Test Results</h2>
-          <p className="text-gray-600">Loading test results...</p>
+          <h2 className="text-lg font-medium text-foreground mb-4">Test Results</h2>
+          <p className="text-muted-foreground">Loading test results...</p>
         </div>
       </div>
     );
@@ -161,22 +161,22 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
 
   if (!results) {
     return (
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-card shadow rounded-lg border border-border">
         <div className="px-4 py-5 sm:p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Test Results</h2>
-          <p className="text-gray-600">No test results found for this assignment.</p>
+          <h2 className="text-lg font-medium text-foreground mb-4">Test Results</h2>
+          <p className="text-muted-foreground">No test results found for this assignment.</p>
         </div>
       </div>
     );
   }
 
-  const cheatRisk = violations ? getCheatRiskLevel(violations.cheatScore) : { level: 'Unknown', color: 'text-gray-600 bg-gray-50' };
+  const cheatRisk = violations ? getCheatRiskLevel(violations.cheatScore) : { level: 'Unknown', color: 'text-muted-foreground bg-muted' };
   const scorePercentage = maxTotalScore > 0 ? Math.round((totalScore / maxTotalScore) * 100) : 0;
 
   return (
     <div className="space-y-6">
       {/* Overall Summary */}
-      <div className="bg-white shadow rounded-lg border border-primary/20">
+      <div className="bg-card shadow rounded-lg border border-primary/20">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-lg font-medium text-primary mb-6">Test Results Summary</h2>
 
@@ -186,10 +186,10 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
               <div className={`text-3xl font-bold ${getScoreColor(totalScore, maxTotalScore)}`}>
                 {scorePercentage}%
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 {totalScore}/{maxTotalScore} points
               </div>
-              <div className="text-xs text-gray-500 mt-1">Overall Score</div>
+              <div className="text-xs text-muted-foreground/70 mt-1">Overall Score</div>
             </div>
 
             {/* Cheat Risk */}
@@ -198,7 +198,7 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
                 <AlertTriangle className="w-4 h-4 mr-1" />
                 {cheatRisk.level} Risk
               </div>
-              <div className="text-xs text-gray-500 mt-2">
+              <div className="text-xs text-muted-foreground/70 mt-2">
                 {violations ? `${violations.totalViolations} violations detected` : 'No violation data'}
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
                 <CheckCircle className="w-5 h-5 mr-1" />
                 Completed
               </div>
-              <div className="text-xs text-gray-500 mt-2">
+              <div className="text-xs text-muted-foreground/70 mt-2">
                 {results.completedAt ? new Date(results.completedAt).toLocaleString() : 'Recently'}
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
 
       {/* Violation Details */}
       {violations && violations.totalViolations > 0 && (
-        <div className="bg-white shadow rounded-lg border border-primary/20">
+        <div className="bg-card shadow rounded-lg border border-primary/20">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium text-primary mb-4">Proctoring Violations</h3>
 
@@ -236,9 +236,9 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
                 <div className="text-2xl font-bold text-primary">{violations.lowSeverity}</div>
                 <div className="text-sm text-primary/70">Low Severity</div>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded">
-                <div className="text-2xl font-bold text-gray-600">{violations.cheatScore}%</div>
-                <div className="text-sm text-gray-700">Cheat Score</div>
+              <div className="text-center p-3 bg-muted rounded">
+                <div className="text-2xl font-bold text-foreground">{violations.cheatScore}%</div>
+                <div className="text-sm text-muted-foreground">Cheat Score</div>
               </div>
             </div>
           </div>
@@ -246,30 +246,30 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
       )}
 
       {/* Question-by-Question Results */}
-      <div className="bg-white shadow rounded-lg border border-primary/20">
+      <div className="bg-card shadow rounded-lg border border-primary/20">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium text-primary mb-6">Question Analysis</h3>
 
           {/* Question Completion Summary */}
           {results.test && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">Completion Summary</h4>
+            <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+              <h4 className="font-medium text-foreground mb-2">Completion Summary</h4>
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">MCQ Questions:</span>
-                  <span className="ml-2 font-medium">
+                  <span className="text-muted-foreground">MCQ Questions:</span>
+                  <span className="ml-2 font-medium text-foreground">
                     {results.answers?.filter((a: any) => a.questionId.startsWith('mcq_')).length || 0} / {results.test.mcqQuestions || 0}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Conversational:</span>
-                  <span className="ml-2 font-medium">
+                  <span className="text-muted-foreground">Conversational:</span>
+                  <span className="ml-2 font-medium text-foreground">
                     {results.answers?.filter((a: any) => a.questionId.startsWith('conv_')).length || 0} / {results.test.conversationalQuestions || 0}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Coding:</span>
-                  <span className="ml-2 font-medium">
+                  <span className="text-muted-foreground">Coding:</span>
+                  <span className="ml-2 font-medium text-foreground">
                     {results.answers?.filter((a: any) => a.questionId.startsWith('code_')).length || 0} / {results.test.codingQuestions || 0}
                   </span>
                 </div>
@@ -313,13 +313,33 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
               }
 
               return questionsToDisplay.map((question: any, index: number) => {
-                // Try to find answer by ID first, then fallback to order matching
+                // IMPROVED MATCHING LOGIC:
+                // 1. Try exact ID match first
                 let answer = results.answers?.find((a: any) => a.questionId === question.id);
 
-                if (!answer && question.order) {
-                  // Fallback: Match by question order within the test
-                  // The nested question object in answer usually preserves the original order
-                  answer = results.answers?.find((a: any) => a.question?.order === question.order);
+                // 2. If no exact ID match, try matching by the nested question object's ID
+                if (!answer) {
+                  answer = results.answers?.find((a: any) => a.question?.id === question.id);
+                }
+
+                // 3. If still no match and we have order, match by order
+                // BUT ONLY if the order hasn't already been claimed by another question with exact ID match
+                if (!answer && question.order !== undefined && question.order !== null) {
+                  // Get all answers that have already been matched by ID
+                  const matchedAnswerIds = new Set();
+                  questionsToDisplay.forEach((q: any) => {
+                    const matched = results.answers?.find((a: any) =>
+                      a.questionId === q.id || a.question?.id === q.id
+                    );
+                    if (matched) matchedAnswerIds.add(matched.questionId);
+                  });
+
+                  // Find answer by order that hasn't been claimed yet
+                  answer = results.answers?.find((a: any) => {
+                    const matchesOrder = a.question?.order === question.order;
+                    const notClaimed = !matchedAnswerIds.has(a.questionId);
+                    return matchesOrder && notClaimed;
+                  });
                 }
 
                 // Try to find score by ID first, then fallback to finding via the matched answer
@@ -344,12 +364,12 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
                   <div key={question.id} className="border-l-4 border-primary/30 pl-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 flex items-center flex-wrap gap-2">
+                        <h4 className="font-medium text-foreground flex items-center flex-wrap gap-2">
                           Question {index + 1}: {question.type || 'Unknown'}
-                          {!answer && <span className="text-red-500 text-sm">(Not Answered)</span>}
+                          {!answer && <span className="text-red-500 dark:text-red-400 text-sm">(Not Answered)</span>}
                           {statusBadge}
                         </h4>
-                        <p className="text-gray-700 mt-1">
+                        <p className="text-muted-foreground mt-1">
                           {question.text || 'Question text not available'}
                         </p>
                       </div>
@@ -360,23 +380,23 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
                             <div className={`text-lg font-bold ${getScoreColor(answerScore.score, answerScore.maxScore)}`}>
                               {answerScore.score}/{answerScore.maxScore}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {Math.round((answerScore.score / answerScore.maxScore) * 100)}%
                             </div>
                           </>
                         ) : (
-                          <div className="text-lg font-bold text-gray-400">
+                          <div className="text-lg font-bold text-muted-foreground/50">
                             -/-
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg mb-3">
-                      <h5 className="font-medium text-sm text-gray-600 mb-2">Candidate Answer:</h5>
-                      <div className="text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto">
-                        {answer?.status === 'SKIPPED' ? <span className="text-gray-400 italic">Question was skipped by candidate</span> :
-                          answer?.status === 'IRRELEVANT' ? <span className="text-gray-400 italic">Marked as irrelevant by candidate</span> :
+                    <div className="bg-muted/50 p-4 rounded-lg mb-3 border border-border">
+                      <h5 className="font-medium text-sm text-muted-foreground mb-2">Candidate Answer:</h5>
+                      <div className="text-foreground whitespace-pre-wrap max-h-40 overflow-y-auto">
+                        {answer?.status === 'SKIPPED' ? <span className="text-muted-foreground/70 italic">Question was skipped by candidate</span> :
+                          answer?.status === 'IRRELEVANT' ? <span className="text-muted-foreground/70 italic">Marked as irrelevant by candidate</span> :
                             answer?.content && answer.content.trim().length > 0 ? answer.content : 'No answer provided'}
                       </div>
                       {answer?.recordingUrl && (
@@ -388,8 +408,8 @@ export default function TestResults({ assignmentId }: TestResultsProps) {
                       )}
                       {answer?.codeSubmission && (
                         <div className="mt-2">
-                          <h6 className="font-medium text-sm text-gray-600 mb-1">Code Submission:</h6>
-                          <pre className="bg-gray-800 text-green-400 p-3 rounded text-sm overflow-x-auto">
+                          <h6 className="font-medium text-sm text-muted-foreground mb-1">Code Submission:</h6>
+                          <pre className="bg-card border border-border text-foreground p-3 rounded text-sm overflow-x-auto">
                             <code>{answer.codeSubmission}</code>
                           </pre>
                         </div>

@@ -65,16 +65,35 @@ export default function TestSession({
   const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining);
   const [isTimeUp, setIsTimeUp] = useState(false);
 
-  // Access proctoring context to stop cameras on submission
-  const { stopProctoring } = useProctoring();
+  // Access proctoring context
+  const {
+    stopProctoring,
+    setTestAssignmentId,
+    videoRef,
+    secondaryVideoRef,
+    stream,
+    secondaryStream
+  } = useProctoring();
 
   useEffect(() => {
     console.log('TestSession mounted with ID:', initialAttemptId);
-  }, [initialAttemptId]);
+    // Set the assignment ID so violations can be saved
+    setTestAssignmentId(initialAttemptId);
+
+    // Re-attach streams to video elements if they exist
+    // This is necessary because we rendered new video elements in this component
+    if (videoRef.current && stream) {
+      console.log('Re-attaching primary stream to video ref');
+      videoRef.current.srcObject = stream;
+    }
+    if (secondaryVideoRef.current && secondaryStream) {
+      console.log('Re-attaching secondary stream to video ref');
+      secondaryVideoRef.current.srcObject = secondaryStream;
+    }
+  }, [initialAttemptId, setTestAssignmentId, stream, secondaryStream]);
 
   const currentQuestion = test.questions[currentQuestionIndex];
 
-  // Cleanup cameras when component unmounts (user navigates away)
   // Cleanup cameras when component unmounts (user navigates away)
   // Use a ref to hold the latest stopProctoring function to avoid re-triggering cleanup on dependency change
   const stopProctoringRef = useRef(stopProctoring);
@@ -303,23 +322,23 @@ export default function TestSession({
   const isLastQuestion = currentQuestionIndex === test.questions.length - 1;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+      <header className="bg-card border-b border-border sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold mr-3">
               T
             </div>
             <div>
-              <h1 className="text-sm font-bold text-gray-900 leading-tight">{test.title}</h1>
-              <p className="text-xs text-gray-500">Candidate Session</p>
+              <h1 className="text-sm font-bold text-foreground leading-tight">{test.title}</h1>
+              <p className="text-xs text-muted-foreground">Candidate Session</p>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-              <CheckCircle className="w-3 h-3 text-green-500 mr-2" />
+            <div className="hidden md:flex items-center text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
+              <CheckCircle className="w-3 h-3 text-green-500 dark:text-green-400 mr-2" />
               Proctoring Active
             </div>
             <TestTimer
@@ -336,29 +355,29 @@ export default function TestSession({
           {/* Main Question Area */}
           <div className="flex-1 min-w-0">
             {/* Question Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-              <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden mb-6">
+              <div className="bg-muted/50 px-6 py-4 border-b border-border flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-semibold text-primary uppercase tracking-wider">
                     Question {currentQuestionIndex + 1}
                   </span>
-                  <span className="text-gray-300">|</span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-border">|</span>
+                  <span className="text-sm text-muted-foreground">
                     {test.questions.length} Total
                   </span>
                 </div>
 
                 <div className="flex items-center space-x-3">
                   {test.questions[currentQuestionIndex].difficulty && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium border border-gray-200">
+                    <span className="px-2.5 py-0.5 rounded-full bg-muted text-foreground text-xs font-medium border border-border">
                       {test.questions[currentQuestionIndex].difficulty}
                     </span>
                   )}
                   <button
                     onClick={toggleFlag}
                     className={`flex items-center text-xs font-medium px-3 py-1.5 rounded-lg transition-colors border ${isFlagged
-                      ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                      : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                      ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20'
+                      : 'bg-card text-muted-foreground border-border hover:bg-muted'
                       }`}
                   >
                     <Flag className={`w-3 h-3 mr-1.5 ${isFlagged ? 'fill-current' : ''}`} />
@@ -375,17 +394,17 @@ export default function TestSession({
                 />
               </div>
 
-              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex flex-wrap justify-between items-center gap-4">
+              <div className="bg-muted/50 px-6 py-4 border-t border-border flex flex-wrap justify-between items-center gap-4">
                 <div className="flex space-x-3">
                   <button
                     onClick={handleSkip}
-                    className="text-sm text-gray-500 hover:text-primary font-medium transition-colors"
+                    className="text-sm text-muted-foreground hover:text-primary font-medium transition-colors"
                   >
                     Skip
                   </button>
                   <button
                     onClick={handleIrrelevant}
-                    className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-sm text-muted-foreground/70 hover:text-muted-foreground transition-colors"
                   >
                     Mark Irrelevant
                   </button>
@@ -396,7 +415,7 @@ export default function TestSession({
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={currentQuestionIndex === 0}
-                    className="bg-white hover:bg-gray-50 border-gray-200 text-gray-700"
+                    className="bg-card hover:bg-muted border-border text-foreground"
                   >
                     Previous
                   </Button>
@@ -428,9 +447,9 @@ export default function TestSession({
           {/* Sidebar Navigation */}
           <div className="lg:w-72 flex-shrink-0">
             <div className="sticky top-24 space-y-6">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-4 border-b border-gray-100 bg-gray-50">
-                  <h3 className="font-semibold text-gray-900 text-sm">Question Navigator</h3>
+              <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                <div className="p-4 border-b border-border bg-muted/50">
+                  <h3 className="font-semibold text-foreground text-sm">Question Navigator</h3>
                 </div>
                 <div className="p-4">
                   <TestNavigation
@@ -441,18 +460,18 @@ export default function TestSession({
                     onQuestionSelect={goToQuestion}
                   />
                 </div>
-                <div className="bg-gray-50 p-3 text-xs text-center border-t border-gray-100 flex justify-center space-x-4">
+                <div className="bg-muted/50 p-3 text-xs text-center border-t border-border flex justify-center space-x-4">
                   <div className="flex items-center">
                     <div className="w-2 h-2 rounded-full bg-primary mr-1.5"></div>
-                    <span className="text-gray-500">Current</span>
+                    <span className="text-muted-foreground">Current</span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></div>
-                    <span className="text-gray-500">Answered</span>
+                    <div className="w-2 h-2 rounded-full bg-green-500 dark:bg-green-400 mr-1.5"></div>
+                    <span className="text-muted-foreground">Answered</span>
                   </div>
                   <div className="flex items-center">
                     <div className="w-2 h-2 rounded-full bg-yellow-400 mr-1.5"></div>
-                    <span className="text-gray-500">Flagged</span>
+                    <span className="text-muted-foreground">Flagged</span>
                   </div>
                 </div>
               </div>
@@ -468,7 +487,7 @@ export default function TestSession({
               )}
 
               <div className="text-center">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground/70">
                   Need help? Contact support via the dashboard.
                 </p>
               </div>
@@ -476,6 +495,24 @@ export default function TestSession({
           </div>
         </div>
       </main>
+
+      {/* Hidden Proctoring Videos - Required for Frame Capture */}
+      <div className="fixed bottom-4 right-4 z-50 pointer-events-none opacity-0">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-48 h-36 bg-black"
+        />
+        <video
+          ref={secondaryVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-48 h-36 bg-black mt-2"
+        />
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function AdminLayout({
   children,
@@ -125,13 +126,16 @@ export default function AdminLayout({
                       <div className="text-xs text-gray-500">Administrator</div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/auth/admin/login' })}
-                    className="flex items-center text-gray-400 hover:text-red-500 transition-all duration-200 p-2 rounded-xl hover:bg-red-50 hover:shadow-md"
-                    title="Sign out"
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <ThemeToggle />
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/auth/admin/login' })}
+                      className="flex items-center text-gray-400 hover:text-red-500 transition-all duration-200 p-2 rounded-xl hover:bg-red-50 hover:shadow-md"
+                      title="Sign out"
+                    >
+                      <LogOut className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

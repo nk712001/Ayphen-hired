@@ -47,11 +47,11 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="bg-card rounded-xl p-8 shadow-sm border border-border">
           <div className="flex items-center space-x-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="text-gray-700 font-medium">Loading test details...</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="text-muted-foreground font-medium">Loading test details...</span>
           </div>
         </div>
       </div>
@@ -60,11 +60,11 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
 
   if (!test) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200 text-center">
-          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Test Not Found</h3>
-          <p className="text-gray-600">The test could not be loaded. Please check the console for errors.</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="bg-card rounded-xl p-8 shadow-sm border border-border text-center">
+          <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">Test Not Found</h3>
+          <p className="text-muted-foreground">The test could not be loaded. Please check the console for errors.</p>
         </div>
       </div>
     );
@@ -80,28 +80,28 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
 
   return (
     <ProctoringProvider>
-      <div className="min-h-screen bg-gray-50 p-8">
+      <div className="min-h-screen bg-background p-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
               <button
                 onClick={() => router.back()}
-                className="flex items-center text-gray-500 hover:text-gray-900 mb-2 transition-colors"
+                className="flex items-center text-muted-foreground hover:text-foreground mb-2 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Tests
               </button>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{test.title}</h1>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium border ${(test as any).status === 'Published'
-                  ? 'bg-green-50 text-green-700 border-green-200'
-                  : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                  ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20'
+                  : 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20'
                   }`}>
                   {(test as any).status || 'Draft'}
                 </span>
               </div>
-              <p className="text-gray-500 mt-1 flex items-center gap-2 text-sm">
+              <p className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
                 <Calendar className="w-4 h-4" />
                 Created {new Date(test.createdAt).toLocaleDateString()}
               </p>
@@ -110,14 +110,14 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
             <div className="flex items-center gap-3">
               <button
                 onClick={() => router.push(`/interviewer/tests/${params.testId}/preview`)}
-                className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                className="flex items-center px-4 py-2 text-foreground bg-background border border-border rounded-lg hover:bg-muted transition-colors shadow-sm"
               >
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
               </button>
               <button
                 onClick={() => setShowQuestionManager(true)}
-                className="flex items-center px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                className="flex items-center px-4 py-2 text-primary-foreground bg-primary rounded-lg hover:bg-secondary-dark transition-colors shadow-sm"
               >
                 <Edit3 className="w-4 h-4 mr-2" />
                 Edit Questions
@@ -130,68 +130,68 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
             <div className="lg:col-span-2 space-y-6">
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                  <p className="text-sm font-medium text-gray-500 mb-1">Duration</p>
+                <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Duration</p>
                   <div className="flex items-end gap-2">
-                    <span className="text-2xl font-bold text-gray-900">{test.duration}</span>
-                    <span className="text-sm text-gray-500 mb-1">mins</span>
+                    <span className="text-2xl font-bold text-foreground">{test.duration}</span>
+                    <span className="text-sm text-muted-foreground mb-1">mins</span>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                  <p className="text-sm font-medium text-gray-500 mb-1">Questions</p>
+                <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Questions</p>
                   <div className="flex items-end gap-2">
-                    <span className="text-2xl font-bold text-gray-900">{questionStats.total}</span>
-                    <span className="text-sm text-gray-500 mb-1">total</span>
+                    <span className="text-2xl font-bold text-foreground">{questionStats.total}</span>
+                    <span className="text-sm text-muted-foreground mb-1">total</span>
                   </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                  <p className="text-sm font-medium text-gray-500 mb-1">Attempts</p>
+                <div className="bg-card p-4 rounded-xl border border-border shadow-sm">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Attempts</p>
                   <div className="flex items-end gap-2">
-                    <span className="text-2xl font-bold text-gray-900">{test.assignments?.filter(a => a.status === 'completed').length || 0}</span>
-                    <span className="text-sm text-gray-500 mb-1">completed</span>
+                    <span className="text-2xl font-bold text-foreground">{test.assignments?.filter(a => a.status === 'completed').length || 0}</span>
+                    <span className="text-sm text-muted-foreground mb-1">completed</span>
                   </div>
                 </div>
               </div>
 
               {/* Candidates Section */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-border flex justify-between items-center">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900">Candidates</h2>
-                    <p className="text-sm text-gray-500">Manage test assignments</p>
+                    <h2 className="text-lg font-bold text-foreground">Candidates</h2>
+                    <p className="text-sm text-muted-foreground">Manage test assignments</p>
                   </div>
                   <button
                     onClick={() => router.push(`/interviewer/tests/${test.id}/assign`)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                    className="text-sm text-primary hover:text-primary/90 font-medium flex items-center gap-1"
                   >
                     <UserPlus className="w-4 h-4" />
                     Invite Candidate
                   </button>
                 </div>
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-border">
                   {(!test.assignments || test.assignments.length === 0) ? (
-                    <div className="p-8 text-center bg-gray-50">
-                      <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500">No candidates invited yet.</p>
+                    <div className="p-8 text-center bg-muted/30">
+                      <Users className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                      <p className="text-muted-foreground">No candidates invited yet.</p>
                     </div>
                   ) : (
                     test.assignments.map((assignment: any) => (
-                      <div key={assignment.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div key={assignment.id} className="p-4 hover:bg-muted/50 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                            <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
                               {assignment.candidate.name.charAt(0)}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{assignment.candidate.name}</p>
-                              <p className="text-sm text-gray-500">{assignment.candidate.email}</p>
+                              <p className="font-medium text-foreground">{assignment.candidate.name}</p>
+                              <p className="text-sm text-muted-foreground">{assignment.candidate.email}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className={`px-2 py-1 text-xs rounded-md font-medium ${assignment.status === 'completed' ? 'bg-green-100 text-green-700' :
-                              assignment.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                                assignment.isScheduled ? 'bg-purple-100 text-purple-700' :
-                                  'bg-gray-100 text-gray-600'
+                            <span className={`px-2 py-1 text-xs rounded-md font-medium ${assignment.status === 'completed' ? 'bg-green-500/10 text-green-700 dark:text-green-400' :
+                              assignment.status === 'in_progress' ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400' :
+                                assignment.isScheduled ? 'bg-purple-500/10 text-purple-700 dark:text-purple-400' :
+                                  'bg-gray-500/10 text-gray-600 dark:text-gray-400'
                               }`}>
                               {assignment.isScheduled && assignment.status === 'pending' ? 'Scheduled' : assignment.status.replace('_', ' ')}
                             </span>
@@ -203,7 +203,7 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
                                   setSelectedAssignment(assignment);
                                   setShowScheduleDialog(true);
                                 }}
-                                className="flex items-center space-x-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
+                                className="flex items-center space-x-1 px-3 py-2 bg-background border border-border text-foreground rounded-lg hover:bg-muted transition-colors text-xs font-medium"
                               >
                                 <CalendarClock className="h-3 w-3" />
                                 <span>Schedule</span>
@@ -217,7 +217,7 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
                                   setSelectedAssignment(assignment);
                                   setShowScheduleDialog(true);
                                 }}
-                                className="flex items-center space-x-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
+                                className="flex items-center space-x-1 px-3 py-2 bg-background border border-border text-foreground rounded-lg hover:bg-muted transition-colors text-xs font-medium"
                               >
                                 <CalendarClock className="h-3 w-3" />
                                 <span>Reschedule</span>
@@ -227,7 +227,7 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
                             {assignment.status === 'completed' && (
                               <button
                                 onClick={() => router.push(`/interviewer/assignments/${assignment.id}`)}
-                                className="flex items-center space-x-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
+                                className="flex items-center space-x-1 px-3 py-2 bg-muted text-foreground rounded-lg hover:bg-muted/80 transition-colors text-xs font-medium"
                               >
                                 <BarChart3 className="h-3 w-3" />
                                 <span>Results</span>
@@ -238,8 +238,8 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
 
                         {/* Show scheduled time if scheduled */}
                         {assignment.isScheduled && assignment.scheduledStartTime && assignment.scheduledEndTime && (
-                          <div className="ml-13 mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                            <div className="flex items-center space-x-4 text-xs text-purple-800">
+                          <div className="ml-13 mt-2 p-3 bg-purple-500/5 border border-purple-500/10 rounded-lg">
+                            <div className="flex items-center space-x-4 text-xs text-purple-700 dark:text-purple-400">
                               <div className="flex items-center space-x-1">
                                 <Calendar className="h-3 w-3" />
                                 <span>Opens: {new Date(assignment.scheduledStartTime).toLocaleString()}</span>
@@ -260,33 +260,33 @@ export default function TestDetailsPage({ params }: { params: { testId: string }
 
             {/* Sidebar - 1 Column */}
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Settings className="w-4 h-4 text-gray-500" />
+              <div className="bg-card rounded-xl border border-border shadow-sm p-6">
+                <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-muted-foreground" />
                   Configuration
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">Proctoring</span>
-                    <span className="text-sm font-medium text-gray-900">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <span className="text-sm text-muted-foreground">Proctoring</span>
+                    <span className="text-sm font-medium text-foreground">
                       {test.requiresSecondaryCamera ? 'Secondary Camera' : 'Standard'}
                     </span>
                   </div>
 
-                  <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Question Mix</p>
+                  <div className="p-3 bg-muted/30 rounded-lg space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Question Mix</p>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Multiple Choice</span>
-                      <span className="font-medium">{questionStats.mcq}</span>
+                      <span className="text-muted-foreground">Multiple Choice</span>
+                      <span className="font-medium text-foreground">{questionStats.mcq}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Coding</span>
-                      <span className="font-medium">{questionStats.coding}</span>
+                      <span className="text-muted-foreground">Coding</span>
+                      <span className="font-medium text-foreground">{questionStats.coding}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Video Response</span>
-                      <span className="font-medium">{questionStats.video}</span>
+                      <span className="text-muted-foreground">Video Response</span>
+                      <span className="font-medium text-foreground">{questionStats.video}</span>
                     </div>
                   </div>
                 </div>

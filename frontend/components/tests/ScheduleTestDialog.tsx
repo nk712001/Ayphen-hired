@@ -87,35 +87,35 @@ export default function ScheduleTestDialog({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between p-6 border-b border-border">
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">Schedule Test</h2>
-                        <p className="text-sm text-gray-500 mt-1">Set a time window for the candidate to take the test</p>
+                        <h2 className="text-xl font-semibold text-foreground">Schedule Test</h2>
+                        <p className="text-sm text-muted-foreground mt-1">Set a time window for the candidate to take the test</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-2 rounded-lg hover:bg-muted transition-colors"
                     >
-                        <X className="h-5 w-5 text-gray-500" />
+                        <X className="h-5 w-5 text-muted-foreground" />
                     </button>
                 </div>
 
                 {/* Content */}
                 <form onSubmit={handleSubmit} className="p-6">
                     {/* Test Info */}
-                    <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+                    <div className="bg-muted/50 rounded-lg p-4 mb-6 border border-border">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <p className="text-sm text-gray-500">Test</p>
-                                <p className="font-medium text-gray-900">{testTitle}</p>
+                                <p className="text-sm text-muted-foreground">Test</p>
+                                <p className="font-medium text-foreground">{testTitle}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Candidate</p>
-                                <p className="font-medium text-gray-900">{candidateName}</p>
-                                <p className="text-xs text-gray-500">{candidateEmail}</p>
+                                <p className="text-sm text-muted-foreground">Candidate</p>
+                                <p className="font-medium text-foreground">{candidateName}</p>
+                                <p className="text-xs text-muted-foreground">{candidateEmail}</p>
                             </div>
                         </div>
                     </div>
@@ -130,8 +130,8 @@ export default function ScheduleTestDialog({
                     {/* Time Selection */}
                     <div className="space-y-6 mb-6">
                         <div>
-                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                                <Calendar className="h-4 w-4 text-gray-500" />
+                            <label className="flex items-center space-x-2 text-sm font-medium text-foreground mb-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
                                 <span>Test Window Opens</span>
                             </label>
                             <input
@@ -139,17 +139,17 @@ export default function ScheduleTestDialog({
                                 value={scheduledStartTime}
                                 onChange={(e) => setScheduledStartTime(e.target.value)}
                                 min={getMinDateTime()}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de065d] focus:border-transparent"
+                                className="w-full px-4 py-2.5 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
                                 required
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 Candidate can start the test from this time
                             </p>
                         </div>
 
                         <div>
-                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                                <Clock className="h-4 w-4 text-gray-500" />
+                            <label className="flex items-center space-x-2 text-sm font-medium text-foreground mb-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
                                 <span>Test Window Closes</span>
                             </label>
                             <input
@@ -157,10 +157,10 @@ export default function ScheduleTestDialog({
                                 value={scheduledEndTime}
                                 onChange={(e) => setScheduledEndTime(e.target.value)}
                                 min={scheduledStartTime || getMinDateTime()}
-                                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#de065d] focus:border-transparent"
+                                className="w-full px-4 py-2.5 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
                                 required
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 Candidate must start the test before this time
                             </p>
                         </div>
@@ -168,19 +168,19 @@ export default function ScheduleTestDialog({
 
                     {/* Email Notification */}
                     <div className="mb-6">
-                        <label className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+                        <label className="flex items-center space-x-3 p-4 bg-muted/30 rounded-lg border border-border cursor-pointer hover:bg-muted/50 transition-colors">
                             <input
                                 type="checkbox"
                                 checked={sendEmail}
                                 onChange={(e) => setSendEmail(e.target.checked)}
-                                className="rounded border-gray-300 text-[#de065d] focus:ring-[#de065d] w-5 h-5"
+                                className="rounded border-input text-primary focus:ring-primary w-5 h-5"
                             />
                             <div className="flex-1">
                                 <div className="flex items-center space-x-2">
-                                    <Send className="h-4 w-4 text-gray-600" />
-                                    <span className="font-medium text-gray-900">Send email notification</span>
+                                    <Send className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium text-foreground">Send email notification</span>
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Candidate will receive an email with the test schedule and access link
                                 </p>
                             </div>
@@ -189,16 +189,16 @@ export default function ScheduleTestDialog({
 
                     {/* Preview */}
                     {scheduledStartTime && scheduledEndTime && (
-                        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-sm font-medium text-blue-900 mb-2">Schedule Preview</p>
-                            <div className="space-y-1 text-sm text-blue-800">
+                        <div className="mb-6 p-4 bg-primary/5 border border-primary/10 rounded-lg">
+                            <p className="text-sm font-medium text-primary mb-2">Schedule Preview</p>
+                            <div className="space-y-1 text-sm text-primary/80">
                                 <p>
                                     <strong>Opens:</strong> {new Date(scheduledStartTime).toLocaleString()}
                                 </p>
                                 <p>
                                     <strong>Closes:</strong> {new Date(scheduledEndTime).toLocaleString()}
                                 </p>
-                                <p className="text-xs text-blue-600 mt-2">
+                                <p className="text-xs text-primary/70 mt-2">
                                     Window duration: {Math.round((new Date(scheduledEndTime).getTime() - new Date(scheduledStartTime).getTime()) / (1000 * 60 * 60))} hours
                                 </p>
                             </div>
@@ -210,15 +210,14 @@ export default function ScheduleTestDialog({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                            className="flex-1 px-4 py-2.5 text-foreground bg-card border border-border rounded-lg hover:bg-muted font-medium transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            style={{ backgroundColor: '#de065d' }}
-                            className="flex-1 px-4 py-2.5 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-opacity"
+                            className="flex-1 px-4 py-2.5 text-white bg-primary rounded-lg hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
                         >
                             {isSubmitting ? (
                                 <>

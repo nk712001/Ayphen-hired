@@ -25,7 +25,10 @@ export async function GET(
 
     // Get the test without assignments first
     const test = await prisma.test.findUnique({
-      where: whereClause
+      where: whereClause,
+      include: {
+        questions: true
+      }
     });
 
     if (!test) {

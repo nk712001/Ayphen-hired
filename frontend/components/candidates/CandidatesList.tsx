@@ -108,78 +108,78 @@ export default function CandidatesList() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div className="mb-4 sm:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">
+              <h1 className="text-3xl font-bold text-foreground mb-1">
                 Candidates
               </h1>
-              <p className="text-gray-600">Manage and track your candidate pipeline</p>
+              <p className="text-muted-foreground">Manage and track your candidate pipeline</p>
             </div>
             <div className="flex flex-wrap gap-3">
               {selectedCandidates.length > 0 && (
                 <button
                   onClick={() => setShowBulkAssignDialog(true)}
-                  className="flex items-center space-x-2 px-4 py-2.5 text-white rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium"
+                  className="flex items-center space-x-2 px-4 py-2.5 text-primary-foreground rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium"
                 >
                   <TestTube className="h-4 w-4" />
-                  <span className="text-white">Assign Test to {selectedCandidates.length} Selected</span>
+                  <span>Assign Test to {selectedCandidates.length} Selected</span>
                 </button>
               )}
               <button
                 onClick={() => setShowImportDialog(true)}
-                className="flex items-center space-x-2 px-4 py-2.5 text-white rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2.5 text-primary-foreground rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium"
               >
-                <Upload className="h-4 w-4 text-white" />
-                <span className="text-white">Import Candidates</span>
+                <Upload className="h-4 w-4" />
+                <span>Import Candidates</span>
               </button>
               <button
                 onClick={() => setShowAddDialog(true)}
-                className="flex items-center space-x-2 px-4 py-2.5 text-white rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2.5 text-primary-foreground rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium"
               >
-                <UserPlus className="h-4 w-4 text-white" />
-                <span className="text-white">Add Candidate</span>
+                <UserPlus className="h-4 w-4" />
+                <span>Add Candidate</span>
               </button>
             </div>
           </div>
         </div>
 
         {!currentOrg ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
-            <h3 className="text-lg font-semibold text-yellow-800 mb-2">No Organization Selected</h3>
-            <p className="text-yellow-700">Please select an organization from the top bar to manage candidates.</p>
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg p-8 text-center">
+            <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">No Organization Selected</h3>
+            <p className="text-yellow-700 dark:text-yellow-300">Please select an organization from the top bar to manage candidates.</p>
           </div>
         ) : (
           <>
             {/* Search and Filters */}
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
+            <div className="bg-card rounded-lg p-6 shadow-sm border border-border mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
-                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                    <Search className="h-4 w-4 text-gray-500" />
+                  <label className="flex items-center space-x-2 text-sm font-medium text-foreground mb-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
                     <span>Search</span>
                   </label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <input
                       type="text"
                       placeholder="Search candidates by name or email..."
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-foreground placeholder-muted-foreground"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                    <Filter className="h-4 w-4 text-gray-500" />
+                  <label className="flex items-center space-x-2 text-sm font-medium text-foreground mb-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
                     <span>Status</span>
                   </label>
                   <select
-                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    className="w-full px-4 py-2.5 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-foreground"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
@@ -193,16 +193,16 @@ export default function CandidatesList() {
             </div>
 
             {/* Candidates List */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-card rounded-lg shadow-sm border border-border">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Users className="h-5 w-5 text-gray-700" />
+                    <div className="p-2 bg-muted rounded-lg">
+                      <Users className="h-5 w-5 text-foreground" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">Candidates ({filteredCandidates.length})</h2>
-                      <p className="text-sm text-gray-500">Manage your candidate pipeline</p>
+                      <h2 className="text-lg font-semibold text-foreground">Candidates ({filteredCandidates.length})</h2>
+                      <p className="text-sm text-muted-foreground">Manage your candidate pipeline</p>
                     </div>
                   </div>
                   {filteredCandidates.length > 0 && (
@@ -211,30 +211,30 @@ export default function CandidatesList() {
                         type="checkbox"
                         checked={selectedCandidates.length === filteredCandidates.length && filteredCandidates.length > 0}
                         onChange={handleSelectAll}
-                        className="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
+                        className="rounded border-input text-primary focus:ring-primary w-5 h-5 bg-background"
                       />
-                      <span className="text-sm text-gray-600">Select All</span>
+                      <span className="text-sm text-muted-foreground">Select All</span>
                     </div>
                   )}
                 </div>
 
                 {isLoading ? (
                   <div className="text-center py-12">
-                    <div className="bg-gray-50 rounded-lg p-8 border border-gray-100">
+                    <div className="bg-muted/50 rounded-lg p-8 border border-border">
                       <div className="flex items-center justify-center space-x-3">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-                        <span className="text-gray-700 font-medium">Loading candidates...</span>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground"></div>
+                        <span className="text-muted-foreground font-medium">Loading candidates...</span>
                       </div>
                     </div>
                   </div>
                 ) : filteredCandidates.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="bg-gray-50 rounded-lg p-8 border border-gray-100">
-                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">
+                    <div className="bg-muted/50 rounded-lg p-8 border border-border">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-base font-semibold text-foreground mb-2">
                         {searchTerm || statusFilter !== 'all' ? 'No Matching Candidates' : 'No Candidates Yet'}
                       </h3>
-                      <p className="text-gray-600 mb-6 text-sm">
+                      <p className="text-muted-foreground mb-6 text-sm">
                         {searchTerm || statusFilter !== 'all'
                           ? 'Try adjusting your search or filter criteria.'
                           : 'Import or add candidates to get started with your hiring process.'}
@@ -242,17 +242,17 @@ export default function CandidatesList() {
                       {!searchTerm && statusFilter === 'all' && (
                         <div className="flex justify-center space-x-3">
                           <button
-                            className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm"
+                            className="flex items-center space-x-2 px-4 py-2 text-primary-foreground rounded-lg shadow-sm bg-primary hover:bg-primary/90 transition-opacity text-sm"
                           >
-                            <Upload className="h-4 w-4 text-white" />
-                            <span className="text-white">Import Candidates</span>
+                            <Upload className="h-4 w-4" />
+                            <span>Import Candidates</span>
                           </button>
                           <button
                             onClick={() => setShowAddDialog(true)}
-                            className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg bg-primary hover:bg-primary/90 transition-opacity text-sm"
+                            className="flex items-center space-x-2 px-4 py-2 text-primary-foreground rounded-lg bg-primary hover:bg-primary/90 transition-opacity text-sm"
                           >
-                            <UserPlus className="h-4 w-4 text-white" />
-                            <span className="text-white">Add Candidate</span>
+                            <UserPlus className="h-4 w-4" />
+                            <span>Add Candidate</span>
                           </button>
                         </div>
                       )}
@@ -264,29 +264,29 @@ export default function CandidatesList() {
                       const getStatusIcon = (status?: string) => {
                         switch (status) {
                           case 'completed':
-                            return <CheckCircle className="h-4 w-4 text-green-600" />;
+                            return <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />;
                           case 'in_progress':
-                            return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+                            return <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
                           default:
-                            return <XCircle className="h-4 w-4 text-gray-400" />;
+                            return <XCircle className="h-4 w-4 text-muted-foreground" />;
                         }
                       };
 
                       const getStatusColor = (status?: string) => {
                         switch (status) {
                           case 'completed':
-                            return 'bg-green-50 text-green-700 border-green-200';
+                            return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900/50';
                           case 'in_progress':
-                            return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                            return 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-900/50';
                           default:
-                            return 'bg-gray-50 text-gray-600 border-gray-200';
+                            return 'bg-muted text-muted-foreground border-border';
                         }
                       };
 
                       return (
                         <div
                           key={candidate.id}
-                          className={`bg-gray-50 rounded-lg p-5 border border-gray-100 hover:border-gray-200 transition-all ${selectedCandidates.includes(candidate.id) ? 'ring-2 ring-primary bg-primary/5' : ''
+                          className={`bg-card rounded-lg p-5 border border-border hover:border-sidebar-accent transition-all ${selectedCandidates.includes(candidate.id) ? 'ring-2 ring-primary bg-primary/5 dark:bg-primary/10' : ''
                             }`}
                         >
                           <div className="flex items-center justify-between">
@@ -295,18 +295,18 @@ export default function CandidatesList() {
                                 type="checkbox"
                                 checked={selectedCandidates.includes(candidate.id)}
                                 onChange={() => handleSelectCandidate(candidate.id)}
-                                className="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
+                                className="rounded border-input text-primary focus:ring-primary w-5 h-5 bg-background"
                               />
                               <div className="flex-shrink-0">
-                                <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
-                                  <span className="text-white font-semibold text-sm">
+                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                  <span className="text-primary font-semibold text-sm">
                                     {candidate.name.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-base font-semibold text-gray-900 truncate">{candidate.name}</h4>
-                                <div className="flex items-center space-x-2 text-sm text-gray-600 mt-0.5">
+                                <h4 className="text-base font-semibold text-foreground truncate">{candidate.name}</h4>
+                                <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-0.5">
                                   <Mail className="h-3.5 w-3.5 flex-shrink-0" />
                                   <span className="truncate">{candidate.email}</span>
                                 </div>
@@ -321,12 +321,12 @@ export default function CandidatesList() {
                                     </span>
                                   </div>
                                   {candidate.assignments?.[0]?.test?.title && (
-                                    <div className="text-xs text-gray-500 truncate">
+                                    <div className="text-xs text-muted-foreground truncate">
                                       Test: {candidate.assignments[0].test.title}
                                     </div>
                                   )}
                                   {candidate.assignments?.[0]?.completedAt && (
-                                    <div className="flex items-center space-x-1 text-xs text-gray-500">
+                                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                                       <Calendar className="h-3 w-3" />
                                       <span>Completed: {new Date(candidate.assignments[0].completedAt).toLocaleDateString()}</span>
                                     </div>
@@ -337,7 +337,7 @@ export default function CandidatesList() {
                             <div className="flex items-center space-x-2 ml-4">
                               <button
                                 onClick={() => router.push(`/interviewer/candidates/${candidate.id}`)}
-                                className="flex items-center space-x-1 px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                                className="flex items-center space-x-1 px-3 py-2 bg-background text-foreground border border-input rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors text-sm font-medium"
                               >
                                 <Eye className="h-4 w-4" />
                                 <span>View</span>
@@ -402,8 +402,8 @@ export default function CandidatesList() {
                                     });
                                   }}
                                   className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${candidate.assignments[0].status === 'completed' || isUnassigning
-                                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    : 'bg-background text-foreground border border-input hover:bg-accent hover:text-accent-foreground'
                                     }`}
                                   disabled={candidate.assignments[0].status === 'completed' || isUnassigning}
                                   type="button"
@@ -421,10 +421,10 @@ export default function CandidatesList() {
                                     setSelectedCandidate(candidate);
                                     setShowAssignDialog(true);
                                   }}
-                                  className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium text-white shadow-sm"
+                                  className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 transition-opacity text-sm font-medium text-primary-foreground shadow-sm"
                                 >
-                                  <TestTube className="h-4 w-4 text-white" />
-                                  <span className="text-white">Assign</span>
+                                  <TestTube className="h-4 w-4" />
+                                  <span>Assign</span>
                                 </button>
                               )}
                               <button
@@ -477,7 +477,7 @@ export default function CandidatesList() {
                                     }
                                   });
                                 }}
-                                className="flex items-center space-x-1 px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center space-x-1 px-3 py-2 bg-background text-foreground border border-input rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={isDeleting}
                                 type="button"
                               >
@@ -500,15 +500,15 @@ export default function CandidatesList() {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
+                  className="px-3 py-1 border border-input rounded disabled:opacity-50 bg-card text-foreground"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-600">Page {page} of {totalPages}</span>
+                <span className="text-sm text-foreground">Page {page} of {totalPages}</span>
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1 border rounded disabled:opacity-50 bg-white"
+                  className="px-3 py-1 border border-input rounded disabled:opacity-50 bg-card text-foreground"
                 >
                   Next
                 </button>
@@ -519,17 +519,17 @@ export default function CandidatesList() {
 
         {/* Custom Confirmation Dialog */}
         {confirmDialog?.show && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{confirmDialog.title}</h3>
-              <p className="text-gray-600 mb-6">{confirmDialog.message}</p>
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-card rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-2">{confirmDialog.title}</h3>
+              <p className="text-muted-foreground mb-6">{confirmDialog.message}</p>
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => {
                     console.log('User cancelled action');
                     setConfirmDialog(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-input rounded-lg text-foreground hover:bg-accent transition-colors"
                 >
                   Cancel
                 </button>
@@ -537,7 +537,7 @@ export default function CandidatesList() {
                   onClick={() => {
                     confirmDialog.onConfirm();
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors"
                 >
                   Confirm
                 </button>

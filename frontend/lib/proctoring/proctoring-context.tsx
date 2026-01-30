@@ -18,6 +18,7 @@ interface ProctoringContextType {
   stream: MediaStream | null;
   secondaryStream: MediaStream | null;
   setSecondaryStream: (stream: MediaStream | null) => void;
+  setTestAssignmentId: (id: string) => void; // ADD THIS
   videoRef: React.RefObject<HTMLVideoElement>;
   secondaryVideoRef: React.RefObject<HTMLVideoElement>;
   startProctoring: (options?: ProctoringOptions) => Promise<void>;
@@ -50,6 +51,8 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const audioTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const [testAssignmentId, setTestAssignmentId] = useState<string | null>(null);
+  const testAssignmentIdRef = useRef<string | null>(null); // Ref to access in callbacks
 
   // Attach stream to video element when it changes
   useEffect(() => {
@@ -227,7 +230,38 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       setSessionId(sid);
       const client = new ProctorClient(
         sid,
-        (violation) => setViolations((prev) => [...prev, violation]),
+        async (violation) => {
+          // Add to state
+          setViolations((prev) => [...prev, violation]);
+
+          // Save to database if we have an assignment ID
+          // Use ref to get current value (not captured in closure)
+          const currentAssignmentId = testAssignmentIdRef.current;
+          if (currentAssignmentId) {
+            try {
+              console.log(`[VIOLATION SAVE] Attempting to save violation to database for assignment ${currentAssignmentId}`);
+              const response = await fetch('/api/proctor-sessions/save-violation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  testAssignmentId: currentAssignmentId,
+                  violation
+                })
+              });
+
+              if (!response.ok) {
+                console.error('[VIOLATION SAVE] Failed to save violation:', await response.text());
+              } else {
+                const result = await response.json();
+                console.log(`[VIOLATION SAVE] ✅ Violation saved: ${result.violationId}`);
+              }
+            } catch (error) {
+              console.error('[VIOLATION SAVE] Error saving violation:', error);
+            }
+          } else {
+            console.warn('[VIOLATION SAVE] No testAssignmentId set - violation not saved to database');
+          }
+        },
         (metrics) => {
           console.log('Context received metrics:', metrics); // Debug log
           setMetrics(metrics);
@@ -504,6 +538,13 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const startMonitoring = useCallback(() => { }, []);
 
+  // Wrapper for setTestAssignmentId that also updates the ref
+  const setTestAssignmentIdWrapper = useCallback((id: string) => {
+    console.log(`[PROCTOR] Setting test assignment ID: ${id}`);
+    setTestAssignmentId(id);
+    testAssignmentIdRef.current = id;
+  }, []);
+
   // Monitoring is now handled by backend via ProctorClient. No simulation needed.
   // Refactoring to use stable references or functional updates where possible?
   // Easier: Just wrap the value object in useMemo and only include start/stop functions if they are stable.
@@ -520,6 +561,7 @@ export const ProctoringProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     stream,
     secondaryStream,
     setSecondaryStream, // EXPORTED NOW
+    setTestAssignmentId: setTestAssignmentIdWrapper, // EXPORTED NOW (with wrapper)
     videoRef,
     secondaryVideoRef, // EXPORTED NOW
     startProctoring,

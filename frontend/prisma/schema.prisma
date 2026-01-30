@@ -58,6 +58,7 @@ model Company {
   name               String
   domain             String?  @unique
   logo               String?
+  darkLogo           String?
   primaryColor       String?  @default("#de065d")
   subscriptionTier   String   @default("trial") // trial, basic, pro, enterprise
   subscriptionStatus String   @default("active") // active, suspended, cancelled
@@ -279,6 +280,9 @@ model TestAssignment {
   scheduledEndTime   DateTime? // When the test window closes
   isScheduled        Boolean   @default(false)
   reminderSent       Boolean   @default(false)
+
+  // Matching Score
+  matchScore         Float?    // 0-100 score indicating fit based on resume and job description
 
   // Scoring Aggregates
   totalScore         Float?

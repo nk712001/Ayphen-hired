@@ -5,6 +5,8 @@ import { BrandingProvider } from '@/components/BrandingProvider';
 import { ProctoringProvider } from '@/lib/proctoring/proctoring-context';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Calendar } from 'lucide-react';
 
 interface PageProps {
     params: { uniqueLink: string };
@@ -54,14 +56,55 @@ export default async function AssessPage({ params }: PageProps) {
         // 2. Check if completed
         if (assignment.status === 'completed') {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-                        <h1 className="text-2xl font-bold mb-4 text-gray-900">Test Completed</h1>
-                        <p className="text-gray-600 mb-6">
+                <div className="min-h-screen flex items-center justify-center bg-background">
+                    <div className="bg-card p-8 rounded-lg shadow-lg max-w-md w-full text-center border border-border">
+                        <h1 className="text-2xl font-bold mb-4 text-foreground">Test Completed</h1>
+                        <p className="text-muted-foreground mb-6">
                             You have already completed this assessment. Thank you for your submission.
                         </p>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                             Completed on: {assignment.completedAt?.toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Handle scheduled tests
+        const now = new Date();
+        const start = assignment.scheduledStartTime;
+        const end = assignment.scheduledEndTime;
+
+        if (assignment.isScheduled && start && now < start) {
+            return (
+                <div className="min-h-screen bg-background flex items-center justify-center p-4">
+                    <div className="bg-card rounded-xl shadow-lg border-t-4 border-primary p-10 max-w-lg w-full text-center">
+                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Calendar className="w-10 h-10 text-primary" />
+                        </div>
+                        <h1 className="text-3xl font-bold text-foreground mb-3">Test Upcoming</h1>
+                        <p className="text-muted-foreground mb-8 text-lg">
+                            This test is scheduled to start on <br />
+                            <span className="font-bold text-primary">{start.toLocaleString()}</span>
+                        </p>
+                        <div className="p-4 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg border border-blue-500/20 text-sm text-blue-800 dark:text-blue-300">
+                            Please return to this page at the scheduled time.
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        if (assignment.isScheduled && end && now > end) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-background">
+                    <div className="bg-card p-8 rounded-lg shadow-lg max-w-md w-full text-center border border-border">
+                        <h1 className="text-2xl font-bold mb-4 text-foreground">Test Window Closed</h1>
+                        <p className="text-muted-foreground mb-6">
+                            The scheduled time for this assessment has passed.
+                        </p>
+                        <div className="text-sm text-muted-foreground">
+                            Scheduled to end on: {end.toLocaleString()}
                         </div>
                     </div>
                 </div>
@@ -131,7 +174,10 @@ export default async function AssessPage({ params }: PageProps) {
                     primaryColor={branding.primaryColor || '#de065d'}
                     enableCustomBranding={branding.customBranding}
                 />
-                <div className="min-h-screen bg-gray-50 from-blue-50 to-indigo-50">
+                <div className="min-h-screen bg-gray-50 from-blue-50 to-indigo-50 dark:bg-gray-900 dark:from-gray-900 dark:to-slate-900 transition-colors duration-300 relative">
+                    <div className="absolute top-4 right-4 z-50">
+                        <ThemeToggle />
+                    </div>
                     <AssessFlow
                         test={testData}
                         assignment={{

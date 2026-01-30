@@ -172,10 +172,10 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading assignment preview...</p>
+          <p className="text-muted-foreground">Loading assignment preview...</p>
         </div>
       </div>
     );
@@ -183,13 +183,13 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Error</h1>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-secondary-dark"
           >
             Go Back
           </button>
@@ -200,12 +200,12 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
 
   if (!previewData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Assignment Not Found</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Assignment Not Found</h1>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-secondary-dark"
           >
             Go Back
           </button>
@@ -217,21 +217,21 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
   const { assignment, questions, generatedFromResume, resumeAnalysis } = previewData;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{assignment.test.title}</h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <h1 className="text-3xl font-bold text-foreground">{assignment.test.title}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Personalized Preview for {assignment.candidate.name}
               </p>
             </div>
             <div className="flex space-x-3">
               <button
                 onClick={() => router.back()}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-md text-foreground hover:bg-muted"
               >
                 Back
               </button>
@@ -239,11 +239,11 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                 <button
                   onClick={generatePersonalizedQuestions}
                   disabled={isGenerating}
-                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGenerating ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground inline-block mr-2"></div>
                       Generating...
                     </>
                   ) : (
@@ -255,32 +255,32 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
           </div>
 
           {/* Candidate Info */}
-          <div className="bg-white shadow rounded-lg mb-6">
+          <div className="bg-card border border-border shadow rounded-lg mb-6">
             <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Candidate Information</h2>
+              <h2 className="text-lg font-medium text-foreground mb-4">Candidate Information</h2>
               <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Name</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{assignment.candidate.name}</dd>
+                  <dt className="text-sm font-medium text-muted-foreground">Name</dt>
+                  <dd className="mt-1 text-sm text-foreground">{assignment.candidate.name}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Email</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{assignment.candidate.email}</dd>
+                  <dt className="text-sm font-medium text-muted-foreground">Email</dt>
+                  <dd className="mt-1 text-sm text-foreground">{assignment.candidate.email}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Resume</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground">Resume</dt>
+                  <dd className="mt-1 text-sm text-foreground">
                     {assignment.candidate.resumeUrl ? (
                       <a
                         href={assignment.candidate.resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:text-primary-dark"
+                        className="text-primary hover:text-primary/80"
                       >
                         View Resume
                       </a>
                     ) : (
-                      <span className="text-gray-400">No resume uploaded</span>
+                      <span className="text-muted-foreground">No resume uploaded</span>
                     )}
                   </dd>
                 </div>
@@ -289,62 +289,62 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
           </div>
 
           {/* Test Configuration */}
-          <div className="bg-white shadow rounded-lg mb-6">
+          <div className="bg-card border border-border shadow rounded-lg mb-6">
             <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">📋 Test Configuration</h2>
+              <h2 className="text-lg font-medium text-foreground mb-4">📋 Test Configuration</h2>
               <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Test Title</dt>
-                  <dd className="mt-1 text-sm text-gray-900 font-medium">{assignment.test.title}</dd>
+                  <dt className="text-sm font-medium text-muted-foreground">Test Title</dt>
+                  <dd className="mt-1 text-sm text-foreground font-medium">{assignment.test.title}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Duration</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <dt className="text-sm font-medium text-muted-foreground">Duration</dt>
+                  <dd className="mt-1 text-sm text-foreground">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                       ⏱️ {assignment.test.duration} minutes
                     </span>
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">Secondary Camera</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                  <dt className="text-sm font-medium text-muted-foreground">Secondary Camera</dt>
+                  <dd className="mt-1 text-sm text-foreground">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.test.requiresSecondaryCamera
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-muted text-muted-foreground'
                       }`}>
                       {assignment.test.requiresSecondaryCamera ? '📱 Required' : '❌ Not required'}
                     </span>
                   </dd>
                 </div>
                 <div className="sm:col-span-3">
-                  <dt className="text-sm font-medium text-gray-500 mb-3">Question Configuration</dt>
+                  <dt className="text-sm font-medium text-muted-foreground mb-3">Question Configuration</dt>
                   <dd className="mt-1">
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-purple-600">{assignment.test.mcqQuestions || 0}</div>
-                        <div className="text-xs text-purple-700 font-medium">Multiple Choice</div>
+                      <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{assignment.test.mcqQuestions || 0}</div>
+                        <div className="text-xs text-purple-700 dark:text-purple-300 font-medium">Multiple Choice</div>
                       </div>
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-green-600">{assignment.test.conversationalQuestions || 0}</div>
-                        <div className="text-xs text-green-700 font-medium">Conversational</div>
+                      <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">{assignment.test.conversationalQuestions || 0}</div>
+                        <div className="text-xs text-green-700 dark:text-green-300 font-medium">Conversational</div>
                       </div>
-                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-orange-600">{assignment.test.codingQuestions || 0}</div>
-                        <div className="text-xs text-orange-700 font-medium">Coding</div>
+                      <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{assignment.test.codingQuestions || 0}</div>
+                        <div className="text-xs text-orange-700 dark:text-orange-300 font-medium">Coding</div>
                       </div>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                        <div className="text-2xl font-bold text-blue-600">
+                      <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                           {(assignment.test.mcqQuestions || 0) + (assignment.test.conversationalQuestions || 0) + (assignment.test.codingQuestions || 0)}
                         </div>
-                        <div className="text-xs text-blue-700 font-medium">Total Questions</div>
+                        <div className="text-xs text-blue-700 dark:text-blue-300 font-medium">Total Questions</div>
                       </div>
                     </div>
                   </dd>
                 </div>
                 {assignment.test.jobDescription && (
                   <div className="sm:col-span-3">
-                    <dt className="text-sm font-medium text-gray-500">Job Description</dt>
-                    <dd className="mt-1 text-sm text-gray-900 bg-gray-50 rounded-lg p-4 whitespace-pre-wrap border">
+                    <dt className="text-sm font-medium text-muted-foreground">Job Description</dt>
+                    <dd className="mt-1 text-sm text-foreground bg-muted/50 rounded-lg p-4 whitespace-pre-wrap border border-border">
                       {assignment.test.jobDescription}
                     </dd>
                   </div>
@@ -355,10 +355,10 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
 
           {/* Resume Analysis */}
           {resumeAnalysis && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg mb-6">
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg mb-6">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-blue-900 mb-4">🤖 AI Resume Analysis</h2>
-                <div className="text-sm text-blue-800">
+                <h2 className="text-lg font-medium text-blue-900 dark:text-blue-300 mb-4">🤖 AI Resume Analysis</h2>
+                <div className="text-sm text-blue-800 dark:text-blue-200">
                   {typeof resumeAnalysis === 'string' ? (
                     <p className="whitespace-pre-wrap">{resumeAnalysis}</p>
                   ) : (
@@ -412,20 +412,20 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
           )}
 
           {/* Questions Preview */}
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-card border border-border shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-medium text-gray-900">
+                <h2 className="text-lg font-medium text-foreground">
                   {generatedFromResume ? '🎯 Personalized Questions' : 'Sample Questions'} ({questions.length})
                 </h2>
                 <div className="flex space-x-2">
                   {generatedFromResume && (
-                    <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                    <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-sm rounded-full">
                       ✨ Personalized
                     </span>
                   )}
                   {!process.env.OPENAI_API_KEY && (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-sm rounded-full">
                       🧠 Intelligent Analysis
                     </span>
                   )}
@@ -433,24 +433,24 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
               </div>
 
               {!assignment.candidate.resumeUrl && !assignment.test.resumeUrl && (
-                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
+                <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     ⚠️ No resume uploaded for this candidate. Questions will be based on the job description only.
                   </p>
                 </div>
               )}
 
               {(assignment.candidate.resumeUrl || assignment.test.resumeUrl) && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800">
+                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm text-green-800 dark:text-green-300">
                     ✅ Resume available - Questions will be personalized based on candidate&apos;s background and job requirements.
                   </p>
                 </div>
               )}
 
               {generatedFromResume && (
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
                     🧠 <strong>Intelligent Question Generation:</strong> These questions have been personalized using advanced pattern matching and skill analysis.
                     {(assignment.candidate.resumeUrl || assignment.test.resumeUrl) ? ' Based on candidate resume and job requirements.' : ' Based on job description analysis.'}
                   </p>
@@ -462,18 +462,18 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                   {isGenerating ? (
                     <div className="flex flex-col items-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-                      <p className="text-gray-600 mb-2">🧠 Generating Personalized Questions...</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-muted-foreground mb-2">🧠 Generating Personalized Questions...</p>
+                      <p className="text-sm text-muted-foreground">
                         Analyzing {assignment.candidate.resumeUrl ? 'candidate resume and' : ''} job description to create tailored questions
                       </p>
                     </div>
                   ) : (
                     <>
-                      <p className="text-gray-500 mb-4">No questions generated yet.</p>
+                      <p className="text-muted-foreground mb-4">No questions generated yet.</p>
                       <button
                         onClick={generatePersonalizedQuestions}
                         disabled={isGenerating}
-                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark disabled:opacity-50"
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-secondary-dark disabled:opacity-50"
                       >
                         Generate Personalized Questions
                       </button>
@@ -485,33 +485,33 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                   {questions.map((question, index) => (
                     <div key={question.id} className="border-l-4 border-primary pl-4">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-sm font-medium text-gray-900">
+                        <h3 className="text-sm font-medium text-foreground">
                           Question {index + 1}
                         </h3>
                         <div className="flex space-x-2">
-                          <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
+                          <span className="px-2 py-1 text-xs bg-muted text-foreground rounded">
                             {question.type.replace('_', ' ').toUpperCase()}
                           </span>
                           {question.difficulty && (
-                            <span className={`px-2 py-1 text-xs rounded ${question.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                                question.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-red-100 text-red-800'
+                            <span className={`px-2 py-1 text-xs rounded ${question.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                              question.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                               }`}>
                               {question.difficulty}
                             </span>
                           )}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-700 mb-2">{question.text}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{question.text}</p>
 
                       {/* Show options for multiple choice questions */}
                       {question.type === 'multiple_choice' && question.metadata?.options && (
                         <div className="mt-2 ml-4">
-                          <p className="text-xs text-gray-500 mb-1">Options:</p>
-                          <ul className="text-sm text-gray-600 space-y-1">
+                          <p className="text-xs text-muted-foreground mb-1">Options:</p>
+                          <ul className="text-sm text-muted-foreground space-y-1">
                             {question.metadata.options.map((option: string, i: number) => (
                               <li key={i} className="flex items-center">
-                                <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs flex items-center justify-center mr-2">
+                                <span className="w-6 h-6 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center mr-2">
                                   {String.fromCharCode(65 + i)}
                                 </span>
                                 {option}
@@ -524,8 +524,8 @@ export default function AssignmentPreviewPage({ params }: { params: { id: string
                       {/* Show starter code for coding questions */}
                       {question.type === 'code' && question.metadata?.starterCode && (
                         <div className="mt-2">
-                          <p className="text-xs text-gray-500 mb-1">Starter Code:</p>
-                          <pre className="bg-gray-100 p-2 rounded text-xs text-gray-700 overflow-x-auto">
+                          <p className="text-xs text-muted-foreground mb-1">Starter Code:</p>
+                          <pre className="bg-muted p-2 rounded text-xs text-muted-foreground overflow-x-auto">
                             {question.metadata.starterCode}
                           </pre>
                         </div>

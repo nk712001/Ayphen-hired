@@ -27,6 +27,7 @@ export async function GET(req: Request) {
             name: company.name,
             domain: company.domain,
             logo: company.logo,
+            darkLogo: company.darkLogo,
             primaryColor: company.primaryColor,
             subscriptionTier: company.subscriptionTier,
             subscriptionStatus: company.subscriptionStatus,
@@ -48,7 +49,7 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { name, primaryColor, logo, emailDomain, customBranding } = await req.json();
+        const { name, primaryColor, logo, darkLogo, emailDomain, customBranding } = await req.json();
 
         // 1. Upsert Settings
         const settings = await prisma.companySettings.upsert({
@@ -70,7 +71,8 @@ export async function PUT(req: Request) {
             data: {
                 name,
                 primaryColor,
-                logo
+                logo,
+                darkLogo
             }
         });
 

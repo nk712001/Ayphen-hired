@@ -65,74 +65,18 @@ export class ProctorClient {
         return;
       }
 
-      // Get the base URL from environment or use default
-      let baseUrl;
+      // Use the Next.js proxy for WebSockets to avoid SSL/Certificate issues
+      // The proxy is configured in next.config.js to forward /ws-proxy/* to http://127.0.0.1:8000/*
+      const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+      const protocol = isSecure ? 'wss:' : 'ws:';
+      const host = typeof window !== 'undefined' ? window.location.host : 'localhost:3000';
 
-      // Use the main AI service on port 8000
-      console.log('Using main AI service on port 8000');
-      baseUrl = process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'https://127.0.0.1:8000';
+      // Construct URL using the proxy path
+      // e.g., wss://localhost:3000/ws-proxy/ws/proctor/sessionId
+      // Note: backend path is /ws/proctor/..., so we append that to /ws-proxy
+      const wsUrl = `${protocol}//${host}/ws-proxy/ws/proctor/${this.sessionId}`;
 
-      // Fallback logic (only used if connection fails)
-      if (this.useTestServer) {
-        console.log('Attempting to connect to test server on port 8001 as fallback');
-        baseUrl = 'https://127.0.0.1:8001';
-      }
-      console.log('Base URL from config:', baseUrl);
-
-      // CRITICAL FIX: Always use IP address instead of localhost for WebSocket connections
-      // This helps avoid certificate validation issues with self-signed certificates
-      baseUrl = baseUrl.replace('localhost', '127.0.0.1');
-      console.log('Base URL after localhost replacement:', baseUrl);
-
-      // IMPORTANT: Match WebSocket protocol with the current page protocol
-      // This ensures we don't mix secure/insecure contexts
-      const pageProtocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
-      const shouldUseSecureWebSocket = pageProtocol === 'https:';
-      console.log('Page protocol detected:', pageProtocol);
-      console.log('Should use secure WebSocket:', shouldUseSecureWebSocket);
-
-      // Convert HTTP/HTTPS to WS/WSS based on current page protocol
-      if (baseUrl.startsWith('http://')) {
-        baseUrl = baseUrl.replace('http://', shouldUseSecureWebSocket ? 'wss://' : 'ws://');
-      } else if (baseUrl.startsWith('https://')) {
-        baseUrl = baseUrl.replace('https://', 'wss://');
-      } else if (!baseUrl.startsWith('ws://') && !baseUrl.startsWith('wss://')) {
-        // If no protocol is specified, use protocol matching page security
-        baseUrl = shouldUseSecureWebSocket ? `wss://${baseUrl}` : `ws://${baseUrl}`;
-      } else if (shouldUseSecureWebSocket && baseUrl.startsWith('ws://')) {
-        // Force WSS if page is HTTPS but URL is WS
-        baseUrl = baseUrl.replace('ws://', 'wss://');
-      }
-
-      console.log(`Using ${baseUrl.startsWith('wss://') ? 'WSS' : 'WS'} protocol for WebSocket connection`);
-
-      // Display warning about mixed content if needed
-      if (shouldUseSecureWebSocket && !baseUrl.startsWith('wss://')) {
-        console.warn('WARNING: Attempting to connect to a non-secure WebSocket (ws://) from a secure context (https://');
-        console.warn('This may be blocked by the browser as mixed content. Check browser console for errors.');
-        console.warn('For development, you may need to enable mixed content in your browser settings.');
-      }
-
-      // Extract hostname without protocol
-      let hostname = baseUrl;
-      if (hostname.startsWith('ws://')) hostname = hostname.substring(5);
-      if (hostname.startsWith('wss://')) hostname = hostname.substring(6);
-
-      // Always use IP address instead of localhost for better compatibility
-      // This is critical for WebSocket connections with self-signed certificates
-      hostname = hostname.replace('localhost', '127.0.0.1');
-
-      // Ensure port is included
-      if (!hostname.includes(':')) {
-        hostname += ':8000'; // Default port
-      }
-
-      // Construct final WebSocket URL - use appropriate protocol based on page security
-      const protocol = shouldUseSecureWebSocket ? 'wss://' : 'ws://';
-      const wsUrl = `${protocol}${hostname}/ws/proctor/${this.sessionId}`;
-
-      console.log('Final WebSocket protocol:', protocol);
-      console.log('Final WebSocket hostname:', hostname);
+      console.log('Using WebSocket Proxy for secure connection');
       console.log('Final WebSocket URL:', wsUrl);
 
       console.log(`Connecting to WebSocket URL (attempt ${this.connectionAttempt + 1}):`, wsUrl);
@@ -264,20 +208,84 @@ export class ProctorClient {
     }
   }
 
-  private handleMessage(result: ProctorResult) {
+  private handleMessage(result: any) {
     console.log('Received from backend:', result); // Debug log
 
+    let processedResult: ProctorResult = {
+      status: 'clear',
+      violations: [],
+      metrics: {
+        face_confidence: 0,
+        gaze_score: 0,
+        objects_detected: 0
+      }
+    };
+
+    // Case 1: Result is already a ProctorResult (has violations array)
+    if (result.violations || result.status) {
+      processedResult = result as ProctorResult;
+    }
+    // Case 2: Result is raw analysis object (like HTTP fallback)
+    else if (result.analysis) {
+      const analysis = result.analysis;
+
+      processedResult.status = analysis.overall_compliance?.status === 'violation' ? 'violation' : 'clear';
+      processedResult.metrics = {
+        face_confidence: analysis.face_detection?.confidence || 0,
+        gaze_score: analysis.gaze_tracking?.gaze_score || 0,
+        objects_detected: analysis.object_detection?.detections?.length || 0
+      };
+
+      // Infer violations from analysis if not present
+      if (analysis.face_detection?.faces_detected === 0) {
+        processedResult.violations.push({ type: 'no_face', severity: 'high', confidence: 1.0, message: 'No face detected' });
+      }
+      if (analysis.object_detection?.detections?.length > 0) {
+        processedResult.violations.push({ type: 'prohibited_object', severity: 'high', confidence: 1.0, message: 'Prohibited object detected' });
+      }
+      if (analysis.gaze_tracking?.gaze_score < 0.3) {
+        processedResult.violations.push({ type: 'gaze_violation', severity: 'medium', confidence: 1.0, message: 'Looking away' });
+      }
+
+      // Add secondary camera violations if present in top-level result
+      if (result.secondary_camera_violations) {
+        result.secondary_camera_violations.forEach((v: any) => {
+          processedResult.violations.push(v);
+        });
+      }
+    }
+    // Case 3: Result is directly the analysis object (sometimes happens with raw socket dumps)
+    else if (result.face_detection || result.gaze_tracking) {
+      const analysis = result;
+      processedResult.metrics = {
+        face_confidence: analysis.face_detection?.confidence || 0,
+        gaze_score: analysis.gaze_tracking?.gaze_score || 0,
+        objects_detected: analysis.object_detection?.detections?.length || 0
+      };
+
+      if (analysis.face_detection?.faces_detected === 0) {
+        processedResult.violations.push({ type: 'no_face', severity: 'high', confidence: 1.0, message: 'No face detected' });
+      }
+      if (analysis.object_detection?.detections?.length > 0) {
+        processedResult.violations.push({ type: 'prohibited_object', severity: 'high', confidence: 1.0, message: 'Prohibited object detected' });
+      }
+      if (analysis.gaze_tracking?.gaze_score < 0.3) {
+        processedResult.violations.push({ type: 'gaze_violation', severity: 'medium', confidence: 1.0, message: 'Looking away' });
+      }
+    }
+
     // Handle violations
-    if (result.violations && result.violations.length > 0) {
-      result.violations.forEach(violation => {
+    if (processedResult.violations && processedResult.violations.length > 0) {
+      console.log('⚠️ Processed violations:', processedResult.violations);
+      processedResult.violations.forEach(violation => {
         this.onViolation(violation);
       });
     }
 
     // Update metrics
-    if (result.metrics) {
-      console.log('Updating metrics:', result.metrics); // Debug log
-      this.onMetrics(result.metrics);
+    if (processedResult.metrics) {
+      // console.log('Updating metrics:', processedResult.metrics); // Reduced log noise
+      this.onMetrics(processedResult.metrics);
     }
   }
 

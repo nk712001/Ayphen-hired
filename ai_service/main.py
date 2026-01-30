@@ -615,7 +615,7 @@ async def analyze_primary_camera_direct(session_id: str, request: dict = Body(..
         primary_validation = session.multi_camera_manager.validate_primary_camera(frame_data)
         
         # Get face detection analysis
-        face_analysis = session.face_detector.analyze_frame(session.multi_camera_manager._decode_image(frame_data))
+        face_analysis = session.face_detector.analyze_frame(frame_data)
         
         # Get object detection analysis (for prohibited items)
         object_analysis = session.object_detector.analyze_frame(session.multi_camera_manager._decode_image(frame_data), context='primary')
